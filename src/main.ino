@@ -126,6 +126,8 @@ void handle_status_check() {
   Serial.println("Get server status");
   
   jsonDocument.clear();  
+  jsonDocument["model_name"] = "Yume Pro V0.01";
+  jsonDocument["device_id"] = "unique_id_for_each_table";
   jsonDocument["type"] = "Running";
   jsonDocument["value"] = 200;
   jsonDocument["unit"] = true;
@@ -171,8 +173,9 @@ void handle_play() {
   deserializeJson(jsonDocument, body);
 
   String filename = jsonDocument["filename"];
+  filename.trim();
 
-  player.read(SD, "/" + filename + ".txt");
+  player.read(SD, "/" + filename);
   is_printing_design = true;
   should_clear = true;
   should_perform_homing = true;
@@ -188,20 +191,21 @@ void handle_add_to_playlist() {
 
   String filename = jsonDocument["filename"];
 
-  player.add_to_playlist(SD, "/" + filename + ".txt");
+  player.add_to_playlist(SD, "/" + filename + ".thr");
 
   server.send(200, "application/json", "Add to playlist done");
 }
 
 
 void set_routing_common(WebServer& server) {
+  server.enableCORS();
   server.on("/", HTTP_GET, handle_status_check);  
   server.on("/mode", HTTP_GET, handle_get_mode);
+  server.on("/pair", HTTP_POST, handle_pairing);
 }
 
 void setup_pairing_routing(WebServer& server) {
   set_routing_common(server);
-  server.on("/pair", HTTP_POST, handle_pairing);
 }
 void setup_paired_routing(WebServer& server) {
   set_routing_common(server);
@@ -258,10 +262,10 @@ void loop() {
     delay(5000);
     return;
   }
-  test_led();
+  move_led();
   server.handleClient();
   if(is_in_pairing_mode) {
-    delay(500);
+    delay(5);
     return;
   }
   if(should_clear) {
@@ -277,7 +281,7 @@ void loop() {
   if(should_play_next) {
     // Play next design
     String next_design = player.get_next_design(SD);
-    player.read(SD, "/" + next_design + ".txt");
+    player.read(SD, "/" + next_design);
     is_printing_design = true;
     should_clear = true;
     should_perform_homing = true;

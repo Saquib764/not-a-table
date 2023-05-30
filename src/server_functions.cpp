@@ -21,9 +21,11 @@ void setup_wifi(String ssid, String pwd, bool set_as_hotspot) {
     const char* ssid_c = ssid.c_str();
     const char* pwd_c = pwd.c_str();
     WiFi.begin(ssid_c, pwd_c);
-    while (WiFi.status() != WL_CONNECTED) {
+    int i = 0;
+    while (WiFi.status() != WL_CONNECTED && i < 100) {
       delay(500);
       Serial.print(".");
+      i++;
     }
     IP = WiFi.localIP();
     Serial.println("WiFi connected.");
