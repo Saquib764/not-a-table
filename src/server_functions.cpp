@@ -35,29 +35,3 @@ void setup_wifi(String ssid, String pwd, bool set_as_hotspot) {
   Serial.println("IP address: ");
   Serial.println(IP);
 }
-
-std::array<String, 2> get_wifi_login(fs::FS &fs) {
-  bool is_file = fs.exists( "/wifi_login.txt" );
-  if(!is_file) {
-    Serial.println("File does not exist");
-    return {"", ""};
-  }
-  File file = fs.open( "/wifi_login.txt");
-  if(!file) {
-    Serial.println("Failed to open login file for reading");
-    return {"", ""};
-  }
-  String ssid = file.readStringUntil('\n');
-  String pwd = file.readStringUntil('\n');
-  return {ssid, pwd};
-}
-void save_wifi_login(fs::FS &fs, String ssid, String pwd) {
-  File file = fs.open( "/wifi_login.txt" , FILE_WRITE);
-  if(!file){
-    Serial.println("Failed to open login file for writing");
-    return;
-  }
-  file.println(ssid);
-  file.println(pwd);
-  file.close();
-}

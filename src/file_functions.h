@@ -1,9 +1,11 @@
 #ifndef FILE_FUNCTIONS_H
 #define FILE_FUNCTIONS_H
 
-#include <SD_MMC.h>
+#include "FS.h"
+#include "SD.h"
+#include "SPI.h"
 
-void read_file(char* filename, char* buffer);
-void write_file(char* filename, char* buffer);
+File read_file(fs::FS &fs, String path);
+File open_file(fs::FS &fs, String path, bool write = false);
 
 #endif

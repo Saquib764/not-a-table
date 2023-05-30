@@ -15,7 +15,7 @@ using namespace std;
 #include "server_functions.h"
 #include "motor_control_functions.h"
 #include "led_control.h"
-
+#include "wifi_functions.h"
 
 
 #define SERIAL_PORT Serial1 // TMC2208/TMC2224 HardwareSerial port
@@ -30,6 +30,8 @@ Player player;
 
 WebServer server(80);
 
+String SAVED_SSID = "";
+String SAVED_PWD = "";
 
 int motor1DirPin = 27;
 int motor1StepPin = 26;
@@ -37,10 +39,6 @@ int motor1StepPin = 26;
 
 int motor2DirPin = 13;
 int motor2StepPin = 14;
-
-
-String SSID = "NOT_A_TABLE";
-String PWD = "i_am_a_table";
 
 
 StaticJsonDocument<250> jsonDocument;
@@ -162,7 +160,6 @@ void handle_pairing() {
   save_wifi_login(SD, ssid, pwd);
   Serial.println("Pairing done. Restarting");
   server.send(200, "application/json", "Pairing done. Restarting");
-  ESP.restart();
 }
 
 void handle_play() {
@@ -196,19 +193,12 @@ void handle_add_to_playlist() {
   server.send(200, "application/json", "Add to playlist done");
 }
 
-
-void set_routing_common(WebServer& server) {
+void setup_routing(WebServer& server) {
   server.enableCORS();
   server.on("/", HTTP_GET, handle_status_check);  
   server.on("/mode", HTTP_GET, handle_get_mode);
   server.on("/pair", HTTP_POST, handle_pairing);
-}
 
-void setup_pairing_routing(WebServer& server) {
-  set_routing_common(server);
-}
-void setup_paired_routing(WebServer& server) {
-  set_routing_common(server);
   server.on("/play", HTTP_POST, handle_play);
   server.on("/add_to_playlist", HTTP_POST, handle_add_to_playlist);
 }
@@ -230,27 +220,28 @@ void setup() {
   Serial.println(logins[0]);
   Serial.println(logins[1]);
 
-  if(logins[0] != "" && logins[1] != "") {
-    SSID = logins[0];
-    PWD = logins[1];
-    
-    is_in_pairing_mode = false;
+  if( logins[0] != "" && logins[1] != "" ) {
+    // Wifi login found, connect to wifi
+    SAVED_SSID = logins[0];
+    SAVED_PWD = logins[1];
 
-    setup_driver(driver, 32, 33, 25);
-  } else {
+    connect_to_network(logins[0], logins[1], 5)
+  } 
+  if(check_if_connected_to_network(SAVED_SSID)){
+    is_in_pairing_mode = false;
+  }else {
+    // No wifi login found, go in pairing mode. Creating hotspot
+    create_hotspot();
     Serial.println("No wifi login found");
     Serial.println("Going in pairing mode");
   }
 
-  setup_wifi(SSID, PWD, is_in_pairing_mode);
-  if(is_in_pairing_mode){
-    setup_pairing_routing(server);
-  }else{
-    setup_paired_routing(server);
-    bool has_resumed = player.read(SD);
-    if(has_resumed) {
-      is_printing_design = true;
-    }
+  setup_driver(driver, 32, 33, 25);
+
+  setup_routing(server);
+  bool has_resumed = player.read(SD);
+  if(has_resumed) {
+    is_printing_design = true;
   }
   setup_led();
   server.begin();
@@ -258,6 +249,20 @@ void setup() {
 }
 
 void loop() {
+  // Every 10sec, check if we are connected to wifi
+  EVERY_N_SECONDS(10) {
+    Serial.println("Checking wifi connection");
+    if(check_if_network_is_available(SAVED_SSID)) {
+      connect_to_network(SAVED_SSID, SAVED_PWD, 5);
+    }
+    if(check_if_connected_to_network(SAVED_SSID)){
+      is_in_pairing_mode = false;
+    }else{
+      is_in_pairing_mode = true;
+      create_hotspot();
+    }
+  }
+
   if(has_error) {
     delay(5000);
     return;
