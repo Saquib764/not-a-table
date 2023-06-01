@@ -257,19 +257,23 @@ void loop() {
     should_play_next = false;
     return;
   }
-
-  if(is_printing_design) {
-    double* points = player.next_line(SD);
-    if(points[0] == 0.0) {
-      is_printing_design = false;
-      should_play_next = true;
-      return;
+  EVERY_N_MILLISECONDS(200) {
+    long current_time = millis();
+    if(is_printing_design) {
+      double* points = player.next_line(SD);
+      if(points[0] == 0.0) {
+        is_printing_design = false;
+        should_play_next = true;
+        return;
+      }
+      double q1 = points[1];
+      double q2 = points[2];
+      
+      move_arm(motor1, motor2, q1 - Q1, q2 - Q2);
+      Q1 = q1;
+      Q2 = q2;
     }
-    double q1 = points[1];
-    double q2 = points[2];
-    
-    move_arm(motor1, motor2, q1 - Q1, q2 - Q2);
-    Q1 = q1;
-    Q2 = q2;
+    Serial.print("Time for servo run: ");
+    Serial.println(millis() - current_time);
   }
 }
