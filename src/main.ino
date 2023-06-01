@@ -12,7 +12,6 @@ using namespace std;
 
 #include "Player.h"
 #include "SStepper.h"
-#include "server_functions.h"
 #include "motor_control_functions.h"
 #include "led_control.h"
 #include "wifi_functions.h"

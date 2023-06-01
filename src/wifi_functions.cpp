@@ -1,4 +1,4 @@
-#include "server_functions.h"
+#include "wifi_functions.h"
 #include "file_functions.h"
 
 String SSID = "NOT_A_TABLE";
