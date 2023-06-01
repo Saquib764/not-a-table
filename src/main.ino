@@ -155,11 +155,17 @@ void handle_pairing() {
   deserializeJson(jsonDocument, body);
   String ssid = jsonDocument["ssid"];
   String pwd = jsonDocument["pwd"];
+  ssid.trim();
+  pwd.trim();
+  SAVED_SSID = ssid;
+  SAVED_PWD = pwd;
   Serial.println(ssid);
   Serial.println(pwd);
   save_wifi_login(SD, ssid, pwd);
-  Serial.println("Pairing done. Restarting");
+  Serial.println("Pairing done. Connecting.");
   server.send(200, "application/json", "Pairing done. Restarting");
+  delay(2000);
+  connect_to_network(SAVED_SSID, SAVED_PWD, 5);
 }
 
 void handle_play() {
@@ -204,6 +210,7 @@ void setup_routing(WebServer& server) {
 }
 
 void setup() {
+  delay(50);
   // put your setup code here, to run once:
   Serial.begin(115200);
   Serial.println("Hello, ESP32!");
@@ -213,26 +220,35 @@ void setup() {
 
   Serial.println("List playlist:");
   Serial.println(player.get_playlist(SD));
+  update_counter(SD);
+  is_in_pairing_mode = should_reset(SD);
+  if(!is_in_pairing_mode) {
+    delay(5000);
+  }
+  clear_counter(SD);
+  
+  if(!is_in_pairing_mode) {
+    std::array<String, 2> logins = get_wifi_login(SD);
 
-  std::array<String, 2> logins = get_wifi_login(SD);
+    Serial.println("Wifi logins:");
+    Serial.println(logins[0]);
+    Serial.println(logins[1]);
 
-  Serial.println("Wifi logins:");
-  Serial.println(logins[0]);
-  Serial.println(logins[1]);
+    if( logins[0] != "" && logins[1] != "" ) {
+      // Wifi login found, connect to wifi
+      SAVED_SSID = logins[0];
+      SAVED_PWD = logins[1];
+      SAVED_SSID.trim();
+      SAVED_PWD.trim();
 
-  if( logins[0] != "" && logins[1] != "" ) {
-    // Wifi login found, connect to wifi
-    SAVED_SSID = logins[0];
-    SAVED_PWD = logins[1];
-
-    connect_to_network(logins[0], logins[1], 5)
-  } 
-  if(check_if_connected_to_network(SAVED_SSID)){
-    is_in_pairing_mode = false;
-  }else {
+      connect_to_network(SAVED_SSID, SAVED_PWD, 5);
+    } else {
+      is_in_pairing_mode = true;
+    }
+  }
+  if(is_in_pairing_mode){
     // No wifi login found, go in pairing mode. Creating hotspot
     create_hotspot();
-    Serial.println("No wifi login found");
     Serial.println("Going in pairing mode");
   }
 
@@ -249,19 +265,6 @@ void setup() {
 }
 
 void loop() {
-  // Every 10sec, check if we are connected to wifi
-  EVERY_N_SECONDS(10) {
-    Serial.println("Checking wifi connection");
-    if(check_if_network_is_available(SAVED_SSID)) {
-      connect_to_network(SAVED_SSID, SAVED_PWD, 5);
-    }
-    if(check_if_connected_to_network(SAVED_SSID)){
-      is_in_pairing_mode = false;
-    }else{
-      is_in_pairing_mode = true;
-      create_hotspot();
-    }
-  }
 
   if(has_error) {
     delay(5000);

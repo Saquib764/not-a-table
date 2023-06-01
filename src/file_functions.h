@@ -6,6 +6,6 @@
 #include "SPI.h"
 
 File read_file(fs::FS &fs, String path);
-File open_file(fs::FS &fs, String path, bool write = false);
+File open_file(fs::FS &fs, String path, const char* mode = FILE_READ);
 
 #endif

@@ -24,4 +24,8 @@ bool check_if_mode_is_pairing();
 std::array<String, 2> get_wifi_login(fs::FS &fs);
 void save_wifi_login(fs::FS &fs, String ssid, String pwd);
 
+void update_counter(fs::FS &fs);
+bool should_reset(fs::FS &fs);
+void clear_counter(fs::FS &fs);
+
 #endif

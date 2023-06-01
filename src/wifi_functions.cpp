@@ -12,7 +12,7 @@ std::array<String, 2> get_wifi_login(fs::FS &fs) {
 }
 
 void save_wifi_login(fs::FS &fs, String ssid, String pwd) {
-  File file = open_file(fs, "/wifi_login.txt", true);
+  File file = open_file(fs, "/wifi_login.txt", FILE_WRITE);
   file.println(ssid);
   file.println(pwd);
   file.close();
@@ -37,13 +37,11 @@ bool check_if_connected_to_network(String ssid) {
   return false;
 }
 bool disconnect_from_network() {
-  return WiFi.disconnect();
+  return WiFi.disconnect() || WiFi.softAPdisconnect();
 }
 
 bool connect_to_network(String ssid, String pwd, int n_try) {
   WiFi.mode(WIFI_STA);
-  ssid.trim();
-  pwd.trim();
   const char* ssid_c = ssid.c_str();
   const char* pwd_c = pwd.c_str();
   if(check_if_connected_to_network(ssid)) {
@@ -60,7 +58,7 @@ bool connect_to_network(String ssid, String pwd, int n_try) {
       Serial.println(WiFi.localIP());
       return true;
     }
-    delay(100);
+    delay(1000);
     Serial.print(".");
   }
   Serial.println("Failed to connect to WiFi.");
@@ -71,8 +69,6 @@ bool create_hotspot() {
   String ssid = SSID;
   String pwd = PWD;
   WiFi.mode(WIFI_AP);
-  ssid.trim();
-  pwd.trim();
   const char* ssid_c = ssid.c_str();
   const char* pwd_c = pwd.c_str();
   WiFi.softAP(ssid_c, pwd_c);
@@ -83,4 +79,26 @@ bool create_hotspot() {
 }
 bool check_if_mode_is_pairing() {
   return check_if_connected_to_network(SSID);
+}
+
+
+void update_counter(fs::FS &fs) {
+  File file = open_file(fs, "/restart_counter.txt", FILE_APPEND);
+  file.print("1");
+  file.close();
+}
+bool should_reset(fs::FS &fs) {
+  File file = read_file(fs, "/restart_counter.txt");
+  String starts = file.readStringUntil('\n');
+  file.close();
+  starts.trim();
+  Serial.print("starts: ");
+  Serial.println(starts);
+  return starts == "111";
+}
+
+void clear_counter(fs::FS &fs) {
+  File file = open_file(fs, "/restart_counter.txt", FILE_WRITE);
+  file.print("");
+  file.close();
 }

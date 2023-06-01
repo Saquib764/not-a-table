@@ -1,7 +1,12 @@
 #include "file_functions.h"
 
-File open_file(fs::FS &fs, String path, bool write) {
-  File file = fs.open( path , write ? FILE_WRITE : FILE_READ);
+File open_file(fs::FS &fs, String path, const char* mode) {
+  File file;
+  if(mode == FILE_APPEND && !fs.exists( path )) {
+    file = fs.open( path , FILE_WRITE);
+  }else{
+    file = fs.open( path , mode);
+  }
   if(!file) {
     Serial.print("Failed to open file: ");
     Serial.println(path);
