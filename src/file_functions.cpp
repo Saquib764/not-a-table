@@ -74,7 +74,7 @@ void list_dir(fs::FS &fs, const char * dirname, uint8_t levels) {
       Serial.print("  DIR : ");
       Serial.println(file.name());
       if(levels){
-        listDir(fs, file.name(), levels -1);
+        list_dir(fs, file.name(), levels -1);
       }
     } else {
       Serial.print("  FILE: ");
