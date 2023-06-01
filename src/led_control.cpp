@@ -30,12 +30,14 @@ void set_led_status(int status_code) {
       leds[i] = CRGB::Red;
     }
   } else if(status_code == 2) {
-    for(int i = 0; i < NUM_LEDS; i++) {
-      if(leds[i] = CRGB::Yellow) {
-        leds[i] = CRGB::Black;
-        continue;
+    EVERY_N_MILLISECONDS(200) {
+      for(int i = 0; i < NUM_LEDS; i++) {
+        if(leds[i] = CRGB::Yellow) {
+          leds[i] = CRGB::Black;
+          continue;
+        }
+        leds[i] = CRGB::Yellow;
       }
-      leds[i] = CRGB::Yellow;
     }
   }
 }
