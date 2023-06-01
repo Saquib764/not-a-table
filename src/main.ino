@@ -160,7 +160,7 @@ void setup() {
   Serial.println("Hello, ESP32!");
 
   setup_sd_card(SD);
-  listDir(SD, "/", 0);
+  list_dir(SD, "/", 0);
 
   Serial.println("List playlist:");
   Serial.println(player.get_playlist(SD));
