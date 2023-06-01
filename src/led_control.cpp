@@ -40,6 +40,7 @@ void set_led_status(int status_code) {
       }
     }
   }
+  FastLED.show();
 }
 
 void move_led() {
