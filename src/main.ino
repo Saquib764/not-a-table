@@ -62,6 +62,7 @@ bool should_clear = false;
 bool should_perform_homing = false;
 bool should_play_next = false;
 bool has_error = false;
+int status_code = 0;
 
 
 void handle_status_check() {
@@ -73,6 +74,8 @@ void handle_status_check() {
   jsonDocument["type"] = "Running";
   jsonDocument["value"] = 200;
   jsonDocument["unit"] = true;
+  jsonDocument["has_error"] = has_error;
+  jsonDocument["status_code"] = status_code;
   serializeJson(jsonDocument, buffer);
   
   server.send(200, "application/json", buffer);
@@ -159,17 +162,29 @@ void setup() {
   Serial.begin(115200);
   Serial.println("Hello, ESP32!");
 
-  setup_sd_card(SD);
+  for(int i = 0; i < 30; i++) {
+    if(setup_sd_card(SD)) {
+      Serial.println("SD card initialized.");
+      has_error = false;
+      break;
+    }
+    Serial.println("SD card failed, or not present");
+    has_error = true;
+    status_code = 1;
+    delay(100);
+  }
+  
   list_dir(SD, "/", 0);
 
-  Serial.println("List playlist:");
-  Serial.println(player.get_playlist(SD));
   update_counter(SD);
   is_in_pairing_mode = should_reset(SD);
   if(!is_in_pairing_mode) {
     delay(5000);
   }
   clear_counter(SD);
+
+  Serial.println("List playlist:");
+  Serial.println(player.get_playlist(SD));
   
   if(!is_in_pairing_mode) {
     std::array<String, 2> logins = get_wifi_login(SD);
@@ -193,6 +208,7 @@ void setup() {
   if(is_in_pairing_mode){
     // No wifi login found, go in pairing mode. Creating hotspot
     create_hotspot();
+    status_code = 2;
     Serial.println("Going in pairing mode");
   }
 
@@ -204,22 +220,23 @@ void setup() {
     is_printing_design = true;
   }
   setup_led();
+  set_led_status(status_code);
   server.begin();
   Serial.println("Server started. Listening on port 80");
 }
 
 void loop() {
-
+  server.handleClient();
   if(has_error) {
     delay(5000);
     return;
   }
-  move_led();
-  server.handleClient();
   if(is_in_pairing_mode) {
+    set_led_status(status_code);
     delay(5);
     return;
   }
+  move_led();
   if(should_clear) {
     // Clear the table
     should_clear = false;
@@ -255,5 +272,4 @@ void loop() {
     Q1 = q1;
     Q2 = q2;
   }
-  delay(500);
 }

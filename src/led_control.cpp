@@ -16,8 +16,31 @@ void test_led() {
   FastLED.show();
 }
 
+void set_led_status(int status_code) {
+  /* 0: No error, GREEN
+   * 1: SD card error, RED
+   * 2: Wifi in pairing mode, YELLOW, BLINK
+  */
+  if(status_code == 0) {
+    for(int i = 0; i < NUM_LEDS; i++) {
+      leds[i] = CRGB::Green;
+    }
+  } else if(status_code == 1) {
+    for(int i = 0; i < NUM_LEDS; i++) {
+      leds[i] = CRGB::Red;
+    }
+  } else if(status_code == 2) {
+    for(int i = 0; i < NUM_LEDS; i++) {
+      if(leds[i] = CRGB::Yellow) {
+        leds[i] = CRGB::Black;
+        continue;
+      }
+      leds[i] = CRGB::Yellow;
+    }
+  }
+}
+
 void move_led() {
-  
   for (int i = 0; i < NUM_LEDS; i++) {
     if(i < pos - 15 || i>pos + 15) {
       leds[i] = CRGB::Black;

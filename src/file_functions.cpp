@@ -27,16 +27,16 @@ File read_file(fs::FS &fs, String path) {
   return open_file(fs, path);
 }
 
-void setup_sd_card(fs::SDFS &SD) {
-    if(!SD.begin(5)){
+bool setup_sd_card(fs::SDFS &SD) {
+  if(!SD.begin(5)){
     Serial.println("Card Mount Failed");
-    return;
+    return false;
   }
   uint8_t cardType = SD.cardType();
 
   if(cardType == CARD_NONE){
     Serial.println("No SD card attached");
-    return;
+    return false;
   }
 
   Serial.print("SD Card Type: ");
@@ -52,6 +52,7 @@ void setup_sd_card(fs::SDFS &SD) {
 
   uint64_t cardSize = SD.cardSize() / (1024 * 1024);
   Serial.printf("SD Card Size: %lluMB\n", cardSize);
+  return true;
 }
 
 
