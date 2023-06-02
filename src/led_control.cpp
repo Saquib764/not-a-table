@@ -37,7 +37,7 @@ void set_led_status(int status_code) {
   } else if(status_code == 2) {
     EVERY_N_MILLISECONDS(200) {
       for(int i = 0; i < NUM_LEDS; i++) {
-        if(leds[i] == CRGB::Yellow) {
+        if(leds[i] == (CRGB)CRGB::Yellow) {
           leds[i] = CRGB::Black;
           continue;
         }
