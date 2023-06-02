@@ -157,15 +157,18 @@ void setup_routing(WebServer& server) {
 }
 
 void setup() {
+  setup_led();
+  init_led();
   delay(50);
   // put your setup code here, to run once:
   Serial.begin(115200);
   Serial.println("Hello, ESP32!");
 
-  for(int i = 0; i < 30; i++) {
+  for(int i = 0; i < 20; i++) {
     if(setup_sd_card(SD)) {
       Serial.println("SD card initialized.");
       has_error = false;
+      status_code = 0;
       break;
     }
     Serial.println("SD card failed, or not present");
@@ -174,7 +177,12 @@ void setup() {
     delay(100);
   }
   
-  list_dir(SD, "/", 0);
+  set_led_status(status_code);
+  if(has_error) {
+    return;
+  }
+  
+  // list_dir(SD, "/", 0);
 
   update_counter(SD);
   is_in_pairing_mode = should_reset(SD);
@@ -219,24 +227,23 @@ void setup() {
   if(has_resumed) {
     is_printing_design = true;
   }
-  setup_led();
   set_led_status(status_code);
   server.begin();
   Serial.println("Server started. Listening on port 80");
 }
 
 void loop() {
-  server.handleClient();
   if(has_error) {
-    delay(5000);
+    delay(10);
     return;
   }
+  server.handleClient();
   if(is_in_pairing_mode) {
     set_led_status(status_code);
     delay(5);
     return;
   }
-  move_led();
+  // move_led();
   if(should_clear) {
     // Clear the table
     should_clear = false;
@@ -273,7 +280,7 @@ void loop() {
       Q1 = q1;
       Q2 = q2;
     }
-    Serial.print("Time for servo run: ");
-    Serial.println(millis() - current_time);
+    // Serial.print("Time for servo run: ");
+    // Serial.println(millis() - current_time);
   }
 }

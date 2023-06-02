@@ -15,7 +15,12 @@ void test_led() {
   leds[2] = CRGB::Blue;
   FastLED.show();
 }
-
+void init_led() {
+  for(int i = 0; i < NUM_LEDS; i++) {
+    leds[i] = CRGB::White;
+  }
+  FastLED.show();
+}
 void set_led_status(int status_code) {
   /* 0: No error, GREEN
    * 1: SD card error, RED
@@ -32,7 +37,7 @@ void set_led_status(int status_code) {
   } else if(status_code == 2) {
     EVERY_N_MILLISECONDS(200) {
       for(int i = 0; i < NUM_LEDS; i++) {
-        if(leds[i] = CRGB::Yellow) {
+        if(leds[i] == CRGB::Yellow) {
           leds[i] = CRGB::Black;
           continue;
         }
