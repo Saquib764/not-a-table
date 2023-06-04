@@ -76,6 +76,9 @@ void handle_status_check() {
   jsonDocument["unit"] = true;
   jsonDocument["has_error"] = has_error;
   jsonDocument["status_code"] = status_code;
+  jsonDocument["SSID"] = WiFi.SSID();
+  jsonDocument["mac"] = WiFi.macAddress();
+  jsonDocument["ip"] = WiFi.localIP().toString();
   serializeJson(jsonDocument, buffer);
   
   server.send(200, "application/json", buffer);

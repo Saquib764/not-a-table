@@ -9,6 +9,7 @@
 #include "FS.h"
 #include "SD.h"
 #include "SPI.h"
+#include <HTTPClient.h>
 #include "file_functions.h"
 using namespace std;
 

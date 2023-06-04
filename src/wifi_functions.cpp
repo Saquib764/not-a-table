@@ -3,6 +3,15 @@
 
 String SSID = "NOT_A_TABLE";
 String PWD = "i_am_a_table";
+String REGISTRY_URL = "http://192.168.1.104:3003/api/1/register";
+
+// Define array of 15 possible static IP addresses
+int static_ip[15][4] = {
+  {192, 168, 1, 106},
+  {192, 168, 1, 117},
+  {192, 168, 4, 138},
+  {192, 168, 190, 127},
+};
 
 std::array<String, 2> get_wifi_login(fs::FS &fs) {
   File file = read_file( fs, "/wifi_login.txt");
@@ -50,16 +59,35 @@ bool connect_to_network(String ssid, String pwd, int n_try) {
   if(check_if_connected_to_network()) {
     disconnect_from_network();
   }
-  WiFi.begin(ssid_c, pwd_c);
-  for(int i = 0; i < n_try; i++) {
-    if(WiFi.status() == WL_CONNECTED) {
-      Serial.print("WiFi connected: ");
-      Serial.println(ssid_c);
-      Serial.println(WiFi.localIP());
-      return true;
+
+  // connect to network with Static IP
+  for(int j = 0; j < 5; j++) {
+    if(j < 4) {
+      // Static IP
+      WiFi.config(static_ip[j][0], static_ip[j][1], static_ip[j][2], static_ip[j][3]);
+    }else{
+      // Dynamic IP
+      WiFi.config(0U, 0U, 0U, 0U);
     }
-    delay(1000);
-    Serial.print(".");
+    WiFi.begin(ssid_c, pwd_c);
+    for(int i = 0; i < n_try; i++) {
+      if(WiFi.status() == WL_CONNECTED) {
+        Serial.print("WiFi connected: ");
+        Serial.println(ssid_c);
+        Serial.println(WiFi.localIP());
+        // Send IP and mac address to resistry server via a post request
+        HTTPClient http;
+        http.begin(REGISTRY_URL);
+        http.addHeader("Content-Type", "application/json");
+        String body = "{\"ip\":\"" + WiFi.localIP().toString() + "\",\"mac\":\"" + WiFi.macAddress() + "\"}";
+        int httpCode = http.POST(body);
+        String payload = http.getString();
+        Serial.println(httpCode);
+        return true;
+      }
+      delay(1000);
+      Serial.print(".");
+    }
   }
   Serial.println("Failed to connect to WiFi.");
   return false;
