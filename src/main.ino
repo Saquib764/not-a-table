@@ -70,7 +70,7 @@ void handle_status_check() {
   
   jsonDocument.clear();  
   jsonDocument["model_name"] = "Yume Pro V0.01";
-  jsonDocument["device_id"] = "unique_id_for_each_table";
+  jsonDocument["id"] = "unique_id_for_each_table";
   jsonDocument["type"] = "Running";
   jsonDocument["value"] = 200;
   jsonDocument["unit"] = true;
