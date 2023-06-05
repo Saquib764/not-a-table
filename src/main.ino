@@ -36,12 +36,12 @@ String SAVED_PWD = "";
 
 int motor1DirPin = 27;
 int motor1StepPin = 26;
-int motor1HomingPin = 4;
+int motor1HomingPin = 22;
 
 
 int motor2DirPin = 13;
 int motor2StepPin = 14;
-int motor2HomingPin = 2;
+int motor2HomingPin = 21;
 
 StaticJsonDocument<250> jsonDocument;
 char buffer[250];
