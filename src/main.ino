@@ -16,6 +16,7 @@ using namespace std;
 #include "motor_control_functions.h"
 #include "led_control.h"
 #include "wifi_functions.h"
+#include "homing_functions.h"
 
 
 #define SERIAL_PORT Serial1 // TMC2208/TMC2224 HardwareSerial port
@@ -35,17 +36,18 @@ String SAVED_PWD = "";
 
 int motor1DirPin = 27;
 int motor1StepPin = 26;
+int motor1HomingPin = 4;
 
 
 int motor2DirPin = 13;
 int motor2StepPin = 14;
-
+int motor2HomingPin = 2;
 
 StaticJsonDocument<250> jsonDocument;
 char buffer[250];
 
-SStepper motor1(motor1DirPin, motor1StepPin);
-SStepper motor2(motor2DirPin, motor2StepPin);
+SStepper motor1(motor1DirPin, motor1StepPin, motor1HomingPin);
+SStepper motor2(motor2DirPin, motor2StepPin, motor2HomingPin);
 
 // Scara scara(motor1, motor2)
 
@@ -59,7 +61,7 @@ float ARM2 = 0.25;
 bool is_printing_design = false;
 bool is_in_pairing_mode = true;
 bool should_clear = false;
-bool should_perform_homing = false;
+bool should_perform_homing = true;
 bool should_play_next = false;
 bool has_error = false;
 int status_code = 0;
@@ -254,6 +256,9 @@ void loop() {
   }
   if(should_perform_homing) {
     // Perform homing
+    perform_homing(motor1);
+    Q1 = 0.0;
+    // perform_homing(motor2);
     should_perform_homing = false;
     return;
   }

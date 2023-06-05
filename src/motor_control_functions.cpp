@@ -26,9 +26,20 @@ void setup_driver(TMC2209Stepper &driver, int EN_PIN, int MS1, int MS2) {
   Serial.println("Done setting up driver");
 }
 
+void move_stepper(SStepper &motor, double theta) {
+  double steps = abs(theta * 200 / (2*PI) * 64);
+  Serial.print(theta);
+  Serial.print(", ");
+  Serial.println(steps);
+
+  for(int i=0; i < steps; i++) {
+    motor.one_step(theta<0?HIGH:LOW);
+  }
+}
+
 void move_arm(SStepper &motor1, SStepper &motor2, double theta1, double theta2) {
-  double steps1 = 3 * abs(theta1 * 200 / (2*PI) * 64);
-  double steps2 = 3 * 3 * abs(theta2 * 200 / (2*PI) * 64);
+  double steps1 = abs(theta1 * 200 / (2*PI) * 64);
+  double steps2 = 3 * abs(theta2 * 200 / (2*PI) * 64);
 
   Serial.print(theta1);
   Serial.print(", ");
