@@ -114,8 +114,14 @@ void handle_pairing() {
   Serial.println(ssid);
   Serial.println(pwd);
   save_wifi_login(SD, ssid, pwd);
+  
+  jsonDocument.clear();  
+  jsonDocument["success"] = true;
+
+  serializeJson(jsonDocument, buffer);
+
   Serial.println("Pairing done. Connecting.");
-  server.send(200, "application/json", "Pairing done. Restarting");
+  server.send(200, "application/json", buffer);
   delay(2000);
   connect_to_network(SAVED_SSID, SAVED_PWD, 5);
 }
@@ -135,7 +141,12 @@ void handle_play() {
   should_clear = true;
   should_perform_homing = true;
 
-  server.send(200, "application/json", "Start done");
+  jsonDocument.clear();  
+  jsonDocument["success"] = true;
+
+  serializeJson(jsonDocument, buffer);
+
+  server.send(200, "application/json", buffer);
 }
 void handle_add_to_playlist() {
   Serial.println("Add to playlist");
@@ -147,8 +158,13 @@ void handle_add_to_playlist() {
   String filename = jsonDocument["filename"];
 
   player.add_to_playlist(SD, "/" + filename + ".thr");
+  
+  jsonDocument.clear();  
+  jsonDocument["success"] = true;
 
-  server.send(200, "application/json", "Add to playlist done");
+  serializeJson(jsonDocument, buffer);
+
+  server.send(200, "application/json", buffer);
 }
 
 void setup_routing(WebServer& server) {
@@ -156,9 +172,12 @@ void setup_routing(WebServer& server) {
   server.on("/", HTTP_GET, handle_status_check);  
   server.on("/mode", HTTP_GET, handle_get_mode);
   server.on("/pair", HTTP_POST, handle_pairing);
+  server.on("/pair", HTTP_OPTIONS, handle_status_check);
 
   server.on("/play", HTTP_POST, handle_play);
+  server.on("/play", HTTP_OPTIONS, handle_status_check);
   server.on("/add_to_playlist", HTTP_POST, handle_add_to_playlist);
+  server.on("/add_to_playlist", HTTP_OPTIONS, handle_status_check);
 }
 
 void setup() {

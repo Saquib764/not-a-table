@@ -67,7 +67,7 @@ bool connect_to_network(String ssid, String pwd, int n_try) {
       Serial.print("WiFi connected: ");
       Serial.println(ssid_c);
       Serial.println(WiFi.localIP());
-      return true;
+      break;
     }
     delay(1000);
     Serial.print(".");
