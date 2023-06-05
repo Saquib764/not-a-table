@@ -59,15 +59,41 @@ bool connect_to_network(String ssid, String pwd, int n_try) {
   if(check_if_connected_to_network()) {
     disconnect_from_network();
   }
+  // Connect to network in Dynamic IP mode to get network parameter
+
+  WiFi.begin(ssid_c, pwd_c);
+  for(int i = 0; i < n_try; i++) {
+    if(WiFi.status() == WL_CONNECTED) {
+      Serial.print("WiFi connected: ");
+      Serial.println(ssid_c);
+      Serial.println(WiFi.localIP());
+      return true;
+    }
+    delay(1000);
+    Serial.print(".");
+  }
+  // Get network parameters IP, gateway, subnet, DNS
+  IPAddress ip = WiFi.localIP();
+  IPAddress gateway = WiFi.gatewayIP();
+  IPAddress subnet = WiFi.subnetMask();
+  IPAddress dns = WiFi.dnsIP();
+  // Disconnect from network
+  WiFi.disconnect();
+
 
   // connect to network with Static IP
   for(int j = 0; j < 5; j++) {
     if(j < 4) {
       // Static IP
-      WiFi.config(static_ip[j][0], static_ip[j][1], static_ip[j][2], static_ip[j][3]);
+      IPAddress _ip(static_ip[j][0], static_ip[j][1], static_ip[j][2], static_ip[j][3]);
+      if(!WiFi.config(_ip, gateway, subnet, dns)) {
+        continue;
+      }
     }else{
       // Dynamic IP
-      WiFi.config(0U, 0U, 0U, 0U);
+      if(!WiFi.config(0U, 0U, 0U)) {
+        continue;
+      }
     }
     WiFi.begin(ssid_c, pwd_c);
     for(int i = 0; i < n_try; i++) {

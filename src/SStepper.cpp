@@ -20,7 +20,7 @@ void SStepper::one_step(int direction, int wait) {
   // direction: 1 for forward, 0 for backward
   digitalWrite(this->DIR_PIN, direction);
   digitalWrite(this->STEP_PIN, HIGH);
-  delayMicroseconds(100);
+  delayMicroseconds(wait);
   digitalWrite(this->STEP_PIN, LOW);
-  delayMicroseconds(100);
+  delayMicroseconds(wait);
 }
