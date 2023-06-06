@@ -67,6 +67,7 @@ bool should_perform_homing = true;
 bool should_play_next = false;
 bool has_error = false;
 int status_code = 0;
+bool is_uploading = false;
 
 
 void handle_status_check() {
@@ -98,6 +99,30 @@ void handle_get_mode() {
   }
   serializeJson(jsonDocument, buffer);
   
+  server.send(200, "application/json", buffer);
+}
+
+void handle_file_upload() {
+  Serial.println("File upload");
+  is_uploading = true;
+  String filename = server.arg("filename");
+  filename.trim();
+  Serial.println(filename);
+  File file = SD.open("/" + filename, FILE_WRITE);
+  if(!file) {
+    Serial.println("Failed to open file for writing");
+    return;
+  }
+  if(server.hasArg("plain")) {
+    file.print(server.arg("plain"));
+  } else {
+    Serial.println("No file to upload");
+  }
+  file.close();
+  is_uploading = false;
+  jsonDocument.clear();  
+  jsonDocument["success"] = true;
+  serializeJson(jsonDocument, buffer);
   server.send(200, "application/json", buffer);
 }
 
@@ -175,6 +200,8 @@ void setup_routing(WebServer& server) {
   server.on("/mode", HTTP_GET, handle_get_mode);
   server.on("/pair", HTTP_POST, handle_pairing);
   server.on("/pair", HTTP_OPTIONS, handle_status_check);
+  server.on("/design/upload", HTTP_POST, handle_file_upload);
+  server.on("/design/upload", HTTP_OPTIONS, handle_status_check);
 
   server.on("/play", HTTP_POST, handle_play);
   server.on("/play", HTTP_OPTIONS, handle_status_check);
