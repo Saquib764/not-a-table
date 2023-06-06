@@ -51,8 +51,10 @@ SStepper motor2(motor2DirPin, motor2StepPin, motor2HomingPin);
 
 // Scara scara(motor1, motor2)
 
-float Q1 = 0.0;
-float Q2 = 0.0;
+double Q1 = 0.0;
+double Q2 = 0.0;
+double target_q1 = 0.0;
+double target_q2 = 0.0;
 
 
 float ARM1 = 0.25;
@@ -291,23 +293,23 @@ void loop() {
     should_play_next = false;
     return;
   }
-  EVERY_N_MILLISECONDS(200) {
-    long current_time = millis();
-    if(is_printing_design) {
+  long current_time = millis();
+  if(is_printing_design) {
+    double delta[2] = {0.0, 0.0};
+    move_arm(delta, motor1, motor2, target_q1 - Q1, target_q2 - Q2);
+    Q1 = Q1 + delta[0];
+    Q2 = Q2 + delta[1];
+    if(abs(delta[0]) < 0.01 && abs(delta[1]) < 0.01) {
       double* points = player.next_line(SD);
       if(points[0] == 0.0) {
         is_printing_design = false;
         should_play_next = true;
         return;
       }
-      double q1 = points[1];
-      double q2 = points[2];
-      
-      move_arm(motor1, motor2, q1 - Q1, q2 - Q2);
-      Q1 = q1;
-      Q2 = q2;
+      target_q1 = points[1];
+      target_q2 = points[2];
     }
-    // Serial.print("Time for servo run: ");
-    // Serial.println(millis() - current_time);
   }
+  // Serial.print("Time for servo run: ");
+  // Serial.println(millis() - current_time);
 }

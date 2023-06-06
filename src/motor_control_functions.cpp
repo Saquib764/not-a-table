@@ -37,9 +37,12 @@ void move_stepper(SStepper &motor, double theta) {
   }
 }
 
-void move_arm(SStepper &motor1, SStepper &motor2, double theta1, double theta2) {
+void move_arm(double delta[2], SStepper &motor1, SStepper &motor2, double theta1, double theta2) {
   double steps1 = abs(theta1 * 200 / (2*PI) * 64);
   double steps2 = 3 * abs(theta2 * 200 / (2*PI) * 64);
+
+  steps1 = max(min(steps1, 10.0), -10.0);
+  steps2 = max(min(steps2, 10.0), -10.0);
 
   Serial.print(theta1);
   Serial.print(", ");
@@ -57,5 +60,7 @@ void move_arm(SStepper &motor1, SStepper &motor2, double theta1, double theta2) 
       motor2.one_step(theta2<0?HIGH:LOW, 500);
     }
   }
+  delta[0] = steps1 * (2*PI) * 64 / 200.0;
+  delta[1] = steps2 * (2*PI) * 64 / 200.0;
 }
 
