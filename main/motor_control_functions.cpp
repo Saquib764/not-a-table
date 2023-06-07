@@ -44,16 +44,16 @@ void move_arm(double * delta, SStepper &motor1, SStepper &motor2, double theta1,
   steps1 = min(steps1, 12.0);
   steps2 = min(steps2, 12.0);
 
-  Serial.print(theta1);
-  Serial.print(", ");
-  Serial.println(theta2);
+  // Serial.print(theta1);
+  // Serial.print(", ");
+  // Serial.println(theta2);
 
 
   for(int i=0; i < max(steps1, steps2); i++) {
     if(i < steps1) {
-      motor1.one_step(theta1<0?HIGH:LOW, 500);
+      motor1.one_step(theta1<0?HIGH:LOW, 600);
       if(i%3 == 0) {
-        motor2.one_step(theta1<0?HIGH:LOW, 500);
+        motor2.one_step(theta1<0?HIGH:LOW, 600);
       }
     }
     if(i < steps2) {

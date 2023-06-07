@@ -107,12 +107,10 @@ bool Player::read(fs::FS &fs) {
 }
 
 double * Player::next_line(fs::FS &fs) {
-  Serial.print("Read: ");
   double* thetas = new double[3];
   while(this->file.available()){
     this->line_number++;
     String line = file.readStringUntil('\n');
-    Serial.println(line);
     if(line == "" || line[0] == '#') {
       continue;
     }

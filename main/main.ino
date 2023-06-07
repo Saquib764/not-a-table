@@ -331,10 +331,10 @@ void loop() {
     move_arm(delta, motor1, motor2, target_q1 - Q1, target_q2 - Q2);
     Q1 = Q1 + delta[0];
     Q2 = Q2 + delta[1];
-    Serial.print("delta: ");
-    Serial.print(delta[0]);
-    Serial.print(", ");
-    Serial.println(delta[1]);
+    // Serial.print("delta: ");
+    // Serial.print(delta[0]);
+    // Serial.print(", ");
+    // Serial.println(delta[1]);
     if(abs(target_q1 - Q1) < 0.01 && abs(target_q2 - Q2) < 0.01) {
       double* points = player.next_line(SD);
       if(points[0] == 0.0) {
