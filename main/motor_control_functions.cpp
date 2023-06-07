@@ -52,8 +52,8 @@ void move_arm(double * delta, SStepper &motor1, SStepper &motor2, double theta1,
   for(int i=0; i < max(steps1, steps2); i++) {
     if(i < steps1) {
       motor1.one_step(theta1<0?HIGH:LOW, 600);
-      if(i%3 == 0) {
-        motor2.one_step(theta1<0?HIGH:LOW, 600);
+      if(i%3 != 0) {
+        motor2.one_step(theta1>0?HIGH:LOW, 600);
       }
     }
     if(i < steps2) {
