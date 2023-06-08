@@ -1,17 +1,8 @@
 #include "file_functions.h"
 
-#define SD_CS      5
-// #define SD_SCK     18 //14 PWN_EN pin
-// #define SD_MOSI    23
-// #define SD_MISO    19
-
 bool setup_sd_card(fs::SDFS &SD) {
-  // delay(20000);
-  // SPIClass SDSPI(VSPI);
-  // SDSPI.begin(SD_SCK, SD_MISO, SD_MOSI, SD_CS);
-  
   for(int i = 0; i < 20; i++) {
-    if(SD.begin(SD_CS)){
+    if(SD.begin(5)){
       break;
     }
     Serial.println("Card Mount Failed");
