@@ -1,17 +1,23 @@
 #include "file_functions.h"
 
 #define SD_CS      5
-#define SD_SCK     18 //14 PWN_EN pin
-#define SD_MOSI    23
-#define SD_MISO    19
+// #define SD_SCK     18 //14 PWN_EN pin
+// #define SD_MOSI    23
+// #define SD_MISO    19
 
 bool setup_sd_card(fs::SDFS &SD) {
-  SPIClass SDSPI(HSPI);
-  SDSPI.begin(SD_SCK, SD_MISO, SD_MOSI, SD_CS);
-  if(!SD.begin(SD_CS, SDSPI, 16000000)){
+  // delay(20000);
+  // SPIClass SDSPI(VSPI);
+  // SDSPI.begin(SD_SCK, SD_MISO, SD_MOSI, SD_CS);
+  
+  for(int i = 0; i < 20; i++) {
+    if(SD.begin(SD_CS)){
+      break;
+    }
     Serial.println("Card Mount Failed");
-    return false;
+    delay(300);
   }
+  delay(1000);
   uint8_t cardType = SD.cardType();
 
   if(cardType == CARD_NONE){
@@ -32,7 +38,7 @@ bool setup_sd_card(fs::SDFS &SD) {
 
   uint64_t cardSize = SD.cardSize() / (1024 * 1024);
   Serial.printf("SD Card Size: %lluMB\n", cardSize);
-  Serial.println("SPI frequency at " + String(SDSPI.getFrequency()));
+  // Serial.println("SPI frequency at " + String(SDSPI.getFrequency()));
   return true;
 }
 

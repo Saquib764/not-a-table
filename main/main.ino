@@ -216,13 +216,11 @@ void setup() {
   Serial.begin(115200);
   Serial.println("Hello, ESP32!");
 
-  for(int i = 0; i < 20; i++) {
-    if(setup_sd_card(SD)) {
-      Serial.println("SD card initialized.");
-      has_error = false;
-      status_code = 0;
-      break;
-    }
+  if(setup_sd_card(SD)) {
+    Serial.println("SD card initialized.");
+    has_error = false;
+    status_code = 0;
+  }else{
     Serial.println("SD card failed, or not present");
     has_error = true;
     status_code = 1;
