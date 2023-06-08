@@ -13,7 +13,7 @@ class SStepper {
     // constructors:
     SStepper(int DIR_PIN, int STEP_PIN, int HOMING_PIN);
 
-    void one_step(int direction=1, int wait=20);
+    void one_step(int direction, int wait=20);
     bool one_step();
     void set_speed(int speed);
     void set_target(long int target);

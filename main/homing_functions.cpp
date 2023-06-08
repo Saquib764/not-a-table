@@ -5,7 +5,7 @@ void perform_homing(SStepper &motor) {
   // This function performs the homing routine for a single motor.
   // if alreay near home position, move back
   if(digitalRead(motor.HOMING_PIN) == HIGH) {
-    for (int i = 0; i < 5000; i++) {
+    for (int i = 0; i < 2000; i++) {
       motor.one_step(0, 600);
     }
   }

@@ -297,6 +297,7 @@ void setup() {
 }
 
 void loop() {
+  long current_time = millis();
   if(has_error) {
     delay(10);
     return;
@@ -335,7 +336,6 @@ void loop() {
   //   should_play_next = false;
   //   return;
   // }
-  long current_time = millis();
   move_led();
   if(is_printing_design) {
     long int delta[2] = {0, 0};
@@ -352,6 +352,6 @@ void loop() {
     }
   }
   // delay(300);
-  // Serial.print("Time for servo run: ");
-  // Serial.println(millis() - current_time);
+  Serial.print("Time for servo run: ");
+  Serial.println(millis() - current_time);
 }

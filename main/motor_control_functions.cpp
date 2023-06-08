@@ -1,6 +1,6 @@
 #include "motor_control_functions.h"
 
-#define MAX_SPEED         50
+#define MAX_SPEED         450
 #define MICROSTEPS        64
 #define STEPS_PER_REV     200
 
@@ -36,16 +36,9 @@ void setup_driver(TMC2209Stepper &driver, int EN_PIN, int MS1, int MS2) {
 }
 
 
-
-
 void move_arm(long int * delta, SStepper &motor1, SStepper &motor2, double theta1, double theta2) {
   long int target1 = theta1 * STEPS_PER_REV * MICROSTEPS/ (2.0*PI);
   long int target2 = 3 * (theta2 - 2.0 * theta1/3.0) * STEPS_PER_REV * MICROSTEPS / (2.0*PI);
-
-  Serial1.print("Target1: ");
-  Serial1.print(target1);
-  Serial1.print(" , ");
-  Serial1.println(target2);
 
   motor1.set_target(target1);
   motor2.set_target(target2);
@@ -62,10 +55,8 @@ void move_arm(long int * delta, SStepper &motor1, SStepper &motor2, double theta
     motor2.set_speed(MAX_SPEED * (delta[1] > 0 ? 1 : -1));
     motor1.set_speed(MAX_SPEED * 1.0 * delta[0] / abs(delta[1]));
   }
-  Serial.print("Speeds: ");
-  Serial.print(motor1.speed);
-  Serial.print(" , ");
-  Serial.println(motor2.speed);
+  motor1.one_step();
+  motor2.one_step();
 
   delta[0] = motor1.distance_to_go();
   delta[1] = motor2.distance_to_go();
