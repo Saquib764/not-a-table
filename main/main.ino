@@ -352,6 +352,6 @@ void loop() {
     }
   }
   // delay(300);
-  Serial.print("Time for servo run: ");
-  Serial.println(millis() - current_time);
+  // Serial.print("Time for servo run: ");
+  // Serial.println(millis() - current_time);
 }
