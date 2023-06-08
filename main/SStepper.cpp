@@ -6,6 +6,9 @@
 #include "Arduino.h"
 #include "SStepper.h"
 
+#define CLOCKWISE 1
+#define COUNTERCLOCKWISE 0
+
 
 SStepper::SStepper(int DIR_PIN, int STEP_PIN, int HOMING_PIN) {
   this->DIR_PIN = DIR_PIN;
@@ -17,15 +20,77 @@ SStepper::SStepper(int DIR_PIN, int STEP_PIN, int HOMING_PIN) {
   pinMode(HOMING_PIN, INPUT_PULLUP);
 
   digitalWrite(this->DIR_PIN, this->direction);
+  this->reset();
+}
+void SStepper::set_speed(int speed) {
+  if(speed == this->speed) {
+    return;
+  }
+  this->speed = speed;
+  if(this->speed == 0) {
+    this->step_interval = 0;
+    return;
+  }
+  this->step_interval = fabs(1000000.0 / this->speed);
+  set_direction(speed > 0?CLOCKWISE:COUNTERCLOCKWISE);
+}
+void SStepper::set_target(long int target) {
+  this->target = target;
+}
+void SStepper::set_position(long int position) {
+  this->position = position;
+}
+void SStepper::set_step_delay(int step_delay) {
+  this->step_delay = step_delay;
+}
+void SStepper::set_direction(int direction) {
+  if(direction != this->direction) {
+    this->direction = direction;
+    digitalWrite(this->DIR_PIN, direction);
+  }
+}
+long int SStepper::distance_to_go() {
+  return this->target - this->position;
+}
+void SStepper::reset() {
+  this->position = 0;
+  this->target = 0;
+  this->speed = 0;
+  this->last_step_time = 0;
+  this->step_delay = 60;
 }
 
 void SStepper::one_step(int direction, int wait) {
   // direction: 1 for forward, 0 for backward
   if(direction != this->direction) {
+    this->direction = direction;
     digitalWrite(this->DIR_PIN, direction);
   }
   digitalWrite(this->STEP_PIN, HIGH);
   delayMicroseconds(wait);
   digitalWrite(this->STEP_PIN, LOW);
   delayMicroseconds(wait);
+}
+bool SStepper::one_step() {
+  unsigned long time = micros();
+  if(!this->step_interval) {
+    return false;
+  }
+  if( time - this->last_step_time < this->step_interval ) {
+    return false;
+  }
+  if(this->position == this->target) {
+    return false;
+  }
+  if(this->direction == CLOCKWISE) {
+    this->position++;
+  } else {
+    this->position--;
+  }
+  this->last_step_time = time;
+  digitalWrite(this->STEP_PIN, HIGH);
+  delayMicroseconds(this->step_delay);
+  digitalWrite(this->STEP_PIN, LOW);
+  delayMicroseconds(this->step_delay);
+  return true;
 }

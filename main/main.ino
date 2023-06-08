@@ -1,4 +1,6 @@
 
+#include <Arduino.h>
+#include "led_control.h"
 #include "math.h"
 #include <TMCStepper.h>
 #include <WebServer.h>
@@ -14,7 +16,6 @@ using namespace std;
 #include "Player.h"
 #include "SStepper.h"
 #include "motor_control_functions.h"
-#include "led_control.h"
 #include "wifi_functions.h"
 #include "homing_functions.h"
 
@@ -315,7 +316,8 @@ void loop() {
     // Perform homing
     Serial.println("Homing start");
     perform_homing(motor1);
-    reset_odometer();
+    motor1.reset();
+    motor2.reset();
     target_q1 = 0.0;
     target_q2 = 0.0;
     // perform_homing(motor2);
