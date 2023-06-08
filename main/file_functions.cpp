@@ -1,34 +1,14 @@
 #include "file_functions.h"
 
-File open_file(fs::FS &fs, String path, const char* mode) {
-  File file;
-  if(mode == FILE_APPEND && !fs.exists( path )) {
-    file = fs.open( path , FILE_WRITE);
-  }else{
-    file = fs.open( path , mode);
-  }
-  if(!file) {
-    Serial.print("Failed to open file: ");
-    Serial.println(path);
-  }
-  return file;
-}
-
-
-File read_file(fs::FS &fs, String path) {
-  /*  Check if a file exists, return empty string if not. Else return file 
-   */
-  File file;
-  bool is_file = fs.exists( path );
-  if(!is_file) {
-    Serial.println("File does not exist");
-    return file;
-  }
-  return open_file(fs, path);
-}
+#define SD_CS      5
+#define SD_SCK     18 //14 PWN_EN pin
+#define SD_MOSI    23
+#define SD_MISO    19
 
 bool setup_sd_card(fs::SDFS &SD) {
-  if(!SD.begin(5)){
+  SPIClass SDSPI(HSPI);
+  SDSPI.begin(SD_SCK, SD_MISO, SD_MOSI, SD_CS);
+  if(!SD.begin(SD_CS, SDSPI, 16000000)){
     Serial.println("Card Mount Failed");
     return false;
   }
@@ -55,6 +35,33 @@ bool setup_sd_card(fs::SDFS &SD) {
   return true;
 }
 
+
+File open_file(fs::FS &fs, String path, const char* mode) {
+  File file;
+  if(mode == FILE_APPEND && !fs.exists( path )) {
+    file = fs.open( path , FILE_WRITE);
+  }else{
+    file = fs.open( path , mode);
+  }
+  if(!file) {
+    Serial.print("Failed to open file: ");
+    Serial.println(path);
+  }
+  return file;
+}
+
+
+File read_file(fs::FS &fs, String path) {
+  /*  Check if a file exists, return empty string if not. Else return file 
+   */
+  File file;
+  bool is_file = fs.exists( path );
+  if(!is_file) {
+    Serial.println("File does not exist");
+    return file;
+  }
+  return open_file(fs, path);
+}
 
 void list_dir(fs::FS &fs, const char * dirname, uint8_t levels) {
   Serial.printf("Listing directory: %s\n", dirname);

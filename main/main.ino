@@ -18,6 +18,7 @@ using namespace std;
 #include "wifi_functions.h"
 #include "homing_functions.h"
 
+const int dummy = 0;
 
 #define SERIAL_PORT Serial1 // TMC2208/TMC2224 HardwareSerial port
 #define DRIVER_ADDRESS 0b00 // TMC2209 Driver address according to MS1 and MS2
