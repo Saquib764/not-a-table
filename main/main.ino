@@ -51,8 +51,6 @@ SStepper motor2(motor2DirPin, motor2StepPin, motor2HomingPin);
 
 // Scara scara(motor1, motor2)
 
-double Q1 = 0.0;
-double Q2 = 0.0;
 double target_q1 = 0.0;
 double target_q2 = 0.0;
 
@@ -305,8 +303,7 @@ void loop() {
     // Perform homing
     Serial.println("Homing start");
     perform_homing(motor1);
-    Q1 = 0.0;
-    Q2 = 0.0;
+    reset_odometer();
     target_q1 = 0.0;
     target_q2 = 0.0;
     // perform_homing(motor2);
@@ -327,15 +324,9 @@ void loop() {
   long current_time = millis();
   move_led();
   if(is_printing_design) {
-    double delta[2] = {0.0, 0.0};
-    move_arm(delta, motor1, motor2, target_q1 - Q1, target_q2 - Q2);
-    Q1 = Q1 + delta[0];
-    Q2 = Q2 + delta[1];
-    // Serial.print("delta: ");
-    // Serial.print(delta[0]);
-    // Serial.print(", ");
-    // Serial.println(delta[1]);
-    if(abs(target_q1 - Q1) < 0.01 && abs(target_q2 - Q2) < 0.01) {
+    long int delta[2] = {0, 0};
+    move_arm(delta, motor1, motor2, target_q1, target_q2);
+    if(abs(delta[0]) < 12 && abs(delta[1]) < 12) {
       double* points = player.next_line(SD);
       if(points[0] == 0.0) {
         is_printing_design = false;
