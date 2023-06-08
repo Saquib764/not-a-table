@@ -51,8 +51,17 @@ void move_arm(long int * delta, SStepper &motor1, SStepper &motor2, double theta
   int dsteps1 = steps1 - odometer[0];
   int dsteps2 = steps2 - odometer[1];
 
-  int _dsteps1 = min(abs(dsteps1), 12);
-  int _dsteps2 = min(abs(dsteps2), 12);
+  int max_steps = max(abs(dsteps1), abs(dsteps2));
+  int max_steps1 = 12;
+  int max_steps2 = 12;
+  if(max_steps > 12) {
+    float n = max_steps * 1.0 / 12.0;
+    max_steps1 = (int)abs(dsteps1) / n;
+    max_steps2 = (int)abs(dsteps2) / n;
+  }
+
+  int _dsteps1 = min(abs(dsteps1), max_steps1);
+  int _dsteps2 = min(abs(dsteps2), max_steps2);
 
   // Serial.print(theta1);
   // Serial.print(", ");
