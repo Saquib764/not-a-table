@@ -48,11 +48,11 @@ void move_arm(long int * delta, SStepper &motor1, SStepper &motor2, double theta
   long int steps1 = theta1 * 200.0 * 64.0/ (2.0*PI);
   long int steps2 = 3 * (theta2 - 2.0 * theta1/3.0) * 200.0 * 64.0 / (2.0*PI);
 
-  long int dsteps1 = steps1 - odometer[0];
-  long int dsteps2 = steps2 - odometer[1];
+  int dsteps1 = steps1 - odometer[0];
+  int dsteps2 = steps2 - odometer[1];
 
-  long int _dsteps1 = min(abs(dsteps1), 12.0);
-  long int _dsteps2 = min(abs(dsteps2), 12.0);
+  int _dsteps1 = min(abs(dsteps1), 12);
+  int _dsteps2 = min(abs(dsteps2), 12);
 
   // Serial.print(theta1);
   // Serial.print(", ");
