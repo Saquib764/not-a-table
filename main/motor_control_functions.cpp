@@ -1,5 +1,8 @@
 #include "motor_control_functions.h"
 
+#define MAX_STEPS         20
+#define MIN_STEPS         3
+#define STEPPER_WAIT      400
 long int odometer[2] = {0, 0};
 
 void setup_driver(TMC2209Stepper &driver, int EN_PIN, int MS1, int MS2) {
@@ -28,17 +31,6 @@ void setup_driver(TMC2209Stepper &driver, int EN_PIN, int MS1, int MS2) {
   Serial.println("Done setting up driver");
 }
 
-void move_stepper(SStepper &motor, double theta) {
-  double steps = abs(theta * 200 / (2*PI) * 64);
-  Serial.print(theta);
-  Serial.print(", ");
-  Serial.println(steps);
-
-  for(int i=0; i < steps; i++) {
-    motor.one_step(theta<0?HIGH:LOW);
-  }
-}
-
 void reset_odometer() {
   odometer[0] = 0;
   odometer[1] = 0;
@@ -52,10 +44,10 @@ void move_arm(long int * delta, SStepper &motor1, SStepper &motor2, double theta
   int dsteps2 = steps2 - odometer[1];
 
   int max_steps = max(abs(dsteps1), abs(dsteps2));
-  int max_steps1 = 12;
-  int max_steps2 = 12;
-  if(max_steps > 12) {
-    float n = max_steps * 1.0 / 12.0;
+  int max_steps1 = MAX_STEPS;
+  int max_steps2 = MAX_STEPS;
+  if(max_steps > MAX_STEPS) {
+    float n = max_steps * 1.0 / MAX_STEPS;
     max_steps1 = (int)abs(dsteps1) / n;
     max_steps2 = (int)abs(dsteps2) / n;
   }
@@ -63,17 +55,12 @@ void move_arm(long int * delta, SStepper &motor1, SStepper &motor2, double theta
   int _dsteps1 = min(abs(dsteps1), max_steps1);
   int _dsteps2 = min(abs(dsteps2), max_steps2);
 
-  // Serial.print(theta1);
-  // Serial.print(", ");
-  // Serial.println(theta2);
-
-
   for(int i=0; i < max(_dsteps1, _dsteps2); i++) {
-    if(i < _dsteps1) {
-      motor1.one_step(dsteps1<0?HIGH:LOW, 600);
+    if(i < _dsteps1 && _dsteps1 > MIN_STEPS) {
+      motor1.one_step(dsteps1<0?HIGH:LOW, STEPPER_WAIT);
     }
-    if(i < _dsteps2) {
-      motor2.one_step(dsteps2<0?HIGH:LOW, 500);
+    if(i < _dsteps2 && _dsteps2 > MIN_STEPS) {
+      motor2.one_step(dsteps2<0?HIGH:LOW, STEPPER_WAIT);
     }
   }
   odometer[0] += _dsteps1 * (dsteps1>0?1:-1);

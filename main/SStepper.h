@@ -15,6 +15,7 @@ class SStepper {
 
     void one_step(int direction=1, int wait=20);
 
+    int direction;
     int DIR_PIN;
     int STEP_PIN;
     int HOMING_PIN;

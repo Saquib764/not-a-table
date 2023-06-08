@@ -152,6 +152,18 @@ void handle_pairing() {
   connect_to_network(SAVED_SSID, SAVED_PWD, 5);
 }
 
+void handle_home() {
+  Serial.println("Home");
+  should_perform_homing = true;
+
+  jsonDocument.clear();  
+  jsonDocument["success"] = true;
+
+  serializeJson(jsonDocument, buffer);
+
+  server.send(200, "application/json", buffer);
+}
+
 void handle_play() {
   Serial.println("Play");
   String body = server.arg("plain");
@@ -197,6 +209,7 @@ void setup_routing(WebServer& server) {
   server.enableCORS();
   server.on("/", HTTP_GET, handle_status_check);  
   server.on("/mode", HTTP_GET, handle_get_mode);
+  server.on("/home", HTTP_GET, handle_home);
   server.on("/pair", HTTP_POST, handle_pairing);
   server.on("/pair", HTTP_OPTIONS, handle_status_check);
   server.on("/design/upload", HTTP_POST, handle_file_upload);
