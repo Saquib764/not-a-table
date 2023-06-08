@@ -20,7 +20,7 @@ void setup_driver(TMC2209Stepper &driver, int EN_PIN, int MS1, int MS2) {
   digitalWrite(MS2, HIGH);
                                   // Enable one according to your setup
 //SPI.begin();                    // SPI drivers
-  SERIAL_PORT.begin(115200);      // HW UART drivers
+  // SERIAL_PORT.begin(115200);      // HW UART drivers
 // driver.beginSerial(115200);     // SW UART drivers
 
   driver.begin();                 //  SPI: Init CS pins and possible SW SPI pins
