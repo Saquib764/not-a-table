@@ -51,8 +51,6 @@ SStepper motor2(motor2DirPin, motor2StepPin, motor2HomingPin);
 
 // Scara scara(motor1, motor2)
 
-double Q1 = 0.0;
-double Q2 = 0.0;
 double target_q1 = 0.0;
 double target_q2 = 0.0;
 
@@ -166,7 +164,7 @@ void handle_play() {
   player.read(SD, "/" + filename);
   is_printing_design = true;
   should_clear = true;
-  should_perform_homing = true;
+  // should_perform_homing = true;
 
   jsonDocument.clear();  
   jsonDocument["success"] = true;
@@ -278,7 +276,7 @@ void setup() {
   setup_routing(server);
   bool has_resumed = player.read(SD);
   if(has_resumed) {
-    is_printing_design = true;
+    is_printing_design = false;
   }
   set_led_status(status_code);
   server.begin();
@@ -296,7 +294,6 @@ void loop() {
     delay(5);
     return;
   }
-  // move_led();
   if(should_clear) {
     // Clear the table
     should_clear = false;
@@ -304,29 +301,32 @@ void loop() {
   }
   if(should_perform_homing) {
     // Perform homing
+    Serial.println("Homing start");
     perform_homing(motor1);
-    Q1 = 0.0;
+    reset_odometer();
+    target_q1 = 0.0;
+    target_q2 = 0.0;
     // perform_homing(motor2);
     should_perform_homing = false;
+    Serial.println("Homing DONE!");
     return;
   }
-  if(should_play_next) {
-    // Play next design
-    String next_design = player.get_next_design(SD);
-    player.read(SD, "/" + next_design);
-    is_printing_design = true;
-    should_clear = true;
-    should_perform_homing = true;
-    should_play_next = false;
-    return;
-  }
+  // if(should_play_next) {
+  //   // Play next design
+  //   String next_design = player.get_next_design(SD);
+  //   player.read(SD, "/" + next_design);
+  //   is_printing_design = true;
+  //   should_clear = true;
+  //   should_perform_homing = true;
+  //   should_play_next = false;
+  //   return;
+  // }
   long current_time = millis();
+  move_led();
   if(is_printing_design) {
-    double delta[2] = {0.0, 0.0};
-    move_arm(delta, motor1, motor2, target_q1 - Q1, target_q2 - Q2);
-    Q1 = Q1 + delta[0];
-    Q2 = Q2 + delta[1];
-    if(abs(delta[0]) < 0.01 && abs(delta[1]) < 0.01) {
+    long int delta[2] = {0, 0};
+    move_arm(delta, motor1, motor2, target_q1, target_q2);
+    if(abs(delta[0]) < 12 && abs(delta[1]) < 12) {
       double* points = player.next_line(SD);
       if(points[0] == 0.0) {
         is_printing_design = false;
@@ -337,6 +337,7 @@ void loop() {
       target_q2 = points[2];
     }
   }
+  // delay(300);
   // Serial.print("Time for servo run: ");
   // Serial.println(millis() - current_time);
 }

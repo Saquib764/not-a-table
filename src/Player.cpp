@@ -133,6 +133,7 @@ double * Player::next_line(fs::FS &fs) {
     this->tracker.println(this->line_number);
     return thetas;
   }
+  Serial.println("End of design file.");
   thetas[0] = 0.0;
   this->tracker.close();
   this->file.close();
