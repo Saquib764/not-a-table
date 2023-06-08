@@ -32,6 +32,7 @@ bool setup_sd_card(fs::SDFS &SD) {
 
   uint64_t cardSize = SD.cardSize() / (1024 * 1024);
   Serial.printf("SD Card Size: %lluMB\n", cardSize);
+  Serial.println("SPI frequency at " + String(SDSPI.getFrequency()));
   return true;
 }
 
