@@ -76,7 +76,8 @@ bool SStepper::one_step() {
   if(!this->step_interval) {
     return false;
   }
-  if( time - this->last_step_time < this->step_interval ) {
+  long dt = time - this->last_step_time;
+  if( dt < this->step_interval ) {
     return false;
   }
   if(this->position == this->target) {
@@ -87,6 +88,8 @@ bool SStepper::one_step() {
   } else {
     this->position--;
   }
+  
+  Serial.print(1000000.0 / dt);
   this->last_step_time = time;
   digitalWrite(this->STEP_PIN, HIGH);
   delayMicroseconds(this->step_delay);

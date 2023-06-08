@@ -55,8 +55,12 @@ void move_arm(long int * delta, SStepper &motor1, SStepper &motor2, double theta
     motor2.set_speed(MAX_SPEED * (delta[1] > 0 ? 1 : -1));
     motor1.set_speed(MAX_SPEED * 1.0 * delta[0] / abs(delta[1]));
   }
+  Serial.print('Speed: ')
+  Serial.print("1: ");
   motor1.one_step();
+  Serial.print("2: ");
   motor2.one_step();
+  Serial.println(".");
 
   delta[0] = motor1.distance_to_go();
   delta[1] = motor2.distance_to_go();
