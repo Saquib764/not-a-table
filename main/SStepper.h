@@ -7,6 +7,7 @@
 // ensure this library description is only included once
 #ifndef SStepper_h
 #define SStepper_h
+#include "AccelStepper.h"
 
 class SStepper {
   public:
@@ -22,6 +23,8 @@ class SStepper {
     void set_direction(int direction);
     long int distance_to_go();
     void reset();
+
+    AccelStepper stepper;
 
     int direction;
     int DIR_PIN;
