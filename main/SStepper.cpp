@@ -70,10 +70,10 @@ void SStepper::one_step(int direction, int wait) {
     this->direction = direction;
     digitalWrite(this->DIR_PIN, direction);
   }
-  digitalWrite(this->STEP_PIN, HIGH);
-  delayMicroseconds(wait);
-  digitalWrite(this->STEP_PIN, LOW);
-  delayMicroseconds(wait);
+  // digitalWrite(this->STEP_PIN, HIGH);
+  // delayMicroseconds(wait);
+  // digitalWrite(this->STEP_PIN, LOW);
+  // delayMicroseconds(wait);
 }
 bool SStepper::one_step() {
   unsigned long time = micros();
@@ -93,7 +93,7 @@ bool SStepper::one_step() {
     this->position--;
   }
   
-  Serial.print(1000000.0 / dt);
+  // Serial.print(1000000.0 / dt);
   this->last_step_time = time;
   digitalWrite(this->STEP_PIN, HIGH);
   delayMicroseconds(this->step_delay);

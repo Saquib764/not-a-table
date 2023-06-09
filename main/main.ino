@@ -61,7 +61,7 @@ float ARM1 = 0.25;
 float ARM2 = 0.25;
 
 bool is_printing_design = false;
-bool is_in_pairing_mode = true;
+bool is_in_pairing_mode = false;
 bool should_clear = false;
 bool should_perform_homing = true;
 bool should_play_next = false;
@@ -284,6 +284,8 @@ void setup() {
     Serial.println("Going in pairing mode");
   }
 
+  sleep(10);
+
   setup_driver(driver, 32, 33, 25);
 
   setup_routing(server);
@@ -356,6 +358,7 @@ void loop() {
       target_q1 = points[current_index][0];
       target_q2 = points[current_index][1];
       current_index++;
+      current_index = current_index % 3;
     }
   // }
   // delay(300);

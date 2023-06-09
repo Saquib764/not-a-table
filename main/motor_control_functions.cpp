@@ -1,12 +1,12 @@
 #include "motor_control_functions.h"
 
 #define MAX_SPEED         450
-#define MICROSTEPS        32
+#define MICROSTEPS        1
 #define STEPS_PER_REV     200
 #define MAX_TARGET_DISTANCE 15
 
 
-// Total steps per revolution = 200 * 32 = 6400
+// Total steps per revolution = 200 * 16 = 3200
 
 #define SERIAL_PORT Serial1 // TMC2208/TMC2224 HardwareSerial port
 
@@ -27,8 +27,8 @@ void setup_driver(TMC2209Stepper &driver, int EN_PIN, int MS1, int MS2) {
   driver.begin();                 //  SPI: Init CS pins and possible SW SPI pins
                                   // UART: Init SW UART (if selected) with default 115200 baudrate
   driver.toff(5);                 // Enables driver in software
-  driver.rms_current(1600);        // Set motor RMS current
-  driver.microsteps(MICROSTEPS);          // Set microsteps to 1/16th
+  driver.rms_current(600);        // Set motor RMS current
+  // driver.microsteps(MICROSTEPS);          // Set microsteps to 1/16th
 
 //driver.en_pwm_mode(true);       // Toggle stealthChop on TMC2130/2160/5130/5160
 //driver.en_spreadCycle(false);   // Toggle spreadCycle on TMC2208/2209/2224
@@ -40,14 +40,26 @@ void setup_driver(TMC2209Stepper &driver, int EN_PIN, int MS1, int MS2) {
 long current_targets[2] = {0, 0};
 long initial_positions[2] = {0, 0};
 void move_arm(long int * delta, SStepper &motor1, SStepper &motor2, double theta1, double theta2) {
-  long int target1 = theta1 * STEPS_PER_REV * MICROSTEPS/ (2.0*PI);
-  long int target2 = 3 * (theta2 - 2.0 * theta1/3.0) * STEPS_PER_REV * MICROSTEPS / (2.0*PI);
+  long int target1 = 3 * theta1 * STEPS_PER_REV * MICROSTEPS/ (2.0*PI);
+  long int target2 = 3 * 3 * (theta2 - 2.0 * theta1/3.0) * STEPS_PER_REV * MICROSTEPS / (2.0*PI);
 
   if(target1 != current_targets[0]) {
+    Serial.print("Target 1: ");
+    Serial.print(target1);
+    Serial.print(" , ");
+    Serial.print(theta1);
+    Serial.print(". Current pos: ");
+    Serial.println(motor1.position * 360.0 /(STEPS_PER_REV * MICROSTEPS * 3));
     initial_positions[0] = current_targets[0];
     current_targets[0] = target1;
   }
   if(target2 != current_targets[1]) {
+    Serial.print("Target 2: ");
+    Serial.print(target2);
+    Serial.print(" , ");
+    Serial.print(theta2);
+    Serial.print(". Current pos: ");
+    Serial.println(motor2.position * 360.0 /(STEPS_PER_REV * MICROSTEPS * 3 * 3) - 2 * motor1.position * 360.0 /(STEPS_PER_REV * MICROSTEPS * 3 * 2));
     initial_positions[1] = current_targets[1];
     current_targets[1] = target2;
   }
@@ -79,12 +91,12 @@ void move_arm(long int * delta, SStepper &motor1, SStepper &motor2, double theta
     motor2.set_speed(2 * MAX_SPEED * (delta[1] > 0 ? 1 : -1));
     motor1.set_speed(2 * MAX_SPEED * 1.0 * delta[0] / abs(delta[1]));
   }
-  Serial.print('Speed: ');
-  Serial.print("1: ");
+  // Serial.print("Speed: ");
+  // Serial.print("1: ");
   motor1.one_step();
-  Serial.print("2: ");
+  // Serial.print("2: ");
   motor2.one_step();
-  Serial.println(".");
+  // Serial.println(".");
 
   delta[0] = abs(current_targets[0] - motor1.position);
   delta[1] = abs(current_targets[1] - motor2.position);
