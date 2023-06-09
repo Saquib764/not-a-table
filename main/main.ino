@@ -267,10 +267,10 @@ void setup() {
 
     // if( logins[0] != "" && logins[1] != "" ) {
       // Wifi login found, connect to wifi
-      SAVED_SSID = logins[0];
-      SAVED_PWD = logins[1];
-      SAVED_SSID.trim();
-      SAVED_PWD.trim();
+      // SAVED_SSID = logins[0];
+      // SAVED_PWD = logins[1];
+      // SAVED_SSID.trim();
+      // SAVED_PWD.trim();
 
       connect_to_network(SAVED_SSID, SAVED_PWD, 5);
     // } else {
@@ -296,7 +296,7 @@ void setup() {
   Serial.println("Server started. Listening on port 80");
 }
 
-double points[2][2] = {
+double points[3][2] = {
   {0.0, 0.0},
   {6.28, 0.0},
   {0.0, 0.0}
