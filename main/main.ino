@@ -340,7 +340,7 @@ void loop() {
   if(is_printing_design) {
     long int delta[2] = {0, 0};
     move_arm(delta, motor1, motor2, target_q1, target_q2);
-    if(abs(delta[0]) < 12 && abs(delta[1]) < 12) {
+    if(abs(delta[0]) < 2 && abs(delta[1]) < 2) {
       double* points = player.next_line(SD);
       if(points[0] == 0.0) {
         is_printing_design = false;

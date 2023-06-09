@@ -35,6 +35,9 @@ void SStepper::set_speed(int speed) {
   set_direction(speed > 0?CLOCKWISE:COUNTERCLOCKWISE);
 }
 void SStepper::set_target(long int target) {
+  if(target == this->target) {
+    return;
+  }
   this->target = target;
 }
 void SStepper::set_position(long int position) {
@@ -52,6 +55,7 @@ void SStepper::set_direction(int direction) {
 long int SStepper::distance_to_go() {
   return this->target - this->position;
 }
+
 void SStepper::reset() {
   this->position = 0;
   this->target = 0;
