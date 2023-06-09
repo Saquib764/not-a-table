@@ -1,9 +1,9 @@
 #include "motor_control_functions.h"
 
-#define MAX_SPEED         450
-#define MICROSTEPS        1
+#define MAX_SPEED         900
+#define MICROSTEPS        8
 #define STEPS_PER_REV     200
-#define MAX_TARGET_DISTANCE 15
+#define MAX_TARGET_DISTANCE 10
 
 
 // Total steps per revolution = 200 * 16 = 3200
@@ -18,7 +18,7 @@ void setup_driver(TMC2209Stepper &driver, int EN_PIN, int MS1, int MS2) {
 
   digitalWrite(EN_PIN, LOW);      // Enable driver in hardware
   digitalWrite(MS1, LOW);
-  digitalWrite(MS2, HIGH);
+  digitalWrite(MS2, LOW);
                                   // Enable one according to your setup
 //SPI.begin();                    // SPI drivers
   // SERIAL_PORT.begin(115200);      // HW UART drivers

@@ -321,7 +321,7 @@ void loop() {
     should_clear = false;
     return;
   }
-  if(should_perform_homing) {
+  if(should_perform_homing && false) {
     // Perform homing
     Serial.println("Homing start");
     perform_homing(motor1);
