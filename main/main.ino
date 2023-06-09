@@ -33,8 +33,8 @@ Player player;
 
 WebServer server(80);
 
-String SAVED_SSID = "";
-String SAVED_PWD = "";
+String SAVED_SSID = "Zapp";
+String SAVED_PWD = "Haweli@1504";
 
 int motor1DirPin = 27;
 int motor1StepPin = 26;
@@ -230,16 +230,16 @@ void setup() {
   Serial.begin(115200);
   Serial.println("Hello, ESP32!");
 
-  if(setup_sd_card(SD)) {
-    Serial.println("SD card initialized.");
-    has_error = false;
-    status_code = 0;
-  }else{
-    Serial.println("SD card failed, or not present");
-    has_error = true;
-    status_code = 1;
-    delay(100);
-  }
+  // if(setup_sd_card(SD)) {
+  //   Serial.println("SD card initialized.");
+  //   has_error = false;
+  //   status_code = 0;
+  // }else{
+  //   Serial.println("SD card failed, or not present");
+  //   has_error = true;
+  //   status_code = 1;
+  //   delay(100);
+  // }
   
   set_led_status(status_code);
   if(has_error) {
@@ -248,24 +248,24 @@ void setup() {
   
   // list_dir(SD, "/", 0);
 
-  update_counter(SD);
-  is_in_pairing_mode = should_reset(SD);
-  if(!is_in_pairing_mode) {
-    delay(5000);
-  }
-  clear_counter(SD);
+  // update_counter(SD);
+  // is_in_pairing_mode = should_reset(SD);
+  // if(!is_in_pairing_mode) {
+  //   delay(5000);
+  // }
+  // clear_counter(SD);
 
-  Serial.println("List playlist:");
-  Serial.println(player.get_playlist(SD));
+  // Serial.println("List playlist:");
+  // Serial.println(player.get_playlist(SD));
   
   if(!is_in_pairing_mode) {
-    std::array<String, 2> logins = get_wifi_login(SD);
+    // std::array<String, 2> logins = get_wifi_login(SD);
 
-    Serial.println("Wifi logins:");
-    Serial.println(logins[0]);
-    Serial.println(logins[1]);
+    // Serial.println("Wifi logins:");
+    // Serial.println(logins[0]);
+    // Serial.println(logins[1]);
 
-    if( logins[0] != "" && logins[1] != "" ) {
+    // if( logins[0] != "" && logins[1] != "" ) {
       // Wifi login found, connect to wifi
       SAVED_SSID = logins[0];
       SAVED_PWD = logins[1];
@@ -273,9 +273,9 @@ void setup() {
       SAVED_PWD.trim();
 
       connect_to_network(SAVED_SSID, SAVED_PWD, 5);
-    } else {
-      is_in_pairing_mode = true;
-    }
+    // } else {
+    //   is_in_pairing_mode = true;
+    // }
   }
   if(is_in_pairing_mode){
     // No wifi login found, go in pairing mode. Creating hotspot
@@ -287,15 +287,21 @@ void setup() {
   setup_driver(driver, 32, 33, 25);
 
   setup_routing(server);
-  bool has_resumed = player.read(SD);
-  if(has_resumed) {
-    is_printing_design = false;
-  }
+  // bool has_resumed = player.read(SD);
+  // if(has_resumed) {
+  //   is_printing_design = false;
+  // }
   set_led_status(status_code);
   server.begin();
   Serial.println("Server started. Listening on port 80");
 }
 
+double points[2][2] = {
+  {0.0, 0.0},
+  {6.28, 0.0},
+  {0.0, 0.0}
+};
+int current_index = 0;
 void loop() {
   long current_time = millis();
   if(has_error) {
@@ -337,20 +343,21 @@ void loop() {
   //   return;
   // }
   move_led();
-  if(is_printing_design) {
+  // if(is_printing_design) {
     long int delta[2] = {0, 0};
     move_arm(delta, motor1, motor2, target_q1, target_q2);
     if(abs(delta[0]) < 2 && abs(delta[1]) < 2) {
-      double* points = player.next_line(SD);
-      if(points[0] == 0.0) {
-        is_printing_design = false;
-        should_play_next = true;
-        return;
-      }
-      target_q1 = points[1];
-      target_q2 = points[2];
+      // double* points = player.next_line(SD);
+      // if(points[0] == 0.0) {
+      //   is_printing_design = false;
+      //   should_play_next = true;
+      //   return;
+      // }
+      target_q1 = points[current_index][0];
+      target_q2 = points[current_index][1];
+      current_index++;
     }
-  }
+  // }
   // delay(300);
   // Serial.print("Time for servo run: ");
   // Serial.println(millis() - current_time);
