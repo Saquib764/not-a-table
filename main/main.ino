@@ -301,7 +301,7 @@ void setup() {
 double points[3][2] = {
   {0.0, 0.0},
   {6.28, 0.0},
-  {0.0, 0.0}
+  {6280.0, 50.0}
 };
 int current_index = 0;
 void loop() {
