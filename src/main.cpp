@@ -1,6 +1,3 @@
-# 1 "C:\\Users\\srava\\AppData\\Local\\Temp\\tmpq34s09_7"
-#include <Arduino.h>
-# 1 "C:/Users/srava/Desktop/AZ/2023/notAtable/Code/not-a-table/src/main.ino"
 
 #include <Arduino.h>
 #include "led_control.h"
@@ -24,15 +21,15 @@ using namespace std;
 
 const int dummy = 0;
 
-#define SERIAL_PORT Serial1
-#define DRIVER_ADDRESS 0b00
+#define SERIAL_PORT Serial1 // TMC2208/TMC2224 HardwareSerial port
+#define DRIVER_ADDRESS 0b00 // TMC2209 Driver address according to MS1 and MS2
 
 #define R_SENSE 0.11f
 
 
 
 TMC2208Stepper driver(&SERIAL_PORT, R_SENSE);
-
+// TMC2209Stepper driver(&SERIAL_PORT, R_SENSE, DRIVER_ADDRESS);
 
 Player player;
 
@@ -56,7 +53,7 @@ char buffer[250];
 SStepper motor1(motor1DirPin, motor1StepPin, motor1HomingPin);
 SStepper motor2(motor2DirPin, motor2StepPin, motor2HomingPin);
 
-
+// Scara scara(motor1, motor2)
 
 double target_q1 = 0.0;
 double target_q2 = 0.0;
@@ -75,21 +72,12 @@ int status_code = 0;
 bool is_uploading = false;
 bool should_use_internal_sd = true;
 bool is_storage_available = false;
-void handle_status_check();
-void handle_get_mode();
-void handle_file_upload();
-void handle_pairing();
-void handle_home();
-void handle_play();
-void handle_add_to_playlist();
-void setup_routing(WebServer& server);
-void setup();
-void loop();
-#line 77 "C:/Users/srava/Desktop/AZ/2023/notAtable/Code/not-a-table/src/main.ino"
+
+
 void handle_status_check() {
   Serial.println("Get server status");
-
-  jsonDocument.clear();
+  
+  jsonDocument.clear();  
   jsonDocument["model_name"] = "Yume Pro V0.01";
   jsonDocument["id"] = "unique_id_for_each_table";
   jsonDocument["type"] = "Running";
@@ -101,20 +89,20 @@ void handle_status_check() {
   jsonDocument["mac"] = WiFi.macAddress();
   jsonDocument["ip"] = WiFi.localIP().toString();
   serializeJson(jsonDocument, buffer);
-
+  
   server.send(200, "application/json", buffer);
 }
 void handle_get_mode() {
   Serial.println("Get server mode");
-
-  jsonDocument.clear();
+  
+  jsonDocument.clear();  
   if(is_in_pairing_mode) {
     jsonDocument["mode"] = "pairing";
   } else {
     jsonDocument["mode"] = "running";
   }
   serializeJson(jsonDocument, buffer);
-
+  
   server.send(200, "application/json", buffer);
 }
 
@@ -136,7 +124,7 @@ void handle_file_upload() {
   }
   file.close();
   is_uploading = false;
-  jsonDocument.clear();
+  jsonDocument.clear();  
   jsonDocument["success"] = true;
   serializeJson(jsonDocument, buffer);
   server.send(200, "application/json", buffer);
@@ -157,8 +145,8 @@ void handle_pairing() {
   Serial.println(ssid);
   Serial.println(pwd);
   save_wifi_login(SD, ssid, pwd);
-
-  jsonDocument.clear();
+  
+  jsonDocument.clear();  
   jsonDocument["success"] = true;
 
   serializeJson(jsonDocument, buffer);
@@ -173,7 +161,7 @@ void handle_home() {
   Serial.println("Home");
   should_perform_homing = true;
 
-  jsonDocument.clear();
+  jsonDocument.clear();  
   jsonDocument["success"] = true;
 
   serializeJson(jsonDocument, buffer);
@@ -194,9 +182,9 @@ void handle_play() {
   player.read(SPIFFS, "/" + filename);
   is_printing_design = true;
   should_clear = true;
+  // should_perform_homing = true;
 
-
-  jsonDocument.clear();
+  jsonDocument.clear();  
   jsonDocument["success"] = true;
 
   serializeJson(jsonDocument, buffer);
@@ -213,8 +201,8 @@ void handle_add_to_playlist() {
   String filename = jsonDocument["filename"];
 
   player.add_to_playlist(SD, "/" + filename + ".thr");
-
-  jsonDocument.clear();
+  
+  jsonDocument.clear();  
   jsonDocument["success"] = true;
 
   serializeJson(jsonDocument, buffer);
@@ -224,7 +212,7 @@ void handle_add_to_playlist() {
 
 void setup_routing(WebServer& server) {
   server.enableCORS();
-  server.on("/", HTTP_GET, handle_status_check);
+  server.on("/", HTTP_GET, handle_status_check);  
   server.on("/mode", HTTP_GET, handle_get_mode);
   server.on("/home", HTTP_GET, handle_home);
   server.on("/pair", HTTP_POST, handle_pairing);
@@ -241,16 +229,16 @@ void setup_routing(WebServer& server) {
 void setup() {
   setup_led();
   init_led();
-
-
+  // delay(50);
+  // put your setup code here, to run once:
   Serial.begin(115200);
   Serial.println("Hello, ESP32!");
-  if(should_use_internal_sd == true) {
-    if(setup_sd_card(SD)) {
+  if(should_use_internal_sd) {
+    if(setup_internal_card(SPIFFS)) {
       is_storage_available = true;
     }
   } else {
-    if(setup_internal_card(SPIFFS)) {
+    if( setup_sd_card(SD)) {
       is_storage_available = true;
     }
   }
@@ -265,23 +253,45 @@ void setup() {
     status_code = 1;
     delay(100);
   }
-
+  
   set_led_status(status_code);
   if(has_error) {
     return;
   }
-
+  
   list_dir(SPIFFS, "/", 0);
-# 274 "C:/Users/srava/Desktop/AZ/2023/notAtable/Code/not-a-table/src/main.ino"
+
+  // update_counter(SD);
+  // is_in_pairing_mode = should_reset(SD);
+  // if(!is_in_pairing_mode) {
+  //   delay(5000);
+  // }
+  // clear_counter(SD);
+
+  // Serial.println("List playlist:");
+  // Serial.println(player.get_playlist(SD));
+  
   if(!is_in_pairing_mode) {
-# 288 "C:/Users/srava/Desktop/AZ/2023/notAtable/Code/not-a-table/src/main.ino"
+    // std::array<String, 2> logins = get_wifi_login(SD);
+
+    // Serial.println("Wifi logins:");
+    // Serial.println(logins[0]);
+    // Serial.println(logins[1]);
+
+    // if( logins[0] != "" && logins[1] != "" ) {
+      // Wifi login found, connect to wifi
+      // SAVED_SSID = logins[0];
+      // SAVED_PWD = logins[1];
+      // SAVED_SSID.trim();
+      // SAVED_PWD.trim();
+
       connect_to_network(SAVED_SSID, SAVED_PWD, 5);
-
-
-
+    // } else {
+    //   is_in_pairing_mode = true;
+    // }
   }
   if(is_in_pairing_mode){
-
+    // No wifi login found, go in pairing mode. Creating hotspot
     create_hotspot();
     status_code = 2;
     Serial.println("Going in pairing mode");
@@ -292,25 +302,25 @@ void setup() {
   setup_driver(driver, 32, 33, 25);
 
   setup_routing(server);
-
-
-
-
+  // bool has_resumed = player.read(SD);
+  // if(has_resumed) {
+  //   is_printing_design = false;
+  // }
   set_led_status(status_code);
   server.begin();
   Serial.println("Server started. Listening on port 80");
 
-
+  // Remove this
 
   player.read(SPIFFS, "/AngularRadiance.thr.txt");
   is_printing_design = true;
 }
 
-double points[3][2] = {
-  {0.0, 0.0},
-  {6.28, 0.0},
-  {6280.0, 50.0}
-};
+// double points[3][2] = {
+//   {0.0, 0.0},
+//   {6.28, 0.0},
+//   {6280.0, 50.0}
+// };
 int current_index = 0;
 void loop() {
   long current_time = micros();
@@ -325,26 +335,36 @@ void loop() {
     return;
   }
   if(should_clear) {
-
+    // Clear the table
     should_clear = false;
     return;
   }
   if(should_perform_homing && false) {
-
+    // Perform homing
     Serial.println("Homing start");
     perform_homing(motor1);
     motor1.reset();
     motor2.reset();
     target_q1 = 0.0;
     target_q2 = 0.0;
-
+    // perform_homing(motor2);
     should_perform_homing = false;
     Serial.println("Homing DONE!");
     return;
   }
-# 366 "C:/Users/srava/Desktop/AZ/2023/notAtable/Code/not-a-table/src/main.ino"
+  // if(should_play_next) {
+  //   // Play next design
+  //   String next_design = player.get_next_design(SD);
+  //   player.read(SD, "/" + next_design);
+  //   is_printing_design = true;
+  //   should_clear = true;
+  //   should_perform_homing = true;
+  //   should_play_next = false;
+  //   return;
+  // }
+  // EVERY_N_MILLISECONDS(10) {
     move_led();
-
+  // }
   if(is_printing_design) {
     long int delta[2] = {0, 0};
     move_arm(delta, motor1, motor2, target_q1, target_q2);
@@ -357,12 +377,13 @@ void loop() {
       }
       target_q1 = points[0];
       target_q2 = points[1];
-      current_index++;
-      current_index = current_index % 3;
+      Serial.print(target_q1);
+      Serial.print(" ");
+      Serial.println(target_q2);
     }
   }
-
-
-
-
+  // delay(300);
+  // Serial.print("Time for servo run: ");
+  // Serial.print(micros() - current_time);
+  // Serial.print("  ");
 }
