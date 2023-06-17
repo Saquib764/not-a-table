@@ -309,6 +309,11 @@ void setup() {
   set_led_status(status_code);
   server.begin();
   Serial.println("Server started. Listening on port 80");
+
+  // Remove this
+
+  player.read(SPIFFS, "/AngularRadiance.thr.txt");
+  is_printing_design = true;
 }
 
 double points[3][2] = {
