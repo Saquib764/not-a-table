@@ -24,7 +24,8 @@ const int dummy = 0;
 #define SERIAL_PORT Serial1 // TMC2208/TMC2224 HardwareSerial port
 #define DRIVER_ADDRESS 0b00 // TMC2209 Driver address according to MS1 and MS2
 
-#define R_SENSE 0.11f 
+#define R_SENSE 0.11f
+
 
 
 TMC2208Stepper driver(&SERIAL_PORT, R_SENSE);
@@ -69,6 +70,8 @@ bool should_play_next = false;
 bool has_error = false;
 int status_code = 0;
 bool is_uploading = false;
+bool should_use_internal_sd = true;
+bool is_storage_available = false;
 
 
 void handle_status_check() {
@@ -176,7 +179,7 @@ void handle_play() {
   String filename = jsonDocument["filename"];
   filename.trim();
 
-  player.read(SD, "/" + filename);
+  player.read(SPIFFS, "/" + filename);
   is_printing_design = true;
   should_clear = true;
   // should_perform_homing = true;
@@ -230,24 +233,33 @@ void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
   Serial.println("Hello, ESP32!");
+  if(should_use_internal_sd == true) {
+    if(setup_sd_card(SD)) {
+      is_storage_available = true;
+    }
+  } else {
+    if(setup_internal_card(SPIFFS)) {
+      is_storage_available = true;
+    }
+  }
 
-  // if(setup_sd_card(SD)) {
-  //   Serial.println("SD card initialized.");
-  //   has_error = false;
-  //   status_code = 0;
-  // }else{
-  //   Serial.println("SD card failed, or not present");
-  //   has_error = true;
-  //   status_code = 1;
-  //   delay(100);
-  // }
+  if(is_storage_available) {
+    Serial.println("Storage initialized.");
+    has_error = false;
+    status_code = 0;
+  }else{
+    Serial.println("No storage available.");
+    has_error = true;
+    status_code = 1;
+    delay(100);
+  }
   
   set_led_status(status_code);
   if(has_error) {
     return;
   }
   
-  // list_dir(SD, "/", 0);
+  list_dir(SPIFFS, "/", 0);
 
   // update_counter(SD);
   // is_in_pairing_mode = should_reset(SD);
@@ -348,22 +360,22 @@ void loop() {
   // EVERY_N_MILLISECONDS(10) {
     move_led();
   // }
-  // if(is_printing_design) {
+  if(is_printing_design) {
     long int delta[2] = {0, 0};
     move_arm(delta, motor1, motor2, target_q1, target_q2);
     if(abs(delta[0]) < 3 && abs(delta[1]) < 3) {
-      // double* points = player.next_line(SD);
-      // if(points[0] == 0.0) {
-      //   is_printing_design = false;
-      //   should_play_next = true;
-      //   return;
-      // }
-      target_q1 = points[current_index][0];
-      target_q2 = points[current_index][1];
+      double* points = player.next_line(SD);
+      if(points[0] == 0.0) {
+        is_printing_design = false;
+        should_play_next = true;
+        return;
+      }
+      target_q1 = points[0];
+      target_q2 = points[1];
       current_index++;
       current_index = current_index % 3;
     }
-  // }
+  }
   // delay(300);
   // Serial.print("Time for servo run: ");
   // Serial.print(micros() - current_time);

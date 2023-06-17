@@ -1,5 +1,13 @@
 #include "file_functions.h"
 
+bool setup_internal_card(fs::SPIFFSFS &SPIFFS) {
+  if(!SPIFFS.begin(true)){
+    Serial.println("An Error has occurred while mounting SPIFFS");
+    return false;
+  }
+  return true;
+}
+
 bool setup_sd_card(fs::SDFS &SD) {
   for(int i = 0; i < 20; i++) {
     if(SD.begin(5)){
