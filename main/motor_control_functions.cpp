@@ -1,24 +1,24 @@
 #include "motor_control_functions.h"
 
-#define MAX_SPEED         900
+#define MAX_SPEED         100
 #define MICROSTEPS        8
 #define STEPS_PER_REV     200
-#define MAX_TARGET_DISTANCE 10
+#define MAX_TARGET_DISTANCE 5
 
 
 // Total steps per revolution = 200 * 16 = 3200
 
 #define SERIAL_PORT Serial1 // TMC2208/TMC2224 HardwareSerial port
 
-void setup_driver(TMC2209Stepper &driver, int EN_PIN, int MS1, int MS2) {
+void setup_driver(TMC2208Stepper &driver, int EN_PIN, int MS1, int MS2) {
   Serial.println("Setting up driver");
   pinMode(EN_PIN, OUTPUT);
-  pinMode(MS1, OUTPUT);
-  pinMode(MS2, OUTPUT);
+  // pinMode(MS1, OUTPUT);
+  // pinMode(MS2, OUTPUT);
 
   digitalWrite(EN_PIN, LOW);      // Enable driver in hardware
-  digitalWrite(MS1, LOW);
-  digitalWrite(MS2, LOW);
+  // digitalWrite(MS1, LOW);
+  // digitalWrite(MS2, HIGH);
                                   // Enable one according to your setup
 //SPI.begin();                    // SPI drivers
   // SERIAL_PORT.begin(115200);      // HW UART drivers
@@ -28,7 +28,7 @@ void setup_driver(TMC2209Stepper &driver, int EN_PIN, int MS1, int MS2) {
                                   // UART: Init SW UART (if selected) with default 115200 baudrate
   driver.toff(5);                 // Enables driver in software
   driver.rms_current(600);        // Set motor RMS current
-  // driver.microsteps(MICROSTEPS);          // Set microsteps to 1/16th
+  driver.microsteps(MICROSTEPS);          // Set microsteps to 1/16th
 
 //driver.en_pwm_mode(true);       // Toggle stealthChop on TMC2130/2160/5130/5160
 //driver.en_spreadCycle(false);   // Toggle spreadCycle on TMC2208/2209/2224
@@ -66,7 +66,7 @@ void move_arm(long int * delta, SStepper &motor1, SStepper &motor2, double theta
   delta[0] = motor1.distance_to_go();
   delta[1] = motor2.distance_to_go();
 
-  if(delta[0] <= 0 && delta[1] <= 0) {
+  if(delta[0] <= 1 && delta[1] <= 1) {
     long max_distance_to_target = max(
                     abs(current_targets[0] - motor1.position),
                     abs(current_targets[1] - motor2.position) );
@@ -94,9 +94,10 @@ void move_arm(long int * delta, SStepper &motor1, SStepper &motor2, double theta
   // Serial.print("Speed: ");
   // Serial.print("1: ");
   motor1.one_step();
+  // Serial.print(",");
   // Serial.print("2: ");
   motor2.one_step();
-  // Serial.println(".");
+  // Serial.println("");
 
   delta[0] = abs(current_targets[0] - motor1.position);
   delta[1] = abs(current_targets[1] - motor2.position);

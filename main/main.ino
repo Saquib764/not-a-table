@@ -27,7 +27,8 @@ const int dummy = 0;
 #define R_SENSE 0.11f 
 
 
-TMC2209Stepper driver(&SERIAL_PORT, R_SENSE, DRIVER_ADDRESS);
+TMC2208Stepper driver(&SERIAL_PORT, R_SENSE);
+// TMC2209Stepper driver(&SERIAL_PORT, R_SENSE, DRIVER_ADDRESS);
 
 Player player;
 
@@ -225,7 +226,7 @@ void setup_routing(WebServer& server) {
 void setup() {
   setup_led();
   init_led();
-  delay(50);
+  // delay(50);
   // put your setup code here, to run once:
   Serial.begin(115200);
   Serial.println("Hello, ESP32!");
@@ -284,7 +285,7 @@ void setup() {
     Serial.println("Going in pairing mode");
   }
 
-  sleep(10);
+  sleep(1);
 
   setup_driver(driver, 32, 33, 25);
 
@@ -305,7 +306,7 @@ double points[3][2] = {
 };
 int current_index = 0;
 void loop() {
-  long current_time = millis();
+  long current_time = micros();
   if(has_error) {
     delay(10);
     return;
@@ -344,11 +345,13 @@ void loop() {
   //   should_play_next = false;
   //   return;
   // }
-  move_led();
+  // EVERY_N_MILLISECONDS(10) {
+    move_led();
+  // }
   // if(is_printing_design) {
     long int delta[2] = {0, 0};
     move_arm(delta, motor1, motor2, target_q1, target_q2);
-    if(abs(delta[0]) < 2 && abs(delta[1]) < 2) {
+    if(abs(delta[0]) < 3 && abs(delta[1]) < 3) {
       // double* points = player.next_line(SD);
       // if(points[0] == 0.0) {
       //   is_printing_design = false;
@@ -363,5 +366,6 @@ void loop() {
   // }
   // delay(300);
   // Serial.print("Time for servo run: ");
-  // Serial.println(millis() - current_time);
+  // Serial.print(micros() - current_time);
+  // Serial.print("  ");
 }

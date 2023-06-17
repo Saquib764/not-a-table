@@ -73,7 +73,7 @@ void SStepper::reset() {
   this->target = 0;
   this->speed = 0;
   this->last_step_time = 0;
-  this->step_delay = 160;
+  this->step_delay = 60;
 }
 
 void SStepper::one_step(int direction, int wait) {
@@ -114,6 +114,6 @@ bool SStepper::one_step() {
   digitalWrite(this->STEP_PIN, HIGH);
   delayMicroseconds(this->step_delay);
   digitalWrite(this->STEP_PIN, LOW);
-  delayMicroseconds(this->step_delay);
+  delayMicroseconds(10);
   return true;
 }
