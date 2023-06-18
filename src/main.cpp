@@ -375,11 +375,8 @@ void loop() {
         should_play_next = true;
         return;
       }
-      target_q1 = points[0];
-      target_q2 = points[1];
-      Serial.print(target_q1);
-      Serial.print(" ");
-      Serial.println(target_q2);
+      target_q1 = points[1];
+      target_q2 = points[2];
     }
   }
   // delay(300);

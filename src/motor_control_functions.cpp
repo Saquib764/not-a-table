@@ -1,7 +1,7 @@
 #include "motor_control_functions.h"
 
-#define MAX_SPEED         100
-#define MICROSTEPS        8
+#define MAX_SPEED         80
+#define MICROSTEPS        16
 #define STEPS_PER_REV     200
 #define MAX_TARGET_DISTANCE 5
 
