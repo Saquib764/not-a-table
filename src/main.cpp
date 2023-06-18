@@ -72,6 +72,7 @@ int status_code = 0;
 bool is_uploading = false;
 bool should_use_internal_sd = true;
 bool is_storage_available = false;
+bool should_use_homing = true;
 
 
 void handle_status_check() {
@@ -312,7 +313,7 @@ void setup() {
 
   // Remove this
 
-  player.read(SPIFFS, "/AngularRadiance.thr.txt");
+  player.read(SPIFFS, "/spiral.thr.txt");
   is_printing_design = true;
 }
 

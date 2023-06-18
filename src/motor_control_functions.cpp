@@ -1,9 +1,10 @@
 #include "motor_control_functions.h"
 
-#define MAX_SPEED         80
-#define MICROSTEPS        16
-#define STEPS_PER_REV     200
-#define MAX_TARGET_DISTANCE 5
+#define MAX_SPEED                 100  // mm/s
+#define MAX_ANGULAR_SPEED         700  // steps/s
+#define MICROSTEPS                8
+#define STEPS_PER_REV             200
+#define MAX_TARGET_DISTANCE       5
 
 
 // Total steps per revolution = 200 * 16 = 3200
@@ -85,11 +86,11 @@ void move_arm(long int * delta, SStepper &motor1, SStepper &motor2, double theta
 
 
   if(abs(delta[0]) > abs(delta[1])) {
-    motor1.set_speed(MAX_SPEED * (delta[0] > 0 ? 1 : -1));
-    motor2.set_speed( MAX_SPEED * 1.0 * delta[1] / abs(delta[0]));
+    motor1.set_speed(MAX_ANGULAR_SPEED * (delta[0] > 0 ? 1 : -1));
+    motor2.set_speed( MAX_ANGULAR_SPEED * 1.0 * delta[1] / abs(delta[0]));
   } else {
-    motor2.set_speed(2 * MAX_SPEED * (delta[1] > 0 ? 1 : -1));
-    motor1.set_speed(2 * MAX_SPEED * 1.0 * delta[0] / abs(delta[1]));
+    motor2.set_speed(2 * MAX_ANGULAR_SPEED * (delta[1] > 0 ? 1 : -1));
+    motor1.set_speed(2 * MAX_ANGULAR_SPEED * 1.0 * delta[0] / abs(delta[1]));
   }
   // Serial.print("Speed: ");
   // Serial.print("1: ");
