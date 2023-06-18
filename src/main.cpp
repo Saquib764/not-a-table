@@ -24,17 +24,19 @@ const int dummy = 0;
 #define SERIAL_PORT Serial1 // TMC2208/TMC2224 HardwareSerial port
 #define DRIVER_ADDRESS 0b00 // TMC2209 Driver address according to MS1 and MS2
 
-#define R_SENSE 0.11f 
+#define R_SENSE 0.11f
 
 
-TMC2209Stepper driver(&SERIAL_PORT, R_SENSE, DRIVER_ADDRESS);
+
+TMC2208Stepper driver(&SERIAL_PORT, R_SENSE);
+// TMC2209Stepper driver(&SERIAL_PORT, R_SENSE, DRIVER_ADDRESS);
 
 Player player;
 
 WebServer server(80);
 
-String SAVED_SSID = "";
-String SAVED_PWD = "";
+String SAVED_SSID = "Zapp";
+String SAVED_PWD = "Haweli@1504";
 
 int motor1DirPin = 27;
 int motor1StepPin = 26;
@@ -61,13 +63,15 @@ float ARM1 = 0.25;
 float ARM2 = 0.25;
 
 bool is_printing_design = false;
-bool is_in_pairing_mode = true;
+bool is_in_pairing_mode = false;
 bool should_clear = false;
 bool should_perform_homing = true;
 bool should_play_next = false;
 bool has_error = false;
 int status_code = 0;
 bool is_uploading = false;
+bool should_use_internal_sd = true;
+bool is_storage_available = false;
 
 
 void handle_status_check() {
@@ -175,7 +179,7 @@ void handle_play() {
   String filename = jsonDocument["filename"];
   filename.trim();
 
-  player.read(SD, "/" + filename);
+  player.read(SPIFFS, "/" + filename);
   is_printing_design = true;
   should_clear = true;
   // should_perform_homing = true;
@@ -225,17 +229,26 @@ void setup_routing(WebServer& server) {
 void setup() {
   setup_led();
   init_led();
-  delay(50);
+  // delay(50);
   // put your setup code here, to run once:
   Serial.begin(115200);
   Serial.println("Hello, ESP32!");
+  if(should_use_internal_sd) {
+    if(setup_internal_card(SPIFFS)) {
+      is_storage_available = true;
+    }
+  } else {
+    if( setup_sd_card(SD)) {
+      is_storage_available = true;
+    }
+  }
 
-  if(setup_sd_card(SD)) {
-    Serial.println("SD card initialized.");
+  if(is_storage_available) {
+    Serial.println("Storage initialized.");
     has_error = false;
     status_code = 0;
   }else{
-    Serial.println("SD card failed, or not present");
+    Serial.println("No storage available.");
     has_error = true;
     status_code = 1;
     delay(100);
@@ -246,36 +259,36 @@ void setup() {
     return;
   }
   
-  // list_dir(SD, "/", 0);
+  list_dir(SPIFFS, "/", 0);
 
-  update_counter(SD);
-  is_in_pairing_mode = should_reset(SD);
-  if(!is_in_pairing_mode) {
-    delay(5000);
-  }
-  clear_counter(SD);
+  // update_counter(SD);
+  // is_in_pairing_mode = should_reset(SD);
+  // if(!is_in_pairing_mode) {
+  //   delay(5000);
+  // }
+  // clear_counter(SD);
 
-  Serial.println("List playlist:");
-  Serial.println(player.get_playlist(SD));
+  // Serial.println("List playlist:");
+  // Serial.println(player.get_playlist(SD));
   
   if(!is_in_pairing_mode) {
-    std::array<String, 2> logins = get_wifi_login(SD);
+    // std::array<String, 2> logins = get_wifi_login(SD);
 
-    Serial.println("Wifi logins:");
-    Serial.println(logins[0]);
-    Serial.println(logins[1]);
+    // Serial.println("Wifi logins:");
+    // Serial.println(logins[0]);
+    // Serial.println(logins[1]);
 
-    if( logins[0] != "" && logins[1] != "" ) {
+    // if( logins[0] != "" && logins[1] != "" ) {
       // Wifi login found, connect to wifi
-      SAVED_SSID = logins[0];
-      SAVED_PWD = logins[1];
-      SAVED_SSID.trim();
-      SAVED_PWD.trim();
+      // SAVED_SSID = logins[0];
+      // SAVED_PWD = logins[1];
+      // SAVED_SSID.trim();
+      // SAVED_PWD.trim();
 
       connect_to_network(SAVED_SSID, SAVED_PWD, 5);
-    } else {
-      is_in_pairing_mode = true;
-    }
+    // } else {
+    //   is_in_pairing_mode = true;
+    // }
   }
   if(is_in_pairing_mode){
     // No wifi login found, go in pairing mode. Creating hotspot
@@ -284,20 +297,33 @@ void setup() {
     Serial.println("Going in pairing mode");
   }
 
+  sleep(1);
+
   setup_driver(driver, 32, 33, 25);
 
   setup_routing(server);
-  bool has_resumed = player.read(SD);
-  if(has_resumed) {
-    is_printing_design = false;
-  }
+  // bool has_resumed = player.read(SD);
+  // if(has_resumed) {
+  //   is_printing_design = false;
+  // }
   set_led_status(status_code);
   server.begin();
   Serial.println("Server started. Listening on port 80");
+
+  // Remove this
+
+  player.read(SPIFFS, "/AngularRadiance.thr.txt");
+  is_printing_design = true;
 }
 
+// double points[3][2] = {
+//   {0.0, 0.0},
+//   {6.28, 0.0},
+//   {6280.0, 50.0}
+// };
+int current_index = 0;
 void loop() {
-  long current_time = millis();
+  long current_time = micros();
   if(has_error) {
     delay(10);
     return;
@@ -313,7 +339,7 @@ void loop() {
     should_clear = false;
     return;
   }
-  if(should_perform_homing) {
+  if(should_perform_homing && false) {
     // Perform homing
     Serial.println("Homing start");
     perform_homing(motor1);
@@ -336,11 +362,13 @@ void loop() {
   //   should_play_next = false;
   //   return;
   // }
-  move_led();
+  // EVERY_N_MILLISECONDS(10) {
+    move_led();
+  // }
   if(is_printing_design) {
     long int delta[2] = {0, 0};
     move_arm(delta, motor1, motor2, target_q1, target_q2);
-    if(abs(delta[0]) < 2 && abs(delta[1]) < 2) {
+    if(abs(delta[0]) < 3 && abs(delta[1]) < 3) {
       double* points = player.next_line(SD);
       if(points[0] == 0.0) {
         is_printing_design = false;
@@ -353,5 +381,6 @@ void loop() {
   }
   // delay(300);
   // Serial.print("Time for servo run: ");
-  // Serial.println(millis() - current_time);
+  // Serial.print(micros() - current_time);
+  // Serial.print("  ");
 }

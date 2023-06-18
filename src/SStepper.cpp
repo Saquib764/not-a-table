@@ -15,6 +15,10 @@ SStepper::SStepper(int DIR_PIN, int STEP_PIN, int HOMING_PIN) {
   this->STEP_PIN = STEP_PIN;
   this->HOMING_PIN = HOMING_PIN;
   this->direction = 1;
+
+  // this->stepper = AccelStepper(1, STEP_PIN, DIR_PIN);
+  // this->stepper.setPinsInverted(true);
+  // this->stepper.setMaxSpeed(1000);
   pinMode(this->DIR_PIN, OUTPUT);
   pinMode(this->STEP_PIN, OUTPUT);
   pinMode(HOMING_PIN, INPUT_PULLUP);
@@ -27,6 +31,7 @@ void SStepper::set_speed(int speed) {
     return;
   }
   this->speed = speed;
+  // this->stepper.setSpeed(speed);
   if(this->speed == 0) {
     this->step_interval = 0;
     return;
@@ -39,9 +44,16 @@ void SStepper::set_target(long int target) {
     return;
   }
   this->target = target;
+  // this->stepper.moveTo(target);
+  // this->stepper.setSpeed(this->speed);
+  // Serial.print("Ta: ");
+  // Serial.print(target);
+  // Serial.print(" ");
+  // Serial.println(this->speed);
 }
 void SStepper::set_position(long int position) {
   this->position = position;
+  // this->stepper.setCurrentPosition(position);
 }
 void SStepper::set_step_delay(int step_delay) {
   this->step_delay = step_delay;
@@ -76,6 +88,10 @@ void SStepper::one_step(int direction, int wait) {
   delayMicroseconds(wait);
 }
 bool SStepper::one_step() {
+  // bool ret = this->stepper.run();
+  // delayMicroseconds(100);
+  // this->position = this->stepper.currentPosition();
+  // return ret;
   unsigned long time = micros();
   if(!this->step_interval) {
     return false;
@@ -93,11 +109,11 @@ bool SStepper::one_step() {
     this->position--;
   }
   
-  Serial.print(1000000.0 / dt);
+  // Serial.print(1000000.0 / dt);
   this->last_step_time = time;
   digitalWrite(this->STEP_PIN, HIGH);
   delayMicroseconds(this->step_delay);
   digitalWrite(this->STEP_PIN, LOW);
-  delayMicroseconds(this->step_delay);
+  delayMicroseconds(10);
   return true;
 }
