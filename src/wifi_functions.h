@@ -11,6 +11,7 @@
 #include "SPI.h"
 #include <HTTPClient.h>
 #include "file_functions.h"
+#include <Preferences.h>
 using namespace std;
 
 

@@ -1,25 +1,25 @@
 #include "motor_control_functions.h"
 
-#define MAX_SPEED                 0.002  // mm/s
+#define MAX_SPEED                 0.02  // m/s
 #define MAX_ANGULAR_SPEED         1000  // steps/s
-#define MICROSTEPS                32
+#define MICROSTEPS                16
 #define STEPS_PER_REV             200
-#define MAX_TARGET_DISTANCE       5
+#define MAX_TARGET_DISTANCE       50
 
 
 // Total steps per revolution = 200 * 16 = 3200
 
 #define SERIAL_PORT Serial1 // TMC2208/TMC2224 HardwareSerial port
 
-void setup_driver(TMC2208Stepper &driver, int EN_PIN, int MS1, int MS2) {
+void setup_driver(TMC2209Stepper &driver, int EN_PIN, int MS1, int MS2) {
   Serial.println("Setting up driver");
-  pinMode(EN_PIN, OUTPUT);
-  // pinMode(MS1, OUTPUT);
-  // pinMode(MS2, OUTPUT);
+  // pinMode(EN_PIN, OUTPUT);
+  pinMode(MS1, OUTPUT);
+  pinMode(MS2, OUTPUT);
 
-  digitalWrite(EN_PIN, LOW);      // Enable driver in hardware
-  // digitalWrite(MS1, LOW);
-  // digitalWrite(MS2, HIGH);
+  // digitalWrite(EN_PIN, LOW);      // Enable driver in hardware
+  digitalWrite(MS1, LOW);
+  digitalWrite(MS2, LOW);
                                   // Enable one according to your setup
 //SPI.begin();                    // SPI drivers
   SERIAL_PORT.begin(115200);      // HW UART drivers
@@ -28,8 +28,10 @@ void setup_driver(TMC2208Stepper &driver, int EN_PIN, int MS1, int MS2) {
   driver.begin();                 //  SPI: Init CS pins and possible SW SPI pins
                                   // UART: Init SW UART (if selected) with default 115200 baudrate
   driver.toff(3);                 // Enables driver in software
-  driver.rms_current(600);        // Set motor RMS current
+  driver.rms_current(400);        // Set motor RMS current
   driver.microsteps(MICROSTEPS);          // Set microsteps to 1/16th
+  driver.irun(31);
+
 
 
   driver.intpol(true);               // Interpolate to 256 steps, smooth stepping even with 0 microsteps.
@@ -73,6 +75,9 @@ void move_arm(long int * delta, SStepper &motor1, SStepper &motor2, double theta
   delta[1] = motor2.distance_to_go();
 
   if(delta[0] <= 3 && delta[1] <= 3) {
+    double max_speed = 0.5 * 18.0 * MAX_SPEED * K / R;
+    double speed_1 = max_speed;
+    double speed_2 = 2 * max_speed;
     long max_distance_to_target = max(
                     abs(current_targets[0] - motor1.position),
                     abs(current_targets[1] - motor2.position) );
@@ -83,8 +88,15 @@ void move_arm(long int * delta, SStepper &motor1, SStepper &motor2, double theta
       float sections_completed = (max_original_distance_to_target - max_distance_to_target) * 1.0 / MAX_TARGET_DISTANCE;
       float target_section = round(sections_completed + 1);
       target1 = initial_positions[0] + MAX_TARGET_DISTANCE * target_section * (current_targets[0] - initial_positions[0])/max_original_distance_to_target;
+      speed_1 = speed_1 * (current_targets[0] - initial_positions[0])/max_original_distance_to_target;
       target2 = initial_positions[1] + MAX_TARGET_DISTANCE * target_section * (current_targets[1] - initial_positions[1])/max_original_distance_to_target;
+      speed_2 = speed_2 * (current_targets[1] - initial_positions[1])/max_original_distance_to_target;
     }
+    
+    Serial.println(max_speed);
+    motor1.set_speed( speed_1);
+    motor2.set_speed(speed_2);
+  
     motor1.set_target(target1);
     motor2.set_target(target2);
   }
@@ -97,12 +109,6 @@ void move_arm(long int * delta, SStepper &motor1, SStepper &motor2, double theta
   // Serial.print("2: ");
   motor2.one_step();
   // Serial.println("");
-
-  double max_speed = 0.5 * 18.0 * MAX_SPEED * K / R;
-  Serial.println(max_speed);
-  motor1.set_speed( 2 * max_speed * (delta[0] > 0 ? 1 : -1));
-  motor2.set_speed( max_speed * (delta[1] > 0 ? 1 : -1));
-  
 
   delta[0] = abs(current_targets[0] - motor1.position);
   delta[1] = abs(current_targets[1] - motor2.position);

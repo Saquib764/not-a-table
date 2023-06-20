@@ -19,10 +19,11 @@ using namespace std;
 #include "wifi_functions.h"
 #include "homing_functions.h"
 #include "ota.h"
+#include <Preferences.h>
 
 const int dummy = 0;
 
-#define SERIAL_PORT Serial2 // TMC2208/TMC2224 HardwareSerial port
+#define SERIAL_PORT Serial1 // TMC2208/TMC2224 HardwareSerial port
 #define DRIVER_ADDRESS 0b00 // TMC2209 Driver address according to MS1 and MS2
 
 #define R_SENSE 0.11f
@@ -30,8 +31,8 @@ const int dummy = 0;
 
 
 
-TMC2208Stepper driver(&SERIAL_PORT, R_SENSE);
-// TMC2209Stepper driver(&SERIAL_PORT, R_SENSE, DRIVER_ADDRESS);
+// TMC2209Stepper driver(&SERIAL_PORT, R_SENSE);
+TMC2209Stepper driver(&SERIAL_PORT, R_SENSE, DRIVER_ADDRESS);
 
 Player player;
 
@@ -347,11 +348,11 @@ void setup() {
   is_printing_design = true;
 }
 
-// double points[3][2] = {
-//   {0.0, 0.0},
-//   {6.28, 0.0},
-//   {6280.0, 50.0}
-// };
+double points[3][3] = {
+  {0., 0.0, 0.0},
+  {0., 6.28, 0.0},
+  {0., 6280.0, 50.0}
+};
 int current_index = 0;
 void loop() {
   long current_time = micros();
@@ -400,14 +401,15 @@ void loop() {
     long int delta[2] = {0, 0};
     move_arm(delta, motor1, motor2, target_q1, target_q2);
     if(abs(delta[0]) < 3 && abs(delta[1]) < 3) {
-      double* points = player.next_line(SD);
-      if(points[0] == 0.0) {
-        is_printing_design = false;
-        should_play_next = true;
-        return;
-      }
-      target_q1 = points[1];
-      target_q2 = points[2];
+      // double* points = player.next_line(SD);
+      // if(points[0] == 0.0) {
+      //   is_printing_design = false;
+      //   should_play_next = true;
+      //   return;
+      // }
+      target_q1 = points[current_index][1];
+      target_q2 = points[current_index][2];
+      current_index = (current_index + 1) % 3;
     }
   }
   // delay(300);
