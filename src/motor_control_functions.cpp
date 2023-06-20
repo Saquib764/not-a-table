@@ -1,6 +1,6 @@
 #include "motor_control_functions.h"
 
-#define MAX_SPEED                 2  // mm/s
+#define MAX_SPEED                 0.002  // mm/s
 #define MAX_ANGULAR_SPEED         1000  // steps/s
 #define MICROSTEPS                32
 #define STEPS_PER_REV             200
@@ -22,23 +22,26 @@ void setup_driver(TMC2208Stepper &driver, int EN_PIN, int MS1, int MS2) {
   // digitalWrite(MS2, HIGH);
                                   // Enable one according to your setup
 //SPI.begin();                    // SPI drivers
-  // SERIAL_PORT.begin(115200);      // HW UART drivers
+  SERIAL_PORT.begin(115200);      // HW UART drivers
 // driver.beginSerial(115200);     // SW UART drivers
 
   driver.begin();                 //  SPI: Init CS pins and possible SW SPI pins
                                   // UART: Init SW UART (if selected) with default 115200 baudrate
-  driver.toff(5);                 // Enables driver in software
+  driver.toff(3);                 // Enables driver in software
   driver.rms_current(600);        // Set motor RMS current
   driver.microsteps(MICROSTEPS);          // Set microsteps to 1/16th
 
+
+  driver.intpol(true);               // Interpolate to 256 steps, smooth stepping even with 0 microsteps.
+
 //driver.en_pwm_mode(true);       // Toggle stealthChop on TMC2130/2160/5130/5160
-//driver.en_spreadCycle(false);   // Toggle spreadCycle on TMC2208/2209/2224
+  driver.en_spreadCycle(false);   // Toggle spreadCycle on TMC2208/2209/2224
   driver.pwm_autoscale(true);     // Needed for stealthChop
   Serial.println("Done setting up driver");
 }
 
 double K = STEPS_PER_REV * MICROSTEPS/ (2.0*PI);
-float R = 63.0/2;
+float R = 0.63/2;
 
 long current_targets[2] = {0, 0};
 long initial_positions[2] = {0, 0};
@@ -96,6 +99,7 @@ void move_arm(long int * delta, SStepper &motor1, SStepper &motor2, double theta
   // Serial.println("");
 
   double max_speed = 0.5 * 18.0 * MAX_SPEED * K / R;
+  Serial.println(max_speed);
   motor1.set_speed( 2 * max_speed * (delta[0] > 0 ? 1 : -1));
   motor2.set_speed( max_speed * (delta[1] > 0 ? 1 : -1));
   
