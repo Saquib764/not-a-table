@@ -258,6 +258,7 @@ void setup_routing(WebServer& server) {
 }
 
 void setup() {
+  // Serial.println("UPDATED via OTA");
   setup_led();
   init_led();
   // delay(50);
