@@ -1,8 +1,8 @@
 #include "motor_control_functions.h"
 
 #define MAX_SPEED                 100  // mm/s
-#define MAX_ANGULAR_SPEED         700  // steps/s
-#define MICROSTEPS                8
+#define MAX_ANGULAR_SPEED         1000  // steps/s
+#define MICROSTEPS                32
 #define STEPS_PER_REV             200
 #define MAX_TARGET_DISTANCE       5
 
@@ -104,7 +104,7 @@ void move_arm(long int * delta, SStepper &motor1, SStepper &motor2, double theta
     motor1.set_speed(2 * MAX_ANGULAR_SPEED * 1.0 * delta[0] / abs(delta[1]));
   }
   double max_speed = 0.5 * 18.0 * MAX_SPEED * K / R;
-  motor1.set_speed( 0.3 * max_speed * (delta[0] > 0 ? 1 : -1));
+  motor1.set_speed( 2 * max_speed * (delta[0] > 0 ? 1 : -1));
   motor2.set_speed( max_speed * (delta[1] > 0 ? 1 : -1));
   
 
