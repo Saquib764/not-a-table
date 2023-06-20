@@ -18,6 +18,7 @@ using namespace std;
 #include "motor_control_functions.h"
 #include "wifi_functions.h"
 #include "homing_functions.h"
+#include "ota.h"
 
 const int dummy = 0;
 
@@ -158,6 +159,30 @@ void handle_pairing() {
   connect_to_network(SAVED_SSID, SAVED_PWD, 5);
 }
 
+void handle_update() {
+  Serial.println("Updating..");
+  String body = server.arg("plain");
+  Serial.println(body);
+  jsonDocument.clear();
+  deserializeJson(jsonDocument, body);
+  String update_url = jsonDocument["update_url"];
+  update_url.trim();
+  Serial.println(update_url);
+  
+  jsonDocument.clear();  
+
+  bool is_success = update_firmware(update_url);
+  jsonDocument["success"] = is_success;
+
+  serializeJson(jsonDocument, buffer);
+
+  server.send(200, "application/json", buffer);
+  delay(2000);
+  if(is_success) {
+    ESP.restart();
+  }
+}
+
 void handle_home() {
   Serial.println("Home");
   should_perform_homing = true;
@@ -216,6 +241,11 @@ void setup_routing(WebServer& server) {
   server.on("/", HTTP_GET, handle_status_check);  
   server.on("/mode", HTTP_GET, handle_get_mode);
   server.on("/home", HTTP_GET, handle_home);
+
+
+  server.on("/update", HTTP_POST, handle_update);
+  server.on("/update", HTTP_OPTIONS, handle_status_check);
+
   server.on("/pair", HTTP_POST, handle_pairing);
   server.on("/pair", HTTP_OPTIONS, handle_status_check);
   server.on("/design/upload", HTTP_POST, handle_file_upload);
@@ -312,7 +342,6 @@ void setup() {
   Serial.println("Server started. Listening on port 80");
 
   // Remove this
-
   player.read(SPIFFS, "/spiral.thr.txt");
   is_printing_design = true;
 }
