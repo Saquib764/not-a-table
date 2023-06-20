@@ -1,8 +1,8 @@
 #include "motor_control_functions.h"
 
-#define MAX_SPEED                 0.02  // m/s
+#define MAX_SPEED                 0.01  // m/s
 #define MAX_ANGULAR_SPEED         1000  // steps/s
-#define MICROSTEPS                16
+#define MICROSTEPS                32
 #define STEPS_PER_REV             200
 #define MAX_TARGET_DISTANCE       50
 
@@ -13,11 +13,11 @@
 
 void setup_driver(TMC2209Stepper &driver, int EN_PIN, int MS1, int MS2) {
   Serial.println("Setting up driver");
-  // pinMode(EN_PIN, OUTPUT);
+  pinMode(EN_PIN, OUTPUT);
   pinMode(MS1, OUTPUT);
   pinMode(MS2, OUTPUT);
 
-  // digitalWrite(EN_PIN, LOW);      // Enable driver in hardware
+  digitalWrite(EN_PIN, LOW);      // Enable driver in hardware
   digitalWrite(MS1, LOW);
   digitalWrite(MS2, LOW);
                                   // Enable one according to your setup
@@ -45,11 +45,16 @@ void setup_driver(TMC2209Stepper &driver, int EN_PIN, int MS1, int MS2) {
 double K = STEPS_PER_REV * MICROSTEPS/ (2.0*PI);
 float R = 0.63/2;
 
+double max_speed = 0.5 * 18.0 * MAX_SPEED * K / R;
+
 long current_targets[2] = {0, 0};
 long initial_positions[2] = {0, 0};
 void move_arm(long int * delta, SStepper &motor1, SStepper &motor2, double theta1, double theta2) {
   long int target1 = 3 * theta1 * K;
   long int target2 = 3 * 3 * (theta2 + theta1/3.0) * K;
+
+  double speed_1 = max_speed;
+  double speed_2 = 2 * max_speed;
 
   if(target1 != current_targets[0]) {
     Serial.print("Target 1: ");
@@ -60,6 +65,8 @@ void move_arm(long int * delta, SStepper &motor1, SStepper &motor2, double theta
     Serial.println(motor1.position * 360.0 /(STEPS_PER_REV * MICROSTEPS * 3));
     initial_positions[0] = current_targets[0];
     current_targets[0] = target1;
+
+    motor1.set_target(target1);
   }
   if(target2 != current_targets[1]) {
     Serial.print("Target 2: ");
@@ -70,36 +77,22 @@ void move_arm(long int * delta, SStepper &motor1, SStepper &motor2, double theta
     Serial.println(motor2.position * 360.0 /(STEPS_PER_REV * MICROSTEPS * 3 * 3) - 2 * motor1.position * 360.0 /(STEPS_PER_REV * MICROSTEPS * 3 * 2));
     initial_positions[1] = current_targets[1];
     current_targets[1] = target2;
+    motor2.set_target(target2);
   }
   delta[0] = motor1.distance_to_go();
   delta[1] = motor2.distance_to_go();
 
-  if(delta[0] <= 3 && delta[1] <= 3) {
-    double max_speed = 0.5 * 18.0 * MAX_SPEED * K / R;
-    double speed_1 = max_speed;
-    double speed_2 = 2 * max_speed;
-    long max_distance_to_target = max(
-                    abs(current_targets[0] - motor1.position),
-                    abs(current_targets[1] - motor2.position) );
-    if(max_distance_to_target > MAX_TARGET_DISTANCE) {
-      long max_original_distance_to_target = max(
-                    abs(current_targets[0] - initial_positions[0]),
-                    abs(current_targets[1] - initial_positions[1]) );
-      float sections_completed = (max_original_distance_to_target - max_distance_to_target) * 1.0 / MAX_TARGET_DISTANCE;
-      float target_section = round(sections_completed + 1);
-      target1 = initial_positions[0] + MAX_TARGET_DISTANCE * target_section * (current_targets[0] - initial_positions[0])/max_original_distance_to_target;
-      speed_1 = speed_1 * (current_targets[0] - initial_positions[0])/max_original_distance_to_target;
-      target2 = initial_positions[1] + MAX_TARGET_DISTANCE * target_section * (current_targets[1] - initial_positions[1])/max_original_distance_to_target;
-      speed_2 = speed_2 * (current_targets[1] - initial_positions[1])/max_original_distance_to_target;
-    }
-    
-    Serial.println(max_speed);
-    motor1.set_speed( speed_1);
-    motor2.set_speed(speed_2);
+  long max_distance_to_target = max(
+                  abs(current_targets[0] - motor1.position),
+                  abs(current_targets[1] - motor2.position) );
+                  
+  speed_1 = speed_1 * (current_targets[0] - motor1.position)/max_distance_to_target;
   
-    motor1.set_target(target1);
-    motor2.set_target(target2);
-  }
+  speed_2 = speed_2 * (current_targets[1] - motor2.position)/max_distance_to_target;
+  
+  Serial.println("Speeds: " + String(speed_1) + ", " + String(speed_2) + ", max: " + String(max_speed));
+  motor1.set_speed( speed_1);
+  motor2.set_speed(speed_2);
 
 
   // Serial.print("Speed: ");
