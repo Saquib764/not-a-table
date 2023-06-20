@@ -1,0 +1,43 @@
+{
+	"sources" : 
+	[
+		{
+			"file" : "/Users/saquib/Documents/PlatformIO/Projects/230331-223557-esp32dev/build/CMakeFiles/bootloader"
+		},
+		{
+			"file" : "/Users/saquib/Documents/PlatformIO/Projects/230331-223557-esp32dev/build/CMakeFiles/bootloader.rule"
+		},
+		{
+			"file" : "/Users/saquib/Documents/PlatformIO/Projects/230331-223557-esp32dev/build/CMakeFiles/bootloader-complete.rule"
+		},
+		{
+			"file" : "/Users/saquib/Documents/PlatformIO/Projects/230331-223557-esp32dev/build/bootloader-prefix/src/bootloader-stamp/bootloader-build.rule"
+		},
+		{
+			"file" : "/Users/saquib/Documents/PlatformIO/Projects/230331-223557-esp32dev/build/bootloader-prefix/src/bootloader-stamp/bootloader-configure.rule"
+		},
+		{
+			"file" : "/Users/saquib/Documents/PlatformIO/Projects/230331-223557-esp32dev/build/bootloader-prefix/src/bootloader-stamp/bootloader-download.rule"
+		},
+		{
+			"file" : "/Users/saquib/Documents/PlatformIO/Projects/230331-223557-esp32dev/build/bootloader-prefix/src/bootloader-stamp/bootloader-install.rule"
+		},
+		{
+			"file" : "/Users/saquib/Documents/PlatformIO/Projects/230331-223557-esp32dev/build/bootloader-prefix/src/bootloader-stamp/bootloader-mkdir.rule"
+		},
+		{
+			"file" : "/Users/saquib/Documents/PlatformIO/Projects/230331-223557-esp32dev/build/bootloader-prefix/src/bootloader-stamp/bootloader-patch.rule"
+		},
+		{
+			"file" : "/Users/saquib/Documents/PlatformIO/Projects/230331-223557-esp32dev/build/bootloader-prefix/src/bootloader-stamp/bootloader-update.rule"
+		}
+	],
+	"target" : 
+	{
+		"labels" : 
+		[
+			"bootloader"
+		],
+		"name" : "bootloader"
+	}
+}
