@@ -1,6 +1,6 @@
 #include "motor_control_functions.h"
 
-#define MAX_SPEED                 100  // mm/s
+#define MAX_SPEED                 2  // mm/s
 #define MAX_ANGULAR_SPEED         1000  // steps/s
 #define MICROSTEPS                32
 #define STEPS_PER_REV             200
@@ -69,7 +69,7 @@ void move_arm(long int * delta, SStepper &motor1, SStepper &motor2, double theta
   delta[0] = motor1.distance_to_go();
   delta[1] = motor2.distance_to_go();
 
-  if(delta[0] <= 1 && delta[1] <= 1) {
+  if(delta[0] <= 3 && delta[1] <= 3) {
     long max_distance_to_target = max(
                     abs(current_targets[0] - motor1.position),
                     abs(current_targets[1] - motor2.position) );
@@ -95,14 +95,6 @@ void move_arm(long int * delta, SStepper &motor1, SStepper &motor2, double theta
   motor2.one_step();
   // Serial.println("");
 
-
-  if(abs(delta[0]) > abs(delta[1])) {
-    motor1.set_speed(MAX_ANGULAR_SPEED * (delta[0] > 0 ? 1 : -1));
-    motor2.set_speed( MAX_ANGULAR_SPEED * 1.0 * delta[1] / abs(delta[0]));
-  } else {
-    motor2.set_speed(2 * MAX_ANGULAR_SPEED * (delta[1] > 0 ? 1 : -1));
-    motor1.set_speed(2 * MAX_ANGULAR_SPEED * 1.0 * delta[0] / abs(delta[1]));
-  }
   double max_speed = 0.5 * 18.0 * MAX_SPEED * K / R;
   motor1.set_speed( 2 * max_speed * (delta[0] > 0 ? 1 : -1));
   motor2.set_speed( max_speed * (delta[1] > 0 ? 1 : -1));

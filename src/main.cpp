@@ -26,6 +26,7 @@ const int dummy = 0;
 #define DRIVER_ADDRESS 0b00 // TMC2209 Driver address according to MS1 and MS2
 
 #define R_SENSE 0.11f
+#define VERSION "1.0.0"
 
 
 
@@ -258,13 +259,12 @@ void setup_routing(WebServer& server) {
 }
 
 void setup() {
-  // Serial.println("UPDATED via OTA");
   setup_led();
   init_led();
   // delay(50);
   // put your setup code here, to run once:
   Serial.begin(115200);
-  Serial.println("Hello, ESP32!");
+  Serial.println("Version: " + String(VERSION));
   if(should_use_internal_sd) {
     if(setup_internal_card(SPIFFS)) {
       is_storage_available = true;
@@ -393,9 +393,9 @@ void loop() {
   //   should_play_next = false;
   //   return;
   // }
-  // EVERY_N_MILLISECONDS(10) {
+  EVERY_N_MILLISECONDS(25) {
     move_led();
-  // }
+  }
   if(is_printing_design) {
     long int delta[2] = {0, 0};
     move_arm(delta, motor1, motor2, target_q1, target_q2);
