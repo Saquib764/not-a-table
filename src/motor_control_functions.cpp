@@ -87,13 +87,6 @@ void move_arm(long int * delta, SStepper &motor1, SStepper &motor2, double theta
   }
 
 
-  if(abs(delta[0]) > abs(delta[1])) {
-    motor1.set_speed(MAX_ANGULAR_SPEED * (delta[0] > 0 ? 1 : -1));
-    motor2.set_speed( MAX_ANGULAR_SPEED * 1.0 * delta[1] / abs(delta[0]));
-  } else {
-    motor2.set_speed(2 * MAX_ANGULAR_SPEED * (delta[1] > 0 ? 1 : -1));
-    motor1.set_speed(2 * MAX_ANGULAR_SPEED * 1.0 * delta[0] / abs(delta[1]));
-  }
   // Serial.print("Speed: ");
   // Serial.print("1: ");
   motor1.one_step();
@@ -101,6 +94,19 @@ void move_arm(long int * delta, SStepper &motor1, SStepper &motor2, double theta
   // Serial.print("2: ");
   motor2.one_step();
   // Serial.println("");
+
+
+  if(abs(delta[0]) > abs(delta[1])) {
+    motor1.set_speed(MAX_ANGULAR_SPEED * (delta[0] > 0 ? 1 : -1));
+    motor2.set_speed( MAX_ANGULAR_SPEED * 1.0 * delta[1] / abs(delta[0]));
+  } else {
+    motor2.set_speed(2 * MAX_ANGULAR_SPEED * (delta[1] > 0 ? 1 : -1));
+    motor1.set_speed(2 * MAX_ANGULAR_SPEED * 1.0 * delta[0] / abs(delta[1]));
+  }
+  double max_speed = 0.5 * 18.0 * MAX_SPEED * K / R;
+  motor1.set_speed( 0.3 * max_speed * (delta[0] > 0 ? 1 : -1));
+  motor2.set_speed( max_speed * (delta[1] > 0 ? 1 : -1));
+  
 
   delta[0] = abs(current_targets[0] - motor1.position);
   delta[1] = abs(current_targets[1] - motor2.position);
