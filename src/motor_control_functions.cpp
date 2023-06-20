@@ -37,12 +37,14 @@ void setup_driver(TMC2208Stepper &driver, int EN_PIN, int MS1, int MS2) {
   Serial.println("Done setting up driver");
 }
 
+double K = STEPS_PER_REV * MICROSTEPS/ (2.0*PI);
+float R = 63.0/2;
 
 long current_targets[2] = {0, 0};
 long initial_positions[2] = {0, 0};
 void move_arm(long int * delta, SStepper &motor1, SStepper &motor2, double theta1, double theta2) {
-  long int target1 = 3 * theta1 * STEPS_PER_REV * MICROSTEPS/ (2.0*PI);
-  long int target2 = 3 * 3 * (theta2 - 2.0 * theta1/3.0) * STEPS_PER_REV * MICROSTEPS / (2.0*PI);
+  long int target1 = 3 * theta1 * K;
+  long int target2 = 3 * 3 * (theta2 + theta1/3.0) * K;
 
   if(target1 != current_targets[0]) {
     Serial.print("Target 1: ");
