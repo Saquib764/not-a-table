@@ -82,13 +82,11 @@ void move_arm(long int * delta, SStepper &motor1, SStepper &motor2, double theta
   delta[0] = motor1.distance_to_go();
   delta[1] = motor2.distance_to_go();
 
-  long max_distance_to_target = max(
-                  abs(current_targets[0] - motor1.position),
-                  abs(current_targets[1] - motor2.position) );
+  long max_distance_to_target = max( abs(delta[0]), abs(delta[1]) );
                   
-  speed_1 = speed_1 * (current_targets[0] - motor1.position)/max_distance_to_target;
+  speed_1 = speed_1 * delta[0]/max_distance_to_target;
   
-  speed_2 = speed_2 * (current_targets[1] - motor2.position)/max_distance_to_target;
+  speed_2 = speed_2 * delta[1]/max_distance_to_target;
   
   Serial.println("Speeds: " + String(speed_1) + ", " + String(speed_2) + ", max: " + String(max_speed));
   motor1.set_speed( speed_1);
