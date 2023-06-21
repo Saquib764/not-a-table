@@ -19,6 +19,7 @@ class SStepper {
     void set_acceleration(double acceleration);
     void set_target_speed(double speed);
     void set_speed(double speed);
+    void compute_speed();
     void set_target(long int target);
     void set_position(long int position);
     void set_step_delay(int step_delay);
@@ -36,6 +37,7 @@ class SStepper {
     long int target;
     double speed;
     double target_speed;
+    unsigned int last_speed_update_time;
     double acceleration;
     unsigned int last_step_time;
     unsigned int step_delay;

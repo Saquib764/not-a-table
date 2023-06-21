@@ -45,6 +45,22 @@ void SStepper::set_speed(double speed) {
   this->step_interval = fabs(1000000.0 / this->speed);
   set_direction(speed > 0?CLOCKWISE:COUNTERCLOCKWISE);
 }
+void SStepper::compute_speed() {
+  if(this->speed == this->target_speed) {
+    return;
+  }
+  unsigned long time = micros();
+  long dt = time - this->last_speed_update_time;
+  if(dt < 1.0/(this->acceleration + 0.001)) {
+    return;
+  }
+  this->last_speed_update_time = time;
+  double speed = this->speed + this->acceleration * dt;
+  if(abs(this->target_speed - this->speed) < abs(this->acceleration * dt)) {
+    speed = this->target_speed;
+  }
+  this->set_speed(speed);
+}
 void SStepper::set_target(long int target) {
   if(target == this->target) {
     return;
@@ -82,6 +98,8 @@ void SStepper::reset() {
   this->acceleration = 0;
   this->last_step_time = 0;
   this->step_delay = 60;
+  this->step_interval = 0;
+  this->last_speed_update_time = 0;
 }
 
 void SStepper::one_step(int direction, int wait) {
@@ -96,10 +114,7 @@ void SStepper::one_step(int direction, int wait) {
   delayMicroseconds(wait);
 }
 bool SStepper::one_step() {
-  // bool ret = this->stepper.run();
-  // delayMicroseconds(100);
-  // this->position = this->stepper.currentPosition();
-  // return ret;
+  this->compute_speed();
   unsigned long time = micros();
   if(!this->step_interval) {
     return false;

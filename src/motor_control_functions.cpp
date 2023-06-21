@@ -60,7 +60,7 @@ void move_arm(long int * delta, SStepper &motor1, SStepper &motor2, double theta
 
   if(target1 != current_targets[0]) {
     Serial.print("Target 1: " + String(target1) + ", " + String(theta1) + ". Current pos: ");
-    Serial.println(motor1.position * 360.0 /(STEPS_PER_REV * MICROSTEPS * 3));
+    Serial.println(motor1.position / (K * 3));
     initial_positions[0] = current_targets[0];
     current_targets[0] = target1;
 
@@ -68,7 +68,7 @@ void move_arm(long int * delta, SStepper &motor1, SStepper &motor2, double theta
   }
   if(target2 != current_targets[1]) {
     Serial.print("Target 2: " + String(target2) + ", " + String(theta2) + ". Current pos: ");
-    Serial.println(motor2.position * 360.0 /(STEPS_PER_REV * MICROSTEPS * 3 * 3) - 2 * motor1.position * 360.0 /(STEPS_PER_REV * MICROSTEPS * 3 * 2));
+    Serial.println(motor2.position / (9*K) - motor1.position / (9*K));
     initial_positions[1] = current_targets[1];
     current_targets[1] = target2;
     motor2.set_target(target2);
@@ -81,15 +81,15 @@ void move_arm(long int * delta, SStepper &motor1, SStepper &motor2, double theta
   speed_1 = max_speed_1 * delta[0]/(abs(delta[0]) + 0.00001);
   speed_2 = max_speed_1 * delta[1]/(abs(delta[0]) + 0.00001);
   if( abs(speed_2) > max_speed_2) {
-    speed_1 = max_speed_2 * delta[0]/(abs(delta[0]) + 0.00001);
+    speed_1 = max_speed_2 * delta[0]/(abs(delta[1]) + 0.00001);
     speed_2 = max_speed_2 * delta[1]/(abs(delta[1]) + 0.00001);
   }
-  // if(delta[0] < 10) {
-  //   speed_1 = 10;
-  // }
-  // if(delta[1] < 10) {
-  //   speed_2 = 10;
-  // }
+  if( abs(delta[0]) < 10) {
+    speed_1 = delta[0];
+  }
+  if( abs(delta[1]) < 10) {
+    speed_2 = delta[1];
+  }
 
   // EVERY_N_SECONDS(1) {
     // Serial.println("Delta: "+ String(delta[0]) + ", " + String(delta[1]));
@@ -97,9 +97,9 @@ void move_arm(long int * delta, SStepper &motor1, SStepper &motor2, double theta
   
   // Serial.println("Speeds: " + String(motor1.speed) + ", " + String(motor2.speed) );
   motor1.set_speed( speed_1);
-  motor2.set_speed(speed_2);
-  // motor1.set_acceleration(abs(speed_1 - motor1.speed) / 10.0);
-  // motor2.set_acceleration(abs(speed_2 - motor2.speed) / 10.0);
+  motor2.set_speed( speed_2 );
+  motor1.set_acceleration( (speed_1 - motor1.speed) / 10.0);
+  motor2.set_acceleration( (speed_2 - motor2.speed) / 10.0);
 
 
   // Serial.print("Speed: ");
