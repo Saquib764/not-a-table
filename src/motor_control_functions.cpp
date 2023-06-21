@@ -1,8 +1,8 @@
 #include "motor_control_functions.h"
 
-#define MAX_SPEED                 0.1  // m/s
+#define MAX_SPEED                 0.01  // m/s
 #define MAX_ANGULAR_SPEED         1000  // steps/s
-#define MICROSTEPS                32
+#define MICROSTEPS                8
 #define STEPS_PER_REV             200
 #define MAX_TARGET_DISTANCE       50
 
@@ -29,12 +29,12 @@ void setup_driver(TMC2209Stepper &driver, int EN_PIN, int MS1, int MS2) {
                                   // UART: Init SW UART (if selected) with default 115200 baudrate
   driver.toff(3);                 // Enables driver in software
   driver.rms_current(400);        // Set motor RMS current
-  driver.microsteps(MICROSTEPS);          // Set microsteps to 1/16th
-  driver.irun(31);
+  driver.microsteps( MICROSTEPS );          // Set microsteps to 1/16th
+  // driver.irun(31);
 
 
 
-  driver.intpol(true);               // Interpolate to 256 steps, smooth stepping even with 0 microsteps.
+  // driver.intpol(false);               // Interpolate to 256 steps, smooth stepping even with 0 microsteps.
 
 //driver.en_pwm_mode(true);       // Toggle stealthChop on TMC2130/2160/5130/5160
   driver.en_spreadCycle(false);   // Toggle spreadCycle on TMC2208/2209/2224
@@ -91,15 +91,15 @@ void move_arm(long int * delta, SStepper &motor1, SStepper &motor2, double theta
     speed_2 = delta[1];
   }
 
-  // EVERY_N_SECONDS(1) {
-    // Serial.println("Delta: "+ String(delta[0]) + ", " + String(delta[1]));
-  // }
+  EVERY_N_MILLISECONDS(1000) {
+    Serial.println("Delta: "+ String(delta[0]) + ", " + String(delta[1]));
+    Serial.println("Speeds: " + String(motor1.speed) + ", " + String(motor2.speed) );
+  }
   
-  // Serial.println("Speeds: " + String(motor1.speed) + ", " + String(motor2.speed) );
-  motor1.set_speed( speed_1);
-  motor2.set_speed( speed_2 );
-  motor1.set_acceleration( (speed_1 - motor1.speed) / 10.0);
-  motor2.set_acceleration( (speed_2 - motor2.speed) / 10.0);
+  motor1.set_target_speed( speed_1);
+  motor2.set_target_speed( speed_2 );
+  motor1.set_acceleration( (speed_1 - motor1.speed) / 50.0);
+  motor2.set_acceleration( (speed_2 - motor2.speed) / 50.0);
 
 
   // Serial.print("Speed: ");

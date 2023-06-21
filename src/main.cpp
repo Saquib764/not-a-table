@@ -321,7 +321,7 @@ void setup() {
       SAVED_SSID.trim();
       SAVED_PWD.trim();
 
-      connect_to_network(SAVED_SSID, SAVED_PWD, 5);
+      connect_to_network( SAVED_SSID, SAVED_PWD, 5);
     } else {
       is_in_pairing_mode = true;
     }
@@ -351,10 +351,10 @@ void setup() {
   is_printing_design = true;
 }
 
-double points[3][3] = {
+double points[2][3] = {
   {0., 0.0, 0.0},
-  {0., 6.28, 6.0},
-  {0., 628.0, 0.0}
+  {0., 2*PI, 2*PI},
+  // {0., 628.0, 0.0}
 };
 int current_index = 0;
 void loop() {
@@ -412,7 +412,7 @@ void loop() {
       // }
       target_q1 = points[current_index][1];
       target_q2 = points[current_index][2];
-      current_index = (current_index + 1) % 3;
+      current_index = (current_index + 1) % 2;
     }
   }
   // delay(300);
