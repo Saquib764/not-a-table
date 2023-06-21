@@ -140,3 +140,9 @@ bool SStepper::one_step() {
   delayMicroseconds(10);
   return true;
 }
+void SStepper::force_step() {
+  digitalWrite(this->STEP_PIN, HIGH);
+  delayMicroseconds(this->step_delay);
+  digitalWrite(this->STEP_PIN, LOW);
+  delayMicroseconds(10);
+}

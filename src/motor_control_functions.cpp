@@ -1,8 +1,8 @@
 #include "motor_control_functions.h"
 
 #define MAX_SPEED                 0.1  // m/s
-#define MAX_ANGULAR_SPEED         400  // steps/s
-#define MICROSTEPS                32
+#define MAX_ANGULAR_SPEED         400.0  // steps/s
+#define MICROSTEPS                8
 #define STEPS_PER_REV             200
 #define MAX_TARGET_DISTANCE       50
 
@@ -76,11 +76,25 @@ void move_arm(long int * delta, SStepper &motor1, SStepper &motor2, double theta
   delta[0] = motor1.distance_to_go();
   delta[1] = motor2.distance_to_go();
 
-  long max_distance_to_target = max( abs(delta[0]), abs(delta[1]) );
+  long initial_delta[2] = {
+    current_targets[0] - initial_positions[0],
+    current_targets[1] - initial_positions[1]
+  };
+  // use larger distance as reference
+  double expected_delta[2] = { 0.0, 0.0 };
+
+  if( abs(initial_delta[0]) > abs(initial_delta[1]) ) {
+    expected_delta[0] = delta[0];
+    expected_delta[1] = delta[0] * abs(initial_delta[1]) / abs(initial_delta[0]);
+  } else {
+    expected_delta[1] = delta[1];
+    expected_delta[0] = delta[1] * abs(initial_delta[0]) / abs(initial_delta[1]);
+  }
+
   
   speed_1 = max_speed_1 * delta[0]/(abs(delta[0]) + 0.00001);
   speed_2 = max_speed_1 * delta[1]/(abs(delta[0]) + 0.00001);
-  if( abs(speed_2) > max_speed_2) {
+  if( abs(speed_2) > max_speed_2 ) {
     speed_1 = max_speed_2 * delta[0]/(abs(delta[1]) + 0.00001);
     speed_2 = max_speed_2 * delta[1]/(abs(delta[1]) + 0.00001);
   }
@@ -90,6 +104,13 @@ void move_arm(long int * delta, SStepper &motor1, SStepper &motor2, double theta
   }
   if( abs(delta[1]) < 10) {
     speed_2 = delta[1];
+  }
+  int force_motor = -1;
+  if( abs( expected_delta[0] - delta[0] ) > 1 ) {
+    force_motor = 0;
+  }
+  if( abs( expected_delta[1] - delta[1] ) > 1 ) {
+    force_motor = 1;
   }
 
   // EVERY_N_MILLISECONDS(1000) {
@@ -111,6 +132,13 @@ void move_arm(long int * delta, SStepper &motor1, SStepper &motor2, double theta
   // Serial.print("2: ");
   motor2.one_step();
   // Serial.println("");
+
+  if(force_motor == 0) {
+    motor1.force_step();
+  }
+  if(force_motor == 1) {
+    motor2.force_step();
+  }
 
   delta[0] = abs(current_targets[0] - motor1.position);
   delta[1] = abs(current_targets[1] - motor2.position);

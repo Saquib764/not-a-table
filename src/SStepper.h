@@ -16,6 +16,7 @@ class SStepper {
 
     void one_step(int direction, int wait=20);
     bool one_step();
+    void force_step();
     void set_acceleration(double acceleration);
     void set_target_speed(double speed);
     void set_speed(double speed);
