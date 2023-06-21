@@ -1,6 +1,6 @@
 #include "motor_control_functions.h"
 
-#define MAX_SPEED                 0.01  // m/s
+#define MAX_SPEED                 1.1  // m/s
 #define MAX_ANGULAR_SPEED         1000  // steps/s
 #define MICROSTEPS                8
 #define STEPS_PER_REV             200
@@ -91,15 +91,15 @@ void move_arm(long int * delta, SStepper &motor1, SStepper &motor2, double theta
     speed_2 = delta[1];
   }
 
-  EVERY_N_MILLISECONDS(1000) {
-    Serial.println("Delta: "+ String(delta[0]) + ", " + String(delta[1]));
-    Serial.println("Speeds: " + String(motor1.speed) + ", " + String(motor2.speed) );
-  }
+  // EVERY_N_MILLISECONDS(1000) {
+  //   Serial.println("Delta: "+ String(delta[0]) + ", " + String(delta[1]));
+  //   Serial.println("Speeds: " + String(motor1.speed) + ", " + String(motor2.speed) );
+  // }
   
   motor1.set_target_speed( speed_1);
   motor2.set_target_speed( speed_2 );
-  motor1.set_acceleration( (speed_1 - motor1.speed) / 50.0);
-  motor2.set_acceleration( (speed_2 - motor2.speed) / 50.0);
+  motor1.set_acceleration( (speed_1 - motor1.speed) / 1000.0);
+  motor2.set_acceleration( (speed_2 - motor2.speed) / 1000.0);
 
 
   // Serial.print("Speed: ");
