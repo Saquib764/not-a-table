@@ -29,7 +29,7 @@ void setup_driver(TMC2209Stepper &driver, int EN_PIN, int MS1, int MS2) {
                                   // UART: Init SW UART (if selected) with default 115200 baudrate
   driver.toff(3);                 // Enables driver in software
   driver.pdn_disable(true);
-  driver.rms_current(400);        // Set motor RMS current
+  driver.rms_current(500);        // Set motor RMS current
   driver.microsteps( MICROSTEPS );          // Set microsteps to 1/16th
   // driver.irun(31);
 
@@ -83,13 +83,28 @@ void move_arm(long int * delta, SStepper &motor1, SStepper &motor2, double theta
   };
   // use larger distance as reference
   double expected_delta[2] = { 0.0, 0.0 };
-
+  int force_motor = -1;
+  long int max_initial_delta = max(abs(initial_delta[0]), abs(initial_delta[1]));
+  // expected_delta[0] = 
   if( abs(initial_delta[0]) > abs(initial_delta[1]) ) {
     expected_delta[0] = delta[0];
     expected_delta[1] = delta[0] * abs(initial_delta[1]) / abs(initial_delta[0]);
+    if( abs(delta[1]) - abs(expected_delta[1]) > 1 ) {
+      force_motor = 1;
+    }
+    if( abs(delta[1]) - abs(expected_delta[1]) < -1 ) {
+      force_motor = 0;
+    }
   } else {
     expected_delta[1] = delta[1];
     expected_delta[0] = delta[1] * abs(initial_delta[0]) / abs(initial_delta[1]);
+
+    if( abs(delta[0]) - abs(expected_delta[0]) > 1 ) {
+      force_motor = 0;
+    }
+    if( abs(delta[1]) - abs(expected_delta[1]) < -1 ) {
+      force_motor = 1;
+    }
   }
 
   
@@ -127,12 +142,12 @@ void move_arm(long int * delta, SStepper &motor1, SStepper &motor2, double theta
   motor2.one_step();
   // Serial.println("");
 
-  // if(force_motor == 0) {
-  //   motor1.force_step();
-  // }
-  // if(force_motor == 1) {
-  //   motor2.force_step();
-  // }
+  if(force_motor == 0) {
+    motor1.force_step();
+  }
+  if(force_motor == 1) {
+    motor2.force_step();
+  }
 
   delta[0] = abs(current_targets[0] - motor1.position);
   delta[1] = abs(current_targets[1] - motor2.position);
