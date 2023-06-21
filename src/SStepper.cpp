@@ -97,7 +97,7 @@ void SStepper::reset() {
   this->target_speed = 0;
   this->acceleration = 0;
   this->last_step_time = 0;
-  this->step_delay = 60;
+  this->step_delay = 20;
   this->step_interval = 0;
   this->last_speed_update_time = 0;
 }
@@ -131,16 +131,22 @@ bool SStepper::one_step() {
   } else {
     this->position--;
   }
-  
+  Serial.println("run");
   // Serial.print(1000000.0 / dt);
   this->last_step_time = time;
   digitalWrite(this->STEP_PIN, HIGH);
   delayMicroseconds(this->step_delay);
   digitalWrite(this->STEP_PIN, LOW);
   delayMicroseconds(10);
+  Serial.println(micros() - time);
   return true;
 }
 void SStepper::force_step() {
+  if(this->direction == CLOCKWISE) {
+    this->position++;
+  } else {
+    this->position--;
+  }
   digitalWrite(this->STEP_PIN, HIGH);
   delayMicroseconds(this->step_delay);
   digitalWrite(this->STEP_PIN, LOW);

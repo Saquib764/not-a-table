@@ -1,6 +1,6 @@
 
 #include <Arduino.h>
-#include "led_control.h"
+// #include "led_control.h"
 #include "math.h"
 #include <TMCStepper.h>
 #include <WebServer.h>
@@ -263,8 +263,8 @@ void setup_routing(WebServer& server) {
 
 void setup() {
   preferences.begin("yume", false); 
-  setup_led();
-  init_led();
+  // setup_led();
+  // init_led();
   // delay(50);
   // put your setup code here, to run once:
   Serial.begin(115200);
@@ -290,7 +290,7 @@ void setup() {
     delay(100);
   }
   
-  set_led_status(status_code);
+  // set_led_status(status_code);
   if(has_error) {
     return;
   }
@@ -342,7 +342,7 @@ void setup() {
   // if(has_resumed) {
   //   is_printing_design = false;
   // }
-  set_led_status(status_code);
+  // set_led_status(status_code);
   server.begin();
   Serial.println("Server started. Listening on port 80");
 
@@ -359,34 +359,34 @@ double points[2][3] = {
 int current_index = 0;
 void loop() {
   long current_time = micros();
-  if(has_error) {
-    delay(10);
-    return;
-  }
-  server.handleClient();
-  if(is_in_pairing_mode) {
-    set_led_status(status_code);
-    delay(5);
-    return;
-  }
-  if(should_clear) {
-    // Clear the table
-    should_clear = false;
-    return;
-  }
-  if(should_perform_homing && false) {
-    // Perform homing
-    Serial.println("Homing start");
-    perform_homing(motor1);
-    motor1.reset();
-    motor2.reset();
-    target_q1 = 0.0;
-    target_q2 = 0.0;
-    // perform_homing(motor2);
-    should_perform_homing = false;
-    Serial.println("Homing DONE!");
-    return;
-  }
+  // if(has_error) {
+  //   delay(10);
+  //   return;
+  // }
+  // server.handleClient();
+  // if(is_in_pairing_mode) {
+  //   set_led_status(status_code);
+  //   delay(5);
+  //   return;
+  // }
+  // if(should_clear) {
+  //   // Clear the table
+  //   should_clear = false;
+  //   return;
+  // }
+  // if(should_perform_homing && false) {
+  //   // Perform homing
+  //   Serial.println("Homing start");
+  //   perform_homing(motor1);
+  //   motor1.reset();
+  //   motor2.reset();
+  //   target_q1 = 0.0;
+  //   target_q2 = 0.0;
+  //   // perform_homing(motor2);
+  //   should_perform_homing = false;
+  //   Serial.println("Homing DONE!");
+  //   return;
+  // }
   // if(should_play_next) {
   //   // Play next design
   //   String next_design = player.get_next_design(SD);
@@ -397,9 +397,9 @@ void loop() {
   //   should_play_next = false;
   //   return;
   // }
-  EVERY_N_MILLISECONDS(25) {
-    move_led();
-  }
+  // EVERY_N_MILLISECONDS(25) {
+  //   move_led();
+  // }
   if(is_printing_design) {
     long int delta[2] = {0, 0};
     move_arm(delta, motor1, motor2, target_q1, target_q2);
@@ -417,6 +417,6 @@ void loop() {
   }
   // delay(300);
   // Serial.print("Time for servo run: ");
-  // Serial.println(micros() - current_time);
+  Serial.println("Time: " + String(micros() - current_time));
   // Serial.print("  ");
 }
