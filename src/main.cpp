@@ -262,7 +262,7 @@ void setup_routing(WebServer& server) {
 }
 
 void setup() {
-  preferences.begin("yume", true); 
+  preferences.begin("yume", false); 
   setup_led();
   init_led();
   // delay(50);
@@ -353,8 +353,8 @@ void setup() {
 
 double points[3][3] = {
   {0., 0.0, 0.0},
-  {0., 6.28, 0.0},
-  {0., 628000.0, 0.0}
+  {0., 6.28, 6.0},
+  {0., 628.0, 0.0}
 };
 int current_index = 0;
 void loop() {

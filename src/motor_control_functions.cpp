@@ -1,6 +1,6 @@
 #include "motor_control_functions.h"
 
-#define MAX_SPEED                 0.01  // m/s
+#define MAX_SPEED                 0.1  // m/s
 #define MAX_ANGULAR_SPEED         1000  // steps/s
 #define MICROSTEPS                32
 #define STEPS_PER_REV             200
@@ -49,7 +49,7 @@ long current_targets[2] = {0, 0};
 long initial_positions[2] = {0, 0};
 void move_arm(long int * delta, SStepper &motor1, SStepper &motor2, double theta1, double theta2) {
 
-  double max_speed_1 = 0.5 * 18.0 * MAX_SPEED * K / (R * (6*cos(theta2/2) + 1));
+  double max_speed_1 = 0.5 * 18.0 * MAX_SPEED * K / (R * (6*abs(cos(theta2/2)) + 1));
   double max_speed_2 = 0.5 * 18.0 * MAX_SPEED * K / R;
 
   long int target1 = 3 * theta1 * K;
@@ -84,18 +84,22 @@ void move_arm(long int * delta, SStepper &motor1, SStepper &motor2, double theta
     speed_1 = max_speed_2 * delta[0]/(abs(delta[0]) + 0.00001);
     speed_2 = max_speed_2 * delta[1]/(abs(delta[1]) + 0.00001);
   }
-  if(delta[0] < 10) {
-    speed_1 = 10;
-  }
-  if(delta[1] < 10) {
-    speed_2 = 10;
-  }
+  // if(delta[0] < 10) {
+  //   speed_1 = 10;
+  // }
+  // if(delta[1] < 10) {
+  //   speed_2 = 10;
+  // }
+
+  // EVERY_N_SECONDS(1) {
+    // Serial.println("Delta: "+ String(delta[0]) + ", " + String(delta[1]));
+  // }
   
-  Serial.println("Speeds: " + String(speed_1) + ", " + String(speed_2) );
-  motor1.set_target_speed( speed_1);
-  motor2.set_target_speed(speed_2);
-  motor1.set_acceleration(abs(speed_1 - motor1.speed) / 10.0);
-  motor2.set_acceleration(abs(speed_2 - motor2.speed) / 10.0);
+  // Serial.println("Speeds: " + String(motor1.speed) + ", " + String(motor2.speed) );
+  motor1.set_speed( speed_1);
+  motor2.set_speed(speed_2);
+  // motor1.set_acceleration(abs(speed_1 - motor1.speed) / 10.0);
+  // motor2.set_acceleration(abs(speed_2 - motor2.speed) / 10.0);
 
 
   // Serial.print("Speed: ");

@@ -116,20 +116,20 @@ bool SStepper::one_step() {
   } else {
     this->position--;
   }
-  if(this->speed != this->target_speed) {
-    if(this->speed < this->target_speed) {
-      this->speed += this->acceleration;
-      if(this->speed > this->target_speed) {
-        this->speed = this->target_speed;
-      }
-    } else {
-      this->speed -= this->acceleration;
-      if(this->speed < this->target_speed) {
-        this->speed = this->target_speed;
-      }
-    }
-    this->step_interval = fabs(1000000.0 / this->speed);
-  }
+  // if(this->speed != this->target_speed) {
+  //   if(this->speed < this->target_speed) {
+  //     this->speed += this->acceleration;
+  //     if(this->speed > this->target_speed) {
+  //       this->speed = this->target_speed;
+  //     }
+  //   } else {
+  //     this->speed -= this->acceleration;
+  //     if(this->speed < this->target_speed) {
+  //       this->speed = this->target_speed;
+  //     }
+  //   }
+  //   this->step_interval = fabs(1000000.0 / this->speed);
+  // }
   
   // Serial.print(1000000.0 / dt);
   this->last_step_time = time;
