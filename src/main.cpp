@@ -160,7 +160,7 @@ void handle_pairing() {
   Serial.println("Pairing done. Connecting.");
   server.send(200, "application/json", buffer);
   delay(2000);
-  connect_to_network(SAVED_SSID, SAVED_PWD, 5);
+  ESP.restart();
 }
 
 void handle_update() {
