@@ -16,7 +16,9 @@ class SStepper {
 
     void one_step(int direction, int wait=20);
     bool one_step();
-    void set_speed(int speed);
+    void set_acceleration(double acceleration);
+    void set_target_speed(double speed);
+    void set_speed(double speed);
     void set_target(long int target);
     void set_position(long int position);
     void set_step_delay(int step_delay);
@@ -32,7 +34,9 @@ class SStepper {
     int HOMING_PIN;
     long int position;
     long int target;
-    int speed;
+    double speed;
+    double target_speed;
+    double acceleration;
     unsigned int last_step_time;
     unsigned int step_delay;
     double step_interval;

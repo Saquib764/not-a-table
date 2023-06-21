@@ -13,18 +13,15 @@ int static_ip[15][4] = {
   {192, 168, 190, 127},
 };
 
-std::array<String, 2> get_wifi_login(fs::FS &fs) {
-  File file = read_file( fs, "/wifi_login.txt");
-  String ssid = file.readStringUntil('\n');
-  String pwd = file.readStringUntil('\n');
+std::array<String, 2> get_wifi_login(Preferences &preferences) {
+  String ssid = preferences.getString("ssid", "");
+  String pwd = preferences.getString("pwd", "");
   return {ssid, pwd};
 }
 
-void save_wifi_login(fs::FS &fs, String ssid, String pwd) {
-  File file = open_file(fs, "/wifi_login.txt", FILE_WRITE);
-  file.println(ssid);
-  file.println(pwd);
-  file.close();
+void save_wifi_login(Preferences &preferences , String ssid, String pwd) {
+  preferences.putString("ssid", ssid);
+  preferences.putString("pwd", pwd);
 }
 
 bool check_if_network_is_available(String ssid) {
@@ -136,23 +133,15 @@ bool check_if_mode_is_pairing() {
 }
 
 
-void update_counter(fs::FS &fs) {
-  File file = open_file(fs, "/restart_counter.txt", FILE_APPEND);
-  file.print("1");
-  file.close();
+void update_counter(Preferences &preferences) {
+  int counter = preferences.getInt("counter", 0);
+  preferences.putInt("counter", counter + 1);
 }
-bool should_reset(fs::FS &fs) {
-  File file = read_file(fs, "/restart_counter.txt");
-  String starts = file.readStringUntil('\n');
-  file.close();
-  starts.trim();
-  Serial.print("starts: ");
-  Serial.println(starts);
-  return starts == "111";
+bool should_reset(Preferences &preferences) {
+  int counter = preferences.getInt("counter", 0);
+  return counter >= 3;
 }
 
-void clear_counter(fs::FS &fs) {
-  File file = open_file(fs, "/restart_counter.txt", FILE_WRITE);
-  file.print("");
-  file.close();
+void clear_counter(Preferences &preferences) {
+  preferences.putInt("counter", 0);  
 }

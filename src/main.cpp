@@ -38,6 +38,8 @@ Player player;
 
 WebServer server(80);
 
+Preferences preferences;
+
 String SAVED_SSID = "Zapp";
 String SAVED_PWD = "Haweli@1504";
 
@@ -148,7 +150,7 @@ void handle_pairing() {
   SAVED_PWD = pwd;
   Serial.println(ssid);
   Serial.println(pwd);
-  save_wifi_login(SD, ssid, pwd);
+  save_wifi_login(preferences, ssid, pwd);
   
   jsonDocument.clear();  
   jsonDocument["success"] = true;
@@ -260,6 +262,7 @@ void setup_routing(WebServer& server) {
 }
 
 void setup() {
+  preferences.begin("yume", true); 
   setup_led();
   init_led();
   // delay(50);
@@ -294,34 +297,34 @@ void setup() {
   
   list_dir(SPIFFS, "/", 0);
 
-  // update_counter(SD);
-  // is_in_pairing_mode = should_reset(SD);
-  // if(!is_in_pairing_mode) {
-  //   delay(5000);
-  // }
-  // clear_counter(SD);
+  update_counter(preferences);
+  is_in_pairing_mode = should_reset(preferences);
+  if(!is_in_pairing_mode) {
+    delay(5000);
+  }
+  clear_counter(preferences);
 
   // Serial.println("List playlist:");
   // Serial.println(player.get_playlist(SD));
   
   if(!is_in_pairing_mode) {
-    // std::array<String, 2> logins = get_wifi_login(SD);
+    std::array<String, 2> logins = get_wifi_login(preferences);
 
-    // Serial.println("Wifi logins:");
-    // Serial.println(logins[0]);
-    // Serial.println(logins[1]);
+    Serial.println("Wifi logins:");
+    Serial.println(logins[0]);
+    Serial.println(logins[1]);
 
-    // if( logins[0] != "" && logins[1] != "" ) {
+    if( logins[0] != "" && logins[1] != "" ) {
       // Wifi login found, connect to wifi
-      // SAVED_SSID = logins[0];
-      // SAVED_PWD = logins[1];
-      // SAVED_SSID.trim();
-      // SAVED_PWD.trim();
+      SAVED_SSID = logins[0];
+      SAVED_PWD = logins[1];
+      SAVED_SSID.trim();
+      SAVED_PWD.trim();
 
       connect_to_network(SAVED_SSID, SAVED_PWD, 5);
-    // } else {
-    //   is_in_pairing_mode = true;
-    // }
+    } else {
+      is_in_pairing_mode = true;
+    }
   }
   if(is_in_pairing_mode){
     // No wifi login found, go in pairing mode. Creating hotspot
@@ -400,7 +403,7 @@ void loop() {
   if(is_printing_design) {
     long int delta[2] = {0, 0};
     move_arm(delta, motor1, motor2, target_q1, target_q2);
-    if(abs(delta[0]) < 3 && abs(delta[1]) < 3) {
+    if(abs(delta[0]) < 11 && abs(delta[1]) < 11) {
       // double* points = player.next_line(SD);
       // if(points[0] == 0.0) {
       //   is_printing_design = false;

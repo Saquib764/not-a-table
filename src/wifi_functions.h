@@ -4,13 +4,8 @@
 
 #include <WiFi.h>
 #include <ArduinoJson.h>
-#include <iostream>
-#include<array>
-#include "FS.h"
-#include "SD.h"
-#include "SPI.h"
+#include <array>
 #include <HTTPClient.h>
-#include "file_functions.h"
 #include <Preferences.h>
 using namespace std;
 
@@ -23,11 +18,11 @@ bool connect_to_network(String ssid, String pwd, int n_try = 3);
 bool create_hotspot();
 bool check_if_mode_is_pairing();
 
-std::array<String, 2> get_wifi_login(fs::FS &fs);
-void save_wifi_login(fs::FS &fs, String ssid, String pwd);
+std::array<String, 2> get_wifi_login(Preferences &preferences);
+void save_wifi_login(Preferences &preferences, String ssid, String pwd);
 
-void update_counter(fs::FS &fs);
-bool should_reset(fs::FS &fs);
-void clear_counter(fs::FS &fs);
+void update_counter(Preferences &preferences);
+bool should_reset(Preferences &preferences);
+void clear_counter(Preferences &preferences);
 
 #endif

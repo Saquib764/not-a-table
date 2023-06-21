@@ -26,7 +26,13 @@ SStepper::SStepper(int DIR_PIN, int STEP_PIN, int HOMING_PIN) {
   digitalWrite(this->DIR_PIN, this->direction);
   this->reset();
 }
-void SStepper::set_speed(int speed) {
+void SStepper::set_acceleration(double acceleration) {
+  this->acceleration = acceleration;
+}
+void SStepper::set_target_speed(double speed) {
+  this->target_speed = speed;
+}
+void SStepper::set_speed(double speed) {
   if(speed == this->speed) {
     return;
   }
@@ -72,6 +78,8 @@ void SStepper::reset() {
   this->position = 0;
   this->target = 0;
   this->speed = 0;
+  this->target_speed = 0;
+  this->acceleration = 0;
   this->last_step_time = 0;
   this->step_delay = 60;
 }
@@ -107,6 +115,20 @@ bool SStepper::one_step() {
     this->position++;
   } else {
     this->position--;
+  }
+  if(this->speed != this->target_speed) {
+    if(this->speed < this->target_speed) {
+      this->speed += this->acceleration;
+      if(this->speed > this->target_speed) {
+        this->speed = this->target_speed;
+      }
+    } else {
+      this->speed -= this->acceleration;
+      if(this->speed < this->target_speed) {
+        this->speed = this->target_speed;
+      }
+    }
+    this->step_interval = fabs(1000000.0 / this->speed);
   }
   
   // Serial.print(1000000.0 / dt);
