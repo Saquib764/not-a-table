@@ -363,7 +363,7 @@ void setup() {
 
     stepper1->setSpeedInHz(500);       // 500 steps/s
     stepper1->setAcceleration(100);    // 100 steps/s²
-    stepper1->move(1000);
+    stepper1->move(100000);
     stepper1->keepRunning();
   }
 }
@@ -380,7 +380,7 @@ void loop() {
   //   delay(10);
   //   return;
   // }
-  // server.handleClient();
+  server.handleClient();
   // if(is_in_pairing_mode) {
   //   set_led_status(status_code);
   //   delay(5);
@@ -434,6 +434,6 @@ void loop() {
   // }
   // delay(300);
   // Serial.print("Time for servo run: ");
-  Serial.println("Time: " + String(micros() - current_time));
+  // Serial.println("Time: " + String(micros() - current_time));
   // Serial.print("  ");
 }
