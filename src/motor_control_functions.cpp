@@ -11,6 +11,10 @@
 
 #define SERIAL_PORT Serial2 // TMC2208/TMC2224 HardwareSerial port
 
+FastAccelStepperEngine engine = FastAccelStepperEngine();
+FastAccelStepper *stepper1 = NULL;
+FastAccelStepper *stepper2 = NULL;
+
 void setup_driver(TMC2209Stepper &driver, int EN_PIN, int MS1, int MS2) {
   Serial.println("Setting up driver");
   pinMode(EN_PIN, OUTPUT);
@@ -44,9 +48,30 @@ void setup_driver(TMC2209Stepper &driver, int EN_PIN, int MS1, int MS2) {
 double K = STEPS_PER_REV * MICROSTEPS/ (2.0*PI);
 float R = 0.63/2;
 
+void setup_arm(uint8_t EN_PIN, uint8_t DIR_1, uint8_t STEPPER_1, uint8_t HOMING_1, uint8_t DIR_2, uint8_t STEPPER_2, uint8_t HOMING_2) {
+  engine.init();
+  stepper1 = engine.stepperConnectToPin(STEPPER_1);
+  if (stepper1) {
+    stepper1->setDirectionPin(DIR_1);
+    stepper1->setEnablePin(EN_PIN);
+    stepper1->setAutoEnable(true);
+
+    // stepper1->setSpeedInHz(500);       // 500 steps/s
+    // stepper1->setAcceleration(100);    // 100 steps/s²
+    // stepper1->move(100000);
+    // stepper1->keepRunning();
+  }
+  stepper2 = engine.stepperConnectToPin(STEPPER_2);
+  if (stepper2) {
+    stepper2->setDirectionPin(DIR_2);
+    stepper2->setEnablePin(EN_PIN);
+    stepper2->setAutoEnable(true);
+  }
+}
+
 long current_targets[2] = {-1, -1};
 long initial_positions[2] = {0, 0};
-void move_arm(long int * delta, SStepper &motor1, SStepper &motor2, double theta1, double theta2) {
+void move_arm(long int * delta, double theta1, double theta2) {
   double max_speed_1 = min(0.5 * 18.0 * MAX_SPEED * K / (R * (6*abs(cos(theta2/2)) + 1)), MAX_ANGULAR_SPEED);
   double max_speed_2 = min(0.5 * 18.0 * MAX_SPEED * K / R, MAX_ANGULAR_SPEED);
 
@@ -58,21 +83,21 @@ void move_arm(long int * delta, SStepper &motor1, SStepper &motor2, double theta
 
   if(target1 != current_targets[0]) {
     Serial.print("Target 1: " + String(target1) + ", " + String(theta1) + ". Current pos: ");
-    Serial.println(motor1.position / (K * 3));
+    Serial.println(stepper1->getCurrentPosition() / (K * 3));
     initial_positions[0] = current_targets[0];
     current_targets[0] = target1;
 
-    motor1.set_target(target1);
+    stepper1->moveTo(target1);
   }
   if(target2 != current_targets[1]) {
     Serial.print("Target 2: " + String(target2) + ", " + String(theta2) + ". Current pos: ");
-    Serial.println(motor2.position / (9*K) - motor1.position / (9*K));
+    Serial.println(stepper2->getCurrentPosition() / (9*K) - stepper1->getCurrentPosition() / (9*K));
     initial_positions[1] = current_targets[1];
     current_targets[1] = target2;
-    motor2.set_target(target2);
+    stepper2->moveTo(target2);
   }
-  delta[0] = motor1.distance_to_go();
-  delta[1] = motor2.distance_to_go();
+  delta[0] = stepper1->targetPos() - stepper1->getCurrentPosition();
+  delta[1] = stepper2->targetPos() - stepper2->getCurrentPosition();
 
   long initial_delta[2] = {
     current_targets[0] - initial_positions[0],
@@ -128,28 +153,33 @@ void move_arm(long int * delta, SStepper &motor1, SStepper &motor2, double theta
   // }
 
   // Serial.println("Speeds: " + String(motor1.speed) + ", " + String(motor2.speed) );
-  motor1.set_speed( speed_1);
-  motor2.set_speed( speed_2 );
+  stepper1->setSpeedInHz(speed_1);
+  stepper2->setSpeedInHz(speed_2);
+
+  stepper1->setAcceleration( 100 * initial_delta[0] / (abs(initial_delta[0]) + 0.00001) );
+  stepper2->setAcceleration( 100 * initial_delta[1] / (abs(initial_delta[1]) + 0.00001) );
+  // motor1.set_speed( speed_1);
+  // motor2.set_speed( speed_2 );
   // motor1.set_acceleration( (speed_1 - motor1.speed) / 10.0);
   // motor2.set_acceleration( (speed_2 - motor2.speed) / 10.0);
 
 
   // Serial.print("Speed: ");
   // Serial.print("1: ");
-  motor1.one_step();
+  // motor1.one_step();
   // Serial.print(",");
   // Serial.print("2: ");
-  motor2.one_step();
+  // motor2.one_step();
   // Serial.println("");
 
-  if(force_motor == 1) {
-    motor1.force_step();
-  }
-  if(force_motor == 2) {
-    motor2.force_step();
-  }
+  // if(force_motor == 1) {
+  //   motor1.force_step();
+  // }
+  // if(force_motor == 2) {
+  //   motor2.force_step();
+  // }
 
-  delta[0] = abs(current_targets[0] - motor1.position);
-  delta[1] = abs(current_targets[1] - motor2.position);
+  delta[0] = abs(current_targets[0] - stepper1->getCurrentPosition());
+  delta[1] = abs(current_targets[1] - stepper2->getCurrentPosition());
 }
 

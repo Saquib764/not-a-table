@@ -20,7 +20,6 @@ using namespace std;
 #include "homing_functions.h"
 #include "ota.h"
 #include <Preferences.h>
-#include "FastAccelStepper.h"
 
 const int dummy = 0;
 
@@ -50,19 +49,12 @@ uint8_t motor1StepPin = 26;
 uint8_t motor1HomingPin = 22;
 
 
-int motor2DirPin = 13;
-int motor2StepPin = 14;
-int motor2HomingPin = 21;
+uint8_t motor2DirPin = 13;
+uint8_t motor2StepPin = 14;
+uint8_t motor2HomingPin = 21;
 
 StaticJsonDocument<250> jsonDocument;
 char buffer[250];
-
-// SStepper motor1(motor1DirPin, motor1StepPin, motor1HomingPin);
-SStepper motor2(motor2DirPin, motor2StepPin, motor2HomingPin);
-FastAccelStepperEngine engine = FastAccelStepperEngine();
-FastAccelStepper *stepper1 = NULL;
-
-// Scara scara(motor1, motor2)
 
 double target_q1 = 0.0;
 double target_q2 = 0.0;
@@ -267,9 +259,9 @@ void setup_routing(WebServer& server) {
 
 void setup() {
   preferences.begin("yume", false); 
-  // setup_led();
-  // init_led();
-  // delay(50);
+  setup_led();
+  init_led();
+  delay(50);
   // put your setup code here, to run once:
   Serial.begin(115200);
   Serial.println("Version: " + String(VERSION));
@@ -354,18 +346,7 @@ void setup() {
   player.read(SPIFFS, "/spiral.thr.txt");
   is_printing_design = true;
 
-  engine.init();
-  stepper1 = engine.stepperConnectToPin(motor1StepPin);
-  if (stepper1) {
-    stepper1->setDirectionPin(motor1DirPin);
-    stepper1->setEnablePin(EN_PIN);
-    stepper1->setAutoEnable(true);
-
-    stepper1->setSpeedInHz(500);       // 500 steps/s
-    stepper1->setAcceleration(100);    // 100 steps/s²
-    stepper1->move(100000);
-    stepper1->keepRunning();
-  }
+  setup_arm(EN_PIN, motor1DirPin, motor1StepPin, motor1HomingPin, motor2DirPin, motor2StepPin, motor2HomingPin);
 }
 
 double points[2][3] = {
@@ -417,21 +398,21 @@ void loop() {
   EVERY_N_MILLISECONDS(25) {
     move_led();
   }
-  // if(is_printing_design) {
-  //   long int delta[2] = {0, 0};
-  //   move_arm(delta, motor1, motor2, target_q1, target_q2);
-  //   if(abs(delta[0]) < 11 && abs(delta[1]) < 11) {
-  //     // double* points = player.next_line(SD);
-  //     // if(points[0] == 0.0) {
-  //     //   is_printing_design = false;
-  //     //   should_play_next = true;
-  //     //   return;
-  //     // }
-  //     target_q1 = points[current_index][1];
-  //     target_q2 = points[current_index][2];
-  //     current_index = (current_index + 1) % 2;
-  //   }
-  // }
+  if(is_printing_design) {
+    long int delta[2] = {0, 0};
+    move_arm(delta, target_q1, target_q2);
+    if(abs(delta[0]) < 11 && abs(delta[1]) < 11) {
+      // double* points = player.next_line(SD);
+      // if(points[0] == 0.0) {
+      //   is_printing_design = false;
+      //   should_play_next = true;
+      //   return;
+      // }
+      target_q1 = points[current_index][1];
+      target_q2 = points[current_index][2];
+      current_index = (current_index + 1) % 2;
+    }
+  }
   // delay(300);
   // Serial.print("Time for servo run: ");
   // Serial.println("Time: " + String(micros() - current_time));
