@@ -1,6 +1,6 @@
 
 #include <Arduino.h>
-// #include "led_control.h"
+#include "led_control.h"
 #include "math.h"
 #include <TMCStepper.h>
 #include <WebServer.h>
@@ -20,6 +20,7 @@ using namespace std;
 #include "homing_functions.h"
 #include "ota.h"
 #include <Preferences.h>
+#include "FastAccelStepper.h"
 
 const int dummy = 0;
 
@@ -43,9 +44,10 @@ Preferences preferences;
 String SAVED_SSID = "Zapp";
 String SAVED_PWD = "Haweli@1504";
 
-int motor1DirPin = 27;
-int motor1StepPin = 26;
-int motor1HomingPin = 22;
+int EN_PIN = 32;
+uint8_t motor1DirPin = 27;
+uint8_t motor1StepPin = 26;
+uint8_t motor1HomingPin = 22;
 
 
 int motor2DirPin = 13;
@@ -55,8 +57,10 @@ int motor2HomingPin = 21;
 StaticJsonDocument<250> jsonDocument;
 char buffer[250];
 
-SStepper motor1(motor1DirPin, motor1StepPin, motor1HomingPin);
+// SStepper motor1(motor1DirPin, motor1StepPin, motor1HomingPin);
 SStepper motor2(motor2DirPin, motor2StepPin, motor2HomingPin);
+FastAccelStepperEngine engine = FastAccelStepperEngine();
+FastAccelStepper *stepper1 = NULL;
 
 // Scara scara(motor1, motor2)
 
@@ -297,12 +301,12 @@ void setup() {
   
   list_dir(SPIFFS, "/", 0);
 
-  update_counter(preferences);
-  is_in_pairing_mode = should_reset(preferences);
-  if(!is_in_pairing_mode) {
-    delay(5000);
-  }
-  clear_counter(preferences);
+  // update_counter(preferences);
+  // is_in_pairing_mode = should_reset(preferences);
+  // if(!is_in_pairing_mode) {
+  //   delay(5000);
+  // }
+  // clear_counter(preferences);
 
   // Serial.println("List playlist:");
   // Serial.println(player.get_playlist(SD));
@@ -335,7 +339,7 @@ void setup() {
 
   sleep(1);
 
-  setup_driver(driver, 32, 33, 25);
+  setup_driver(driver, EN_PIN, 33, 25);
 
   setup_routing(server);
   // bool has_resumed = player.read(SD);
@@ -349,6 +353,19 @@ void setup() {
   // Remove this
   player.read(SPIFFS, "/spiral.thr.txt");
   is_printing_design = true;
+
+  engine.init();
+  stepper1 = engine.stepperConnectToPin(motor1StepPin);
+  if (stepper1) {
+    stepper1->setDirectionPin(motor1DirPin);
+    stepper1->setEnablePin(EN_PIN);
+    stepper1->setAutoEnable(true);
+
+    stepper1->setSpeedInHz(500);       // 500 steps/s
+    stepper1->setAcceleration(100);    // 100 steps/s²
+    stepper1->move(1000);
+    stepper1->keepRunning();
+  }
 }
 
 double points[2][3] = {
@@ -397,24 +414,24 @@ void loop() {
   //   should_play_next = false;
   //   return;
   // }
-  // EVERY_N_MILLISECONDS(25) {
-  //   move_led();
-  // }
-  if(is_printing_design) {
-    long int delta[2] = {0, 0};
-    move_arm(delta, motor1, motor2, target_q1, target_q2);
-    if(abs(delta[0]) < 11 && abs(delta[1]) < 11) {
-      // double* points = player.next_line(SD);
-      // if(points[0] == 0.0) {
-      //   is_printing_design = false;
-      //   should_play_next = true;
-      //   return;
-      // }
-      target_q1 = points[current_index][1];
-      target_q2 = points[current_index][2];
-      current_index = (current_index + 1) % 2;
-    }
+  EVERY_N_MILLISECONDS(25) {
+    move_led();
   }
+  // if(is_printing_design) {
+  //   long int delta[2] = {0, 0};
+  //   move_arm(delta, motor1, motor2, target_q1, target_q2);
+  //   if(abs(delta[0]) < 11 && abs(delta[1]) < 11) {
+  //     // double* points = player.next_line(SD);
+  //     // if(points[0] == 0.0) {
+  //     //   is_printing_design = false;
+  //     //   should_play_next = true;
+  //     //   return;
+  //     // }
+  //     target_q1 = points[current_index][1];
+  //     target_q2 = points[current_index][2];
+  //     current_index = (current_index + 1) % 2;
+  //   }
+  // }
   // delay(300);
   // Serial.print("Time for servo run: ");
   Serial.println("Time: " + String(micros() - current_time));
