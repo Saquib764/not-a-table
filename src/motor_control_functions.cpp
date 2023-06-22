@@ -1,8 +1,8 @@
 #include "motor_control_functions.h"
 
-#define MAX_SPEED                 0.1  // m/s
-#define MAX_ANGULAR_SPEED         1000.0  // steps/s
-#define MICROSTEPS                16
+#define MAX_SPEED                 0.5  // m/s
+#define MAX_ANGULAR_SPEED         800.0  // steps/s
+#define MICROSTEPS                4
 #define STEPS_PER_REV             200
 #define MAX_TARGET_DISTANCE       50
 
@@ -22,7 +22,8 @@ void setup_driver(TMC2209Stepper &driver, int EN_PIN, int MS1, int MS2) {
   digitalWrite(MS2, LOW);
                                   // Enable one according to your setup
 //SPI.begin();                    // SPI drivers
-  SERIAL_PORT.begin(115200);      // HW UART drivers
+  // NEVER increase the baud rate, its adds 10ms delay. probably related to buffer overflow and flush cycle
+  SERIAL_PORT.begin(9600);      // HW UART drivers
 // driver.beginSerial(115200);     // SW UART drivers
 
   driver.begin();                 //  SPI: Init CS pins and possible SW SPI pins
@@ -112,42 +113,34 @@ void move_arm(long int * delta, SStepper &motor1, SStepper &motor2, double theta
     speed_2 = max_speed_2 * delta[1]/(abs(delta[1]) + 0.00001);
   }
 
-  if( abs(delta[0]) < 10) {
+  if( abs(delta[0]) < 100) {
     speed_1 = delta[0];
   }
-  if( abs(delta[1]) < 10) {
+  if( abs(delta[1]) < 100) {
     speed_2 = delta[1];
   }
 
-  // EVERY_N_MILLISECONDS(1000) {
-  //   Serial.println("Ex Delta: "+ String(expected_delta[0]) + ", " + String(expected_delta[1]));
-  //   Serial.println("Delta: "+ String(delta[0]) + ", " + String(delta[1]));
-  //   Serial.println(motor1.position / (K * 3));
-  //   Serial.println(force_motor);
-  //   Serial.println("Speeds: " + String(motor1.speed) + ", " + String(motor2.speed) );
-  // }
+  EVERY_N_MILLISECONDS(1000) {
+    Serial.println("Ex Delta: "+ String(expected_delta[0]) + ", " + String(expected_delta[1]));
+    Serial.println("Delta: "+ String(delta[0]) + ", " + String(delta[1]));
+    Serial.println(force_motor);
+    Serial.println("Speeds: " + String(motor1.speed) + ", " + String(motor2.speed) );
+  }
 
   // Serial.println("Speeds: " + String(motor1.speed) + ", " + String(motor2.speed) );
-  motor1.set_speed( speed_1);
-  motor2.set_speed( speed_2 );
-  // motor1.set_acceleration( (speed_1 - motor1.speed) / 10.0);
-  // motor2.set_acceleration( (speed_2 - motor2.speed) / 10.0);
+  motor1.set_target_speed( speed_1);
+  motor2.set_target_speed( speed_2);
+  motor1.set_acceleration( 10 *  initial_delta[0] / (max_initial_delta + 0.001));
+  motor2.set_acceleration( 10 *  initial_delta[1] / (max_initial_delta + 0.001));
 
 
   // Serial.print("Speed: ");
   // Serial.print("1: ");
-  motor1.one_step();
+  motor1.one_step( force_motor == 1 );
   // Serial.print(",");
   // Serial.print("2: ");
-  motor2.one_step();
+  motor2.one_step( force_motor == 2 );
   // Serial.println("");
-
-  if(force_motor == 1) {
-    motor1.force_step();
-  }
-  if(force_motor == 2) {
-    motor2.force_step();
-  }
 
   delta[0] = abs(current_targets[0] - motor1.position);
   delta[1] = abs(current_targets[1] - motor2.position);
