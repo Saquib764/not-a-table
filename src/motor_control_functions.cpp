@@ -74,8 +74,11 @@ long previous_targets[2] = {0, 0};
 long current_targets[2] = {0, 0};
 long next_targets[2] = {0, 0};
 double next_speeds[2] = {0.0, 0.0};
+double current_speed_targets[2] = {0.0, 0.0};
 double current_accelerations[2] = {0.0, 0.0};
 int caution_distances[2] = { 0,0};
+
+double error_integral = 0.0;
 
 double* compute_speeds_to_next_target(double* speeds, long * current_positions, long * next_positions, double* max_speeds) {
   Serial.println("MAx: " + String(max_speeds[0]) + ", " + String(max_speeds[1]));
@@ -189,26 +192,35 @@ void move_arm(long int * delta, double theta1, double theta2) {
   double error[2] = { 0.0, 0.0 };
   int motor_to_slow = -1;
   
-  if( abs(initial_delta[0]) < abs(initial_delta[1]) ) {
+  if( initial_delta[0] != 0 && initial_delta[1] != 0 ) {
     error[0] = 0.0;
-    error[1] = abs(delta[1]) - abs(delta[0] * initial_delta[1]) / (abs(initial_delta[0]) + 0.000001);
+    int s = 0;
+    int b = 1;
+    if(abs(initial_delta[0]) > abs(initial_delta[1])) {
+      b = 0;
+      s = 1;
+    }
+    error[1] = abs(delta[b]) - abs(delta[s] * initial_delta[b]) / abs(initial_delta[s]);
     // error[1] > 0 => motor 2 is too slow=> slow down motor 1
     // error[1] < 0 => motor 2 is too fast=> slow down motor 2
     // we always slow down the motor
-    stepper1->setSpeedInHz( current_speeds[0] * (1 - error[1])/(abs(current_speeds[0]) + 0.00001) );
-    stepper1->setAcceleration( - error[1] * current_speeds[0]/(abs(current_speeds[0]) + 0.00001) / ACCELERATION_TIME );
+    double f = 100.0;
+    error_integral += error[1];
+    error_integral = min(100.0, max(-100.0, error_integral));
+    stepper1->setSpeedInHz( current_speed_targets[0] * (1 - ( f * error[1] + error_integral)/abs(current_speed_targets[0])) );
+    stepper1->setAcceleration( - f * 10* error[1] * current_speed_targets[0]/abs(current_speed_targets[0]) );
 
-    stepper2->setSpeedInHz( current_speeds[1] * (1 + error[1] / (abs(current_speeds[1]) + 0.00001) ) );
-    stepper2->setAcceleration( error[1] * current_speeds[1]/(abs(current_speeds[1]) + 0.00001) / ACCELERATION_TIME );
+    stepper2->setSpeedInHz( current_speed_targets[1] * (1 + (f * error[1] + error_integral) / abs(current_speed_targets[1])) );
+    stepper2->setAcceleration( f* 10 * error[1] * current_speed_targets[1]/abs(current_speed_targets[1]) );
 
     stepper1->applySpeedAcceleration();
     stepper2->applySpeedAcceleration();
   }
 
 
-  EVERY_N_MILLISECONDS(5000) {
-    Serial.println("Ex Delta: "+ String(error[0]) + ", " + String(error[1]));
-    Serial.println("Delta: "+ String(delta[0]) + ", " + String(delta[1]));
+  EVERY_N_MILLISECONDS(2000) {
+    Serial.println("Error: "+ String(error[0]) + ", " + String(error[1]));
+    Serial.println("Distance from target: "+ String(delta[0]) + ", " + String(delta[1]));
     Serial.println(stepper1->getCurrentPosition() / (K * 3));
     Serial.println("Speeds: " + String(stepper1->getSpeedInMilliHz()/1000.0) + ", " + String(stepper2->getSpeedInMilliHz()/1000.0) );
   }
