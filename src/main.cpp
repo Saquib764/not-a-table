@@ -14,7 +14,6 @@ using namespace std;
 
 #include "file_functions.h"
 #include "Player.h"
-#include "SStepper.h"
 #include "motor_control_functions.h"
 #include "wifi_functions.h"
 #include "homing_functions.h"
