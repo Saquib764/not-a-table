@@ -8,7 +8,7 @@
 // #define FASTLED_FORCE_SOFTWARE_SPI
 #include <FastLED.h>
 
-#define NUM_LEDS 120
+#define NUM_LEDS 135
 #define LED_PIN 4
 
 

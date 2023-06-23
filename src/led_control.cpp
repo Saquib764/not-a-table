@@ -28,7 +28,8 @@ void set_led_status(int status_code) {
   */
   if(status_code == 0) {
     for(int i = 0; i < NUM_LEDS; i++) {
-      leds[i] = CRGB::Green;
+      leds[i] = CRGB(20, 200, 20);
+      leds[i].maximizeBrightness(20);
     }
   } else if(status_code == 1) {
     for(int i = 0; i < NUM_LEDS; i++) {
@@ -49,13 +50,18 @@ void set_led_status(int status_code) {
 }
 
 void move_led() {
+  int L = 15;
   for (int i = 0; i < NUM_LEDS; i++) {
-    if(i < pos - 15 || i>pos + 15) {
-      leds[i] = CRGB::Black;
-      continue;
+    int d = abs(pos - i);
+    if(d > L) {
+      d = abs(NUM_LEDS - i - pos);
     }
-    leds[i] = CHSV(hue + (( i - pos) * 10), 255, 255);
-    leds[i].maximizeBrightness(15*6 + (i - pos) * 5);
+    if( d > L) {
+          leds[i] = CRGB::Black;
+          continue;
+    }
+    leds[i] = CHSV(hue + (d * 10), 150, 155);
+    leds[i].maximizeBrightness(15*2 + d * 2);
   }
 
   EVERY_N_MILLISECONDS(15){
