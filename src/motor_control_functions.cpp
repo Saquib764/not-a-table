@@ -59,13 +59,15 @@ void setup_arm(uint8_t EN_PIN, uint8_t DIR_1, uint8_t STEPPER_1, uint8_t HOMING_
     // stepper1->setSpeedInHz(500);       // 500 steps/s
     // stepper1->setAcceleration(100);    // 100 steps/s²
     // stepper1->move(100000);
-    // stepper1->keepRunning();
+    stepper1->keepRunning();
   }
   stepper2 = engine.stepperConnectToPin(STEPPER_2);
   if (stepper2) {
     stepper2->setDirectionPin(DIR_2);
     stepper2->setEnablePin(EN_PIN);
     stepper2->setAutoEnable(true);
+
+    stepper2->keepRunning();
   }
 }
 
