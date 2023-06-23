@@ -237,3 +237,7 @@ void move_arm(long int * delta, double theta1, double theta2) {
   }
 }
 
+void force_stop() {
+  stepper1->forceStop();
+  stepper2->forceStop();
+}
