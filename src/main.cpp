@@ -70,7 +70,7 @@ bool should_play_next = false;
 bool has_error = false;
 int status_code = 0;
 bool is_uploading = false;
-bool should_use_internal_sd = true;
+bool should_use_internal_sd = false;
 bool is_storage_available = false;
 bool should_use_homing = true;
 
@@ -290,7 +290,7 @@ void setup() {
     return;
   }
   
-  list_dir(SPIFFS, "/", 0);
+  list_dir(SD, "/", 0);
 
   // update_counter(preferences);
   // is_in_pairing_mode = should_reset(preferences);
@@ -342,7 +342,7 @@ void setup() {
   Serial.println("Server started. Listening on port 80");
 
   // Remove this
-  player.read(SPIFFS, "/AngularRadiance.thr.txt");
+  player.read(SD, "/designs/AngularRadiance.thr.txt");
   is_printing_design = true;
 
   setup_arm(EN_PIN, motor1DirPin, motor1StepPin, motor1HomingPin, motor2DirPin, motor2StepPin, motor2HomingPin);
