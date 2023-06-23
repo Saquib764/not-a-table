@@ -3,7 +3,7 @@
 
 #include "motor_control_functions.h"
 
-void perform_homing(SStepper &motor);
+// void perform_homing(SStepper &motor);
 
 
 #endif

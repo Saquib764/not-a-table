@@ -14,7 +14,6 @@ using namespace std;
 
 #include "file_functions.h"
 #include "Player.h"
-#include "SStepper.h"
 #include "motor_control_functions.h"
 #include "wifi_functions.h"
 #include "homing_functions.h"
@@ -43,22 +42,18 @@ Preferences preferences;
 String SAVED_SSID = "Zapp";
 String SAVED_PWD = "Haweli@1504";
 
-int motor1DirPin = 27;
-int motor1StepPin = 26;
-int motor1HomingPin = 22;
+int EN_PIN = 32;
+uint8_t motor1DirPin = 27;
+uint8_t motor1StepPin = 26;
+uint8_t motor1HomingPin = 22;
 
 
-int motor2DirPin = 13;
-int motor2StepPin = 14;
-int motor2HomingPin = 21;
+uint8_t motor2DirPin = 13;
+uint8_t motor2StepPin = 14;
+uint8_t motor2HomingPin = 21;
 
 StaticJsonDocument<250> jsonDocument;
 char buffer[250];
-
-SStepper motor1(motor1DirPin, motor1StepPin, motor1HomingPin);
-SStepper motor2(motor2DirPin, motor2StepPin, motor2HomingPin);
-
-// Scara scara(motor1, motor2)
 
 double target_q1 = 0.0;
 double target_q2 = 0.0;
@@ -265,7 +260,7 @@ void setup() {
   preferences.begin("yume", false); 
   setup_led();
   init_led();
-  // delay(50);
+  delay(50);
   // put your setup code here, to run once:
   Serial.begin(115200);
   Serial.println("Version: " + String(VERSION));
@@ -297,12 +292,12 @@ void setup() {
   
   list_dir(SPIFFS, "/", 0);
 
-  update_counter(preferences);
-  is_in_pairing_mode = should_reset(preferences);
-  if(!is_in_pairing_mode) {
-    delay(5000);
-  }
-  clear_counter(preferences);
+  // update_counter(preferences);
+  // is_in_pairing_mode = should_reset(preferences);
+  // if(!is_in_pairing_mode) {
+  //   delay(5000);
+  // }
+  // clear_counter(preferences);
 
   // Serial.println("List playlist:");
   // Serial.println(player.get_playlist(SD));
@@ -335,7 +330,7 @@ void setup() {
 
   sleep(1);
 
-  setup_driver(driver, 32, 33, 25);
+  setup_driver(driver, EN_PIN, 33, 25);
 
   setup_routing(server);
   // bool has_resumed = player.read(SD);
@@ -349,6 +344,8 @@ void setup() {
   // Remove this
   player.read(SPIFFS, "/spiral.thr.txt");
   is_printing_design = true;
+
+  setup_arm(EN_PIN, motor1DirPin, motor1StepPin, motor1HomingPin, motor2DirPin, motor2StepPin, motor2HomingPin);
 }
 
 double points[2][3] = {
@@ -363,7 +360,7 @@ void loop() {
   //   delay(10);
   //   return;
   // }
-  // server.handleClient();
+  server.handleClient();
   // if(is_in_pairing_mode) {
   //   set_led_status(status_code);
   //   delay(5);
@@ -402,7 +399,7 @@ void loop() {
   }
   if(is_printing_design) {
     long int delta[2] = {0, 0};
-    move_arm(delta, motor1, motor2, target_q1, target_q2);
+    move_arm(delta, target_q1, target_q2);
     if(abs(delta[0]) < 11 && abs(delta[1]) < 11) {
       // double* points = player.next_line(SD);
       // if(points[0] == 0.0) {
