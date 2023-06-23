@@ -1,6 +1,6 @@
 #include "motor_control_functions.h"
 
-#define MAX_SPEED                 0.04  // m/s
+#define MAX_SPEED                 0.01  // m/s
 #define MAX_ANGULAR_SPEED         4000.0  // steps/s
 #define MICROSTEPS                16
 #define STEPS_PER_REV             200
@@ -180,7 +180,7 @@ bool move_arm(long int * delta, double theta1, double theta2) {
     Serial.println("Speed computed: " + String(next_speeds[0]) + ", " + String(next_speeds[1]));
     Serial.println("Direction: " + String(next_initial_displacements[0]) + ", " + String(next_initial_displacements[1]));
     
-    Serial.print("Target: " + String(next_targets[1]) + ", " + String(next_targets[1]));
+    Serial.println("Target: " + String(next_targets[0]) + ", " + String(next_targets[1]));
 
     previous_targets[0] = current_targets[0];
     previous_targets[1] = current_targets[1];
@@ -249,7 +249,7 @@ bool move_arm(long int * delta, double theta1, double theta2) {
     // Serial.println("Error: "+ String(b) + ", " + String(error[1]));
     // Serial.println("Initial distance: "+ String(initial_displacement[0]) + ", " + String(initial_displacement[1]));
     // Serial.println("Current distance: "+ String(delta[0]) + ", " + String(delta[1]));
-    // Serial.println("Speeds: " + String(stepper1->getCurrentSpeedInMilliHz()/1000.0) + ", " + String(stepper2->getCurrentSpeedInMilliHz()/1000.0) );
+    Serial.println("Speeds: " + String(stepper1->getCurrentSpeedInMilliHz()/1000.0) + ", " + String(stepper2->getCurrentSpeedInMilliHz()/1000.0) );
     // Serial.println(" ");
   }
   return !has_new_target;
