@@ -5,7 +5,7 @@
 #define MICROSTEPS                16
 #define STEPS_PER_REV             200
 #define MAX_TARGET_DISTANCE       50
-#define ACCELERATION_TIME         10.0  // s
+#define ACCELERATION_TIME         2.0  // s
 
 
 // Total steps per revolution = 200 * 16 = 3200
@@ -72,9 +72,9 @@ void setup_arm(uint8_t EN_PIN, uint8_t DIR_1, uint8_t STEPPER_1, uint8_t HOMING_
   }
 }
 
-long previous_targets[2] = {-1, -1};
-long current_targets[2] = {-1, -1};
-long next_targets[2] = {-1, -1};
+long previous_targets[2] = {0, 0};
+long current_targets[2] = {0, 0};
+long next_targets[2] = {0, 0};
 double next_speeds[2] = {0.0, 0.0};
 int caution_distances[2] = { 0,0};
 
@@ -140,6 +140,7 @@ void move_arm(long int * delta, double theta1, double theta2) {
       current_targets[1] - previous_targets[1]
     };
 
+    Serial.println("Speed computed: " + String(next_speeds[0]) + ", " + String(next_speeds[1]));
     stepper1->setSpeedInHz(next_speeds[0]);
     stepper2->setSpeedInHz(next_speeds[1]);
 
@@ -148,6 +149,10 @@ void move_arm(long int * delta, double theta1, double theta2) {
     stepper2->setAcceleration( (next_speeds[1] - current_speeds[1]) / ACCELERATION_TIME );
     stepper1->moveTo(current_targets[0]);
     stepper2->moveTo(current_targets[1]);
+
+    
+    stepper1->applySpeedAcceleration();
+    stepper2->applySpeedAcceleration();
 
     next_targets[0] = -1;
     next_targets[1] = -1;
@@ -183,7 +188,7 @@ void move_arm(long int * delta, double theta1, double theta2) {
   // expected_delta[0] = 
   if( abs(initial_delta[0]) > abs(initial_delta[1]) ) {
     expected_delta[0] = delta[0];
-    expected_delta[1] = delta[0] * abs(initial_delta[1]) / abs(initial_delta[0]);
+    expected_delta[1] = delta[0] * abs(initial_delta[1]) / (abs(initial_delta[0]) + 0.000001);
     if( abs(delta[1]) - abs(expected_delta[1]) >= 1 ) {
       force_motor = 2;
     }
@@ -192,7 +197,7 @@ void move_arm(long int * delta, double theta1, double theta2) {
     }
   } else {
     expected_delta[1] = delta[1];
-    expected_delta[0] = delta[1] * abs(initial_delta[0]) / abs(initial_delta[1]);
+    expected_delta[0] = delta[1] * abs(initial_delta[0]) / (abs(initial_delta[1]) + 0.000001);
 
     if( abs(delta[0]) - abs(expected_delta[0]) >= 1 ) {
       force_motor = 1;
@@ -217,31 +222,20 @@ void move_arm(long int * delta, double theta1, double theta2) {
     speed_2 = delta[1];
   }
 
-  // EVERY_N_MILLISECONDS(1000) {
-  //   Serial.println("Ex Delta: "+ String(expected_delta[0]) + ", " + String(expected_delta[1]));
-  //   Serial.println("Delta: "+ String(delta[0]) + ", " + String(delta[1]));
-  //   Serial.println(motor1.position / (K * 3));
-  //   Serial.println(force_motor);
-  //   Serial.println("Speeds: " + String(motor1.speed) + ", " + String(motor2.speed) );
-  // }
+  EVERY_N_MILLISECONDS(5000) {
+    Serial.println("Ex Delta: "+ String(expected_delta[0]) + ", " + String(expected_delta[1]));
+    Serial.println("Delta: "+ String(delta[0]) + ", " + String(delta[1]));
+    Serial.println(stepper1->getCurrentPosition() / (K * 3));
+    Serial.println(force_motor);
+    Serial.println("Speeds: " + String(stepper1->getSpeedInMilliHz()/1000.0) + ", " + String(stepper2->getSpeedInMilliHz()/1000.0) );
+  }
 
-
-  // Serial.print("Speed: ");
-  // Serial.print("1: ");
-  // motor1.one_step();
-  // Serial.print(",");
-  // Serial.print("2: ");
-  // motor2.one_step();
-  // Serial.println("");
-
-  // if(force_motor == 1) {
-  //   motor1.force_step();
-  // }
-  // if(force_motor == 2) {
-  //   motor2.force_step();
-  // }
-
-  delta[0] = abs(current_targets[0] - stepper1->getCurrentPosition());
-  delta[1] = abs(current_targets[1] - stepper2->getCurrentPosition());
+  if(has_new_target) {
+    delta[0] = abs(next_targets[0] - stepper1->getCurrentPosition());
+    delta[1] = abs(next_targets[1] - stepper2->getCurrentPosition());
+  }else{
+    delta[0] = abs(current_targets[0] - stepper1->getCurrentPosition());
+    delta[1] = abs(current_targets[1] - stepper2->getCurrentPosition());
+  }
 }
 
