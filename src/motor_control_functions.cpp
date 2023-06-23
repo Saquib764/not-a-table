@@ -119,12 +119,12 @@ bool move_arm(long int * delta, double theta1, double theta2) {
   double speed_2;
 
   if(target1 != next_targets[0] || target2 != next_targets[1]) {
-    // Serial.print("Target 1: " + String(target1) + ", " + String(theta1) + ". Current pos: ");
+    Serial.print("Target 1: " + String(target1) + ", " + String(theta1) + ". Current pos: ");
     Serial.println(stepper1->getCurrentPosition() / (K * 3));
     next_targets[0] = target1;
 
     
-    // Serial.print("Target 2: " + String(target2) + ", " + String(theta2) + ". Current pos: ");
+    Serial.print("Target 2: " + String(target2) + ", " + String(theta2) + ". Current pos: ");
     Serial.println(stepper2->getCurrentPosition() / (9*K) - stepper1->getCurrentPosition() / (9*K));
     next_targets[1] = target2;
 
@@ -139,7 +139,7 @@ bool move_arm(long int * delta, double theta1, double theta2) {
     stepper2->getCurrentSpeedInMilliHz() / 1000.0
   };
 
-  if(delta[0] == 0 && delta[1] == 0 && has_new_target) {
+  if( abs(delta[0]) < 2 && abs(delta[1]) < 2 && has_new_target) {
     long initial_displacement[2] = {
       next_targets[0] - current_targets[0],
       next_targets[1] - current_targets[1]
@@ -173,26 +173,14 @@ bool move_arm(long int * delta, double theta1, double theta2) {
     current_targets[0] - previous_targets[0],
     current_targets[1] - previous_targets[1]
   };
-
-  // Implement smooth follow-on keypoints
-  if( delta[0] <= current_speeds[0] * ACCELERATION_TIME && delta[1] <= current_speeds[1] * ACCELERATION_TIME ) {
-    long next_displacement[2] = {
-      next_targets[0] - current_targets[0],
-      next_targets[1] - current_targets[1]
-    };
-    if(next_displacement[0] * initial_displacement[0] > 0) {
-      stepper1->setAcceleration( 0.0 );
-    }else {
-      stepper1->setAcceleration( current_speeds[0] / ACCELERATION_TIME );
-    }
-
-    if(next_displacement[1] * initial_displacement[1] > 0) {
-      stepper2->setAcceleration( 0.0 );
-    }else {
-      stepper2->setAcceleration( current_speeds[2] / ACCELERATION_TIME );
-    }
-
+  if ( (stepper1->getSpeedInMilliHz() - stepper1->getCurrentSpeedInMilliHz()) / 1000.0 < 0.1 ) {
+    // Turn off accelaration
+    stepper1->setAcceleration( 10000.0 );
     stepper1->applySpeedAcceleration();
+  }
+  if ( (stepper2->getSpeedInMilliHz() - stepper2->getCurrentSpeedInMilliHz()) / 1000.0 < 0.1 ) {
+    // Turn off accelaration
+    stepper2->setAcceleration( 10000.0 );
     stepper2->applySpeedAcceleration();
   }
 
