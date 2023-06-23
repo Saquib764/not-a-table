@@ -65,8 +65,6 @@ void setup_arm(uint8_t EN_PIN, uint8_t DIR_1, uint8_t STEPPER_1, uint8_t HOMING_
     stepper2->setDirectionPin(DIR_2);
     stepper2->setEnablePin(EN_PIN);
     stepper2->setAutoEnable(true);
-    stepper2->setSpeedInHz(0);
-    stepper2->setAcceleration(0);
 
     // stepper2->keepRunning();
   }
@@ -75,14 +73,18 @@ void setup_arm(uint8_t EN_PIN, uint8_t DIR_1, uint8_t STEPPER_1, uint8_t HOMING_
 long previous_targets[2] = {0, 0};
 long current_targets[2] = {0, 0};
 long next_targets[2] = {0, 0};
+long next_initial_displacements[2] = {0, 0};
 double next_speeds[2] = {0.0, 0.0};
 double current_speed_targets[2] = {0.0, 0.0};
 double current_accelerations[2] = {0.0, 0.0};
 int caution_distances[2] = { 0,0};
 
+
 double error_integral = 0.0;
 
 bool has_new_target = false;
+bool needs_update[2] = {false, false};
+bool will_direction_change[2] = {false, false};
 
 double* compute_speeds_to_next_target(double* speeds, long * current_positions, long * next_positions, double* max_speeds) {
   // Serial.println("MAx: " + String(max_speeds[0]) + ", " + String(max_speeds[1]));
@@ -118,6 +120,11 @@ bool move_arm(long int * delta, double theta1, double theta2) {
   double speed_1;
   double speed_2;
 
+  long initial_displacement[2] = {
+    current_targets[0] - previous_targets[0],
+    current_targets[1] - previous_targets[1]
+  };
+
   if(target1 != next_targets[0] || target2 != next_targets[1]) {
     Serial.print("Target 1: " + String(target1) + ", " + String(theta1) + ". Current pos: ");
     Serial.println(stepper1->getCurrentPosition() / (K * 3));
@@ -129,7 +136,14 @@ bool move_arm(long int * delta, double theta1, double theta2) {
     next_targets[1] = target2;
 
     compute_speeds_to_next_target(next_speeds, current_targets, next_targets, max_speeds);
+    next_initial_displacements[0] = next_targets[0] - current_targets[0];
+    next_initial_displacements[1] = next_targets[1] - current_targets[1];
+
+    will_direction_change[0] = next_initial_displacements[0] * initial_displacement[0] < 0;
+    will_direction_change[1] = next_initial_displacements[1] * initial_displacement[1] < 0;
     has_new_target = true;
+    needs_update[0] = true;
+    needs_update[1] = true;
   }
   delta[0] = current_targets[0] - stepper1->getCurrentPosition();
   delta[1] = current_targets[1] - stepper2->getCurrentPosition();
@@ -139,24 +153,30 @@ bool move_arm(long int * delta, double theta1, double theta2) {
     stepper2->getCurrentSpeedInMilliHz() / 1000.0
   };
 
-  if( abs(delta[0]) < 2 && abs(delta[1]) < 2 && has_new_target) {
-    long initial_displacement[2] = {
-      next_targets[0] - current_targets[0],
-      next_targets[1] - current_targets[1]
-    };
 
+  if( abs(delta[0]) < 2 && needs_update[0]) {
+    if( (delta[0] == 1 && !will_direction_change[0]) || delta[0] == 0) {
+      stepper1->setSpeedInHz(next_speeds[0]);
+      current_accelerations[0] = next_speeds[0] / ACCELERATION_TIME;
+      stepper1->setAcceleration( current_accelerations[0] );
+      stepper1->moveTo(next_targets[0]);
+      needs_update[0] = false;
+    }
+  }
+  if( abs(delta[1]) < 2 && needs_update[1]) {
+    if( (delta[1] == 1 && !will_direction_change[1]) || delta[1] == 0) {
+      stepper1->setSpeedInHz(next_speeds[1]);
+      current_accelerations[1] = next_speeds[1] / ACCELERATION_TIME;
+      stepper2->setAcceleration( current_accelerations[1] );
+      stepper2->moveTo(next_targets[1]);
+      needs_update[1] = false;
+    }
+  }
+
+  if( !needs_update[0] && !needs_update[0] && has_new_target) {
+    // Update current targets done
     Serial.println("Speed computed: " + String(next_speeds[0]) + ", " + String(next_speeds[1]));
-    Serial.println("Direction: " + String(initial_displacement[0]) + ", " + String(initial_displacement[1]));
-
-    current_accelerations[0] = next_speeds[0] / ACCELERATION_TIME;
-    current_accelerations[1] = next_speeds[1] / ACCELERATION_TIME;
-
-    stepper1->setSpeedInHz(next_speeds[0]);
-    stepper2->setSpeedInHz(next_speeds[1]);
-    stepper1->setAcceleration( current_accelerations[0] );
-    stepper2->setAcceleration( current_accelerations[1] );
-    stepper1->moveTo(next_targets[0]);
-    stepper2->moveTo(next_targets[1]);
+    Serial.println("Direction: " + String(next_initial_displacements[0]) + ", " + String(next_initial_displacements[1]));
 
     previous_targets[0] = current_targets[0];
     previous_targets[1] = current_targets[1];
@@ -164,15 +184,9 @@ bool move_arm(long int * delta, double theta1, double theta2) {
     current_targets[1] = next_targets[1];
     next_speeds[0] = 0.0;
     next_speeds[1] = 0.0;
-    delta[0] = current_targets[0] - stepper1->getCurrentPosition();
-    delta[1] = current_targets[1] - stepper2->getCurrentPosition();
     has_new_target = false;
   }
 
-  long initial_displacement[2] = {
-    current_targets[0] - previous_targets[0],
-    current_targets[1] - previous_targets[1]
-  };
   if ( (stepper1->getSpeedInMilliHz() - stepper1->getCurrentSpeedInMilliHz()) / 1000.0 < 0.1 ) {
     // Turn off accelaration
     stepper1->setAcceleration( 10000.0 );
@@ -227,8 +241,9 @@ bool move_arm(long int * delta, double theta1, double theta2) {
   // stepper2->applySpeedAcceleration();
 
   EVERY_N_MILLISECONDS(2000) {
-    Serial.println("Error: "+ String(error[0]) + ", " + String(error[1]));
-    Serial.println("Distance from target: "+ String(delta[0]) + ", " + String(delta[1]));
+    Serial.println("Error: "+ String(b) + ", " + String(error[1]));
+    Serial.println("Initial distance: "+ String(initial_displacement[0]) + ", " + String(initial_displacement[1]));
+    Serial.println("Current distance: "+ String(delta[0]) + ", " + String(delta[1]));
     Serial.println("Speeds: " + String(stepper1->getCurrentSpeedInMilliHz()/1000.0) + ", " + String(stepper2->getCurrentSpeedInMilliHz()/1000.0) );
   }
   return !has_new_target;
