@@ -350,8 +350,8 @@ void setup() {
 
 double points[3][3] = {
   {0., 0.0, 0.0},
-  {0., 2*PI, 2*PI},
-  {0., -2*PI, 4*PI}
+  {0., -0.25*PI, 0*PI},
+  {0., 0.25*PI, 0*PI}
 };
 int current_index = 0;
 void loop() {
