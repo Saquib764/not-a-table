@@ -348,10 +348,12 @@ void setup() {
   setup_arm(EN_PIN, motor1DirPin, motor1StepPin, motor1HomingPin, motor2DirPin, motor2StepPin, motor2HomingPin);
 }
 
-double points[3][3] = {
+double points[5][3] = {
   {0., 0.0, 0.0},
-  {0., -0.25*PI, 0*PI},
-  {0., 0.25*PI, 0*PI}
+  {0., 0.1*PI, 0*PI},
+  {0., 0.2*PI, 0*PI},
+  {0., 0.3*PI, 0*PI},
+  {0., 0.4*PI, 0*PI},
 };
 int current_index = 0;
 void loop() {
@@ -397,11 +399,11 @@ void loop() {
   EVERY_N_MILLISECONDS(25) {
     move_led();
   }
-  EVERY_N_MILLISECONDS(4) {
+  EVERY_N_MILLISECONDS(400) {
     if(is_printing_design) {
       long int delta[2] = {0, 0};
-      move_arm(delta, target_q1, target_q2);
-      if(abs(delta[0]) < 11 && abs(delta[1]) < 11) {
+      bool should_read_next = move_arm(delta, target_q1, target_q2);
+      if(should_read_next) {
         // double* points = player.next_line(SD);
         // if(points[0] == 0.0) {
         //   is_printing_design = false;
@@ -412,7 +414,7 @@ void loop() {
         // target_q2 = points[2];
         target_q1 = points[current_index][1];
         target_q2 = points[current_index][2];
-        current_index = (current_index + 1) % 3;
+        current_index = (current_index + 1) % 5;
       }
     }
   }
