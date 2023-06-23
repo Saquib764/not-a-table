@@ -179,7 +179,7 @@ bool move_arm(long int * delta, double theta1, double theta2) {
     long next_displacement[2] = {
       next_targets[0] - current_targets[0],
       next_targets[1] - current_targets[1]
-    }
+    };
     if(next_displacement[0] * initial_displacement[0] > 0) {
       stepper1->setAcceleration( 0.0 );
     }else {
