@@ -1,7 +1,7 @@
 #include "motor_control_functions.h"
 
-#define MAX_SPEED                 0.1  // m/s
-#define MAX_ANGULAR_SPEED         1000.0  // steps/s
+#define MAX_SPEED                 0.02  // m/s
+#define MAX_ANGULAR_SPEED         4000.0  // steps/s
 #define MICROSTEPS                16
 #define STEPS_PER_REV             200
 #define MAX_TARGET_DISTANCE       50
@@ -57,9 +57,6 @@ void setup_arm(uint8_t EN_PIN, uint8_t DIR_1, uint8_t STEPPER_1, uint8_t HOMING_
     stepper1->setEnablePin(EN_PIN);
     stepper1->setAutoEnable(true);
 
-    // stepper1->setSpeedInHz(500);       // 500 steps/s
-    // stepper1->setAcceleration(100);    // 100 steps/s²
-    // stepper1->move(100000);
     stepper1->keepRunning();
   }
   stepper2 = engine.stepperConnectToPin(STEPPER_2);
@@ -81,14 +78,15 @@ int caution_distances[2] = { 0,0};
 long initial_positions[2] = {0, 0};
 
 double* compute_speeds_to_next_target(double* speeds, long * current_positions, long * next_positions, double* max_speeds) {
+  Serial.println("MAx: " + String(max_speeds[0]) + ", " + String(max_speeds[1]));
   long distances[2] = {next_positions[0] - current_positions[0], next_positions[1] - current_positions[1]};
-  double bigger_distance = max(abs(distances[0]), abs(distances[1])) + 0.00001; // divide by zero protection
   
-  speeds[0] = max_speeds[0] * distances[0] / bigger_distance;
-  speeds[1] = max_speeds[0] * distances[1] / bigger_distance;
+  
+  speeds[0] = max_speeds[0] * distances[0] / (abs(distances[0]) + 0.00001);
+  speeds[1] = max_speeds[0] * distances[1] / (abs(distances[0]) + 0.00001);
   if(speeds[1] > max_speeds[1]) {
-    speeds[0] = max_speeds[1] * distances[0] / bigger_distance;
-    speeds[1] = max_speeds[1];
+    speeds[0] = max_speeds[1] * distances[0] / (abs(distances[1]) + 0.00001);
+    speeds[1] = max_speeds[1] * distances[1] / (abs(distances[1]) + 0.00001);
   }
 
   return speeds;
@@ -96,8 +94,8 @@ double* compute_speeds_to_next_target(double* speeds, long * current_positions, 
 
 void move_arm(long int * delta, double theta1, double theta2) {
   double max_speeds[2] = {
-    min(0.5 * 18.0 * MAX_SPEED * K / (R * (6*abs(cos(theta2/2)) + 1)), MAX_ANGULAR_SPEED),
-    min(0.5 * 18.0 * MAX_SPEED * K / R, MAX_ANGULAR_SPEED)
+    min( 18.0 * MAX_SPEED * K / (R * (5*abs(cos(theta2/2)) + 1)), MAX_ANGULAR_SPEED),
+    min( 18.0 * MAX_SPEED * K / R, MAX_ANGULAR_SPEED)
   };
 
   long int target1 = 3 * theta1 * K;
