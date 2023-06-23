@@ -27,7 +27,8 @@ void setup_driver(TMC2209Stepper &driver, int EN_PIN, int MS1, int MS2) {
   digitalWrite(MS2, LOW);
                                   // Enable one according to your setup
 //SPI.begin();                    // SPI drivers
-  SERIAL_PORT.begin(115200);      // HW UART drivers
+  // NEVER increase the baud rate, its adds 10ms delay. probably related to buffer overflow and flush cycle
+  SERIAL_PORT.begin(9600);      // HW UART drivers
 // driver.beginSerial(115200);     // SW UART drivers
 
   driver.begin();                 //  SPI: Init CS pins and possible SW SPI pins
@@ -213,10 +214,10 @@ void move_arm(long int * delta, double theta1, double theta2) {
     speed_2 = max_speeds[1] * delta[1]/(abs(delta[1]) + 0.00001);
   }
 
-  if( abs(delta[0]) < 10) {
+  if( abs(delta[0]) < 100) {
     speed_1 = delta[0];
   }
-  if( abs(delta[1]) < 10) {
+  if( abs(delta[1]) < 100) {
     speed_2 = delta[1];
   }
 

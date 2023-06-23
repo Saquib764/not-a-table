@@ -285,7 +285,7 @@ void setup() {
     delay(100);
   }
   
-  // set_led_status(status_code);
+  set_led_status(status_code);
   if(has_error) {
     return;
   }
@@ -337,7 +337,7 @@ void setup() {
   // if(has_resumed) {
   //   is_printing_design = false;
   // }
-  // set_led_status(status_code);
+  set_led_status(status_code);
   server.begin();
   Serial.println("Server started. Listening on port 80");
 
@@ -414,6 +414,8 @@ void loop() {
   }
   // delay(300);
   // Serial.print("Time for servo run: ");
-  // Serial.println("Time: " + String(micros() - current_time));
+  // if(micros() - current_time > 300) {
+  //   Serial.println("Time: " + String(micros() - current_time));
+  // }
   // Serial.print("  ");
 }
