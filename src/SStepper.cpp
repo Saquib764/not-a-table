@@ -26,7 +26,13 @@ SStepper::SStepper(int DIR_PIN, int STEP_PIN, int HOMING_PIN) {
   digitalWrite(this->DIR_PIN, this->direction);
   this->reset();
 }
-void SStepper::set_speed(int speed) {
+void SStepper::set_acceleration(double acceleration) {
+  this->acceleration = acceleration;
+}
+void SStepper::set_target_speed(double speed) {
+  this->target_speed = speed;
+}
+void SStepper::set_speed(double speed) {
   if(speed == this->speed) {
     return;
   }
@@ -38,6 +44,22 @@ void SStepper::set_speed(int speed) {
   }
   this->step_interval = fabs(1000000.0 / this->speed);
   set_direction(speed > 0?CLOCKWISE:COUNTERCLOCKWISE);
+}
+void SStepper::compute_speed() {
+  if(this->speed == this->target_speed) {
+    return;
+  }
+  unsigned long time = micros();
+  long dt = time - this->last_speed_update_time;
+  if(dt < 1.0/(this->acceleration + 0.001)) {
+    return;
+  }
+  this->last_speed_update_time = time;
+  double speed = this->speed + this->acceleration * dt;
+  if(abs(this->target_speed - this->speed) < abs(this->acceleration * dt)) {
+    speed = this->target_speed;
+  }
+  this->set_speed(speed);
 }
 void SStepper::set_target(long int target) {
   if(target == this->target) {
@@ -72,8 +94,12 @@ void SStepper::reset() {
   this->position = 0;
   this->target = 0;
   this->speed = 0;
+  this->target_speed = 0;
+  this->acceleration = 0;
   this->last_step_time = 0;
-  this->step_delay = 60;
+  this->step_delay = 20;
+  this->step_interval = 0;
+  this->last_speed_update_time = 0;
 }
 
 void SStepper::one_step(int direction, int wait) {
@@ -87,17 +113,14 @@ void SStepper::one_step(int direction, int wait) {
   digitalWrite(this->STEP_PIN, LOW);
   delayMicroseconds(wait);
 }
-bool SStepper::one_step() {
-  // bool ret = this->stepper.run();
-  // delayMicroseconds(100);
-  // this->position = this->stepper.currentPosition();
-  // return ret;
+bool SStepper::one_step(bool force) {
+  this->compute_speed();
   unsigned long time = micros();
-  if(!this->step_interval) {
+  if(!this->step_interval && !force) {
     return false;
   }
   long dt = time - this->last_step_time;
-  if( dt < this->step_interval ) {
+  if( dt < this->step_interval && !force ) {
     return false;
   }
   if(this->position == this->target) {
@@ -108,12 +131,22 @@ bool SStepper::one_step() {
   } else {
     this->position--;
   }
-  
   // Serial.print(1000000.0 / dt);
   this->last_step_time = time;
   digitalWrite(this->STEP_PIN, HIGH);
   delayMicroseconds(this->step_delay);
   digitalWrite(this->STEP_PIN, LOW);
-  delayMicroseconds(10);
+  delayMicroseconds(this->step_delay);
   return true;
+}
+void SStepper::force_step() {
+  if(this->direction == CLOCKWISE) {
+    this->position++;
+  } else {
+    this->position--;
+  }
+  digitalWrite(this->STEP_PIN, HIGH);
+  delayMicroseconds(this->step_delay);
+  digitalWrite(this->STEP_PIN, LOW);
+  delayMicroseconds(this->step_delay);
 }

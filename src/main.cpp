@@ -18,22 +18,27 @@ using namespace std;
 #include "motor_control_functions.h"
 #include "wifi_functions.h"
 #include "homing_functions.h"
+#include "ota.h"
+#include <Preferences.h>
 
 const int dummy = 0;
 
-#define SERIAL_PORT Serial1 // TMC2208/TMC2224 HardwareSerial port
+#define SERIAL_PORT Serial2 // TMC2208/TMC2224 HardwareSerial port
 #define DRIVER_ADDRESS 0b00 // TMC2209 Driver address according to MS1 and MS2
 
 #define R_SENSE 0.11f
+#define VERSION "1.0.0"
 
 
 
-TMC2208Stepper driver(&SERIAL_PORT, R_SENSE);
-// TMC2209Stepper driver(&SERIAL_PORT, R_SENSE, DRIVER_ADDRESS);
+// TMC2209Stepper driver(&SERIAL_PORT, R_SENSE);
+TMC2209Stepper driver(&SERIAL_PORT, R_SENSE, DRIVER_ADDRESS);
 
 Player player;
 
 WebServer server(80);
+
+Preferences preferences;
 
 String SAVED_SSID = "Zapp";
 String SAVED_PWD = "Haweli@1504";
@@ -72,6 +77,7 @@ int status_code = 0;
 bool is_uploading = false;
 bool should_use_internal_sd = true;
 bool is_storage_available = false;
+bool should_use_homing = true;
 
 
 void handle_status_check() {
@@ -144,7 +150,7 @@ void handle_pairing() {
   SAVED_PWD = pwd;
   Serial.println(ssid);
   Serial.println(pwd);
-  save_wifi_login(SD, ssid, pwd);
+  save_wifi_login(preferences, ssid, pwd);
   
   jsonDocument.clear();  
   jsonDocument["success"] = true;
@@ -154,7 +160,31 @@ void handle_pairing() {
   Serial.println("Pairing done. Connecting.");
   server.send(200, "application/json", buffer);
   delay(2000);
-  connect_to_network(SAVED_SSID, SAVED_PWD, 5);
+  ESP.restart();
+}
+
+void handle_update() {
+  Serial.println("Updating..");
+  String body = server.arg("plain");
+  Serial.println(body);
+  jsonDocument.clear();
+  deserializeJson(jsonDocument, body);
+  String update_url = jsonDocument["update_url"];
+  update_url.trim();
+  Serial.println(update_url);
+  
+  jsonDocument.clear();  
+
+  bool is_success = update_firmware(update_url);
+  jsonDocument["success"] = is_success;
+
+  serializeJson(jsonDocument, buffer);
+
+  server.send(200, "application/json", buffer);
+  delay(2000);
+  if(is_success) {
+    ESP.restart();
+  }
 }
 
 void handle_home() {
@@ -215,6 +245,11 @@ void setup_routing(WebServer& server) {
   server.on("/", HTTP_GET, handle_status_check);  
   server.on("/mode", HTTP_GET, handle_get_mode);
   server.on("/home", HTTP_GET, handle_home);
+
+
+  server.on("/update", HTTP_POST, handle_update);
+  server.on("/update", HTTP_OPTIONS, handle_status_check);
+
   server.on("/pair", HTTP_POST, handle_pairing);
   server.on("/pair", HTTP_OPTIONS, handle_status_check);
   server.on("/design/upload", HTTP_POST, handle_file_upload);
@@ -227,12 +262,13 @@ void setup_routing(WebServer& server) {
 }
 
 void setup() {
+  preferences.begin("yume", false); 
   setup_led();
   init_led();
   // delay(50);
   // put your setup code here, to run once:
   Serial.begin(115200);
-  Serial.println("Hello, ESP32!");
+  Serial.println("Version: " + String(VERSION));
   if(should_use_internal_sd) {
     if(setup_internal_card(SPIFFS)) {
       is_storage_available = true;
@@ -261,34 +297,34 @@ void setup() {
   
   list_dir(SPIFFS, "/", 0);
 
-  // update_counter(SD);
-  // is_in_pairing_mode = should_reset(SD);
-  // if(!is_in_pairing_mode) {
-  //   delay(5000);
-  // }
-  // clear_counter(SD);
+  update_counter(preferences);
+  is_in_pairing_mode = should_reset(preferences);
+  if(!is_in_pairing_mode) {
+    delay(5000);
+  }
+  clear_counter(preferences);
 
   // Serial.println("List playlist:");
   // Serial.println(player.get_playlist(SD));
   
   if(!is_in_pairing_mode) {
-    // std::array<String, 2> logins = get_wifi_login(SD);
+    std::array<String, 2> logins = get_wifi_login(preferences);
 
-    // Serial.println("Wifi logins:");
-    // Serial.println(logins[0]);
-    // Serial.println(logins[1]);
+    Serial.println("Wifi logins:");
+    Serial.println(logins[0]);
+    Serial.println(logins[1]);
 
-    // if( logins[0] != "" && logins[1] != "" ) {
+    if( logins[0] != "" && logins[1] != "" ) {
       // Wifi login found, connect to wifi
-      // SAVED_SSID = logins[0];
-      // SAVED_PWD = logins[1];
-      // SAVED_SSID.trim();
-      // SAVED_PWD.trim();
+      SAVED_SSID = logins[0];
+      SAVED_PWD = logins[1];
+      SAVED_SSID.trim();
+      SAVED_PWD.trim();
 
-      connect_to_network(SAVED_SSID, SAVED_PWD, 5);
-    // } else {
-    //   is_in_pairing_mode = true;
-    // }
+      connect_to_network( SAVED_SSID, SAVED_PWD, 5);
+    } else {
+      is_in_pairing_mode = true;
+    }
   }
   if(is_in_pairing_mode){
     // No wifi login found, go in pairing mode. Creating hotspot
@@ -311,47 +347,46 @@ void setup() {
   Serial.println("Server started. Listening on port 80");
 
   // Remove this
-
-  player.read(SPIFFS, "/AngularRadiance.thr.txt");
+  player.read(SPIFFS, "/spiral.thr.txt");
   is_printing_design = true;
 }
 
-// double points[3][2] = {
-//   {0.0, 0.0},
-//   {6.28, 0.0},
-//   {6280.0, 50.0}
-// };
+double points[2][3] = {
+  {0., 0.0, 0.0},
+  {0., 2*PI, 2*PI},
+  // {0., 628.0, 0.0}
+};
 int current_index = 0;
 void loop() {
   long current_time = micros();
-  if(has_error) {
-    delay(10);
-    return;
-  }
-  server.handleClient();
-  if(is_in_pairing_mode) {
-    set_led_status(status_code);
-    delay(5);
-    return;
-  }
-  if(should_clear) {
-    // Clear the table
-    should_clear = false;
-    return;
-  }
-  if(should_perform_homing && false) {
-    // Perform homing
-    Serial.println("Homing start");
-    perform_homing(motor1);
-    motor1.reset();
-    motor2.reset();
-    target_q1 = 0.0;
-    target_q2 = 0.0;
-    // perform_homing(motor2);
-    should_perform_homing = false;
-    Serial.println("Homing DONE!");
-    return;
-  }
+  // if(has_error) {
+  //   delay(10);
+  //   return;
+  // }
+  // server.handleClient();
+  // if(is_in_pairing_mode) {
+  //   set_led_status(status_code);
+  //   delay(5);
+  //   return;
+  // }
+  // if(should_clear) {
+  //   // Clear the table
+  //   should_clear = false;
+  //   return;
+  // }
+  // if(should_perform_homing && false) {
+  //   // Perform homing
+  //   Serial.println("Homing start");
+  //   perform_homing(motor1);
+  //   motor1.reset();
+  //   motor2.reset();
+  //   target_q1 = 0.0;
+  //   target_q2 = 0.0;
+  //   // perform_homing(motor2);
+  //   should_perform_homing = false;
+  //   Serial.println("Homing DONE!");
+  //   return;
+  // }
   // if(should_play_next) {
   //   // Play next design
   //   String next_design = player.get_next_design(SD);
@@ -362,25 +397,28 @@ void loop() {
   //   should_play_next = false;
   //   return;
   // }
-  // EVERY_N_MILLISECONDS(10) {
+  EVERY_N_MILLISECONDS(25) {
     move_led();
-  // }
+  }
   if(is_printing_design) {
     long int delta[2] = {0, 0};
     move_arm(delta, motor1, motor2, target_q1, target_q2);
-    if(abs(delta[0]) < 3 && abs(delta[1]) < 3) {
-      double* points = player.next_line(SD);
-      if(points[0] == 0.0) {
-        is_printing_design = false;
-        should_play_next = true;
-        return;
-      }
-      target_q1 = points[1];
-      target_q2 = points[2];
+    if(abs(delta[0]) < 11 && abs(delta[1]) < 11) {
+      // double* points = player.next_line(SD);
+      // if(points[0] == 0.0) {
+      //   is_printing_design = false;
+      //   should_play_next = true;
+      //   return;
+      // }
+      target_q1 = points[current_index][1];
+      target_q2 = points[current_index][2];
+      current_index = (current_index + 1) % 2;
     }
   }
   // delay(300);
   // Serial.print("Time for servo run: ");
-  // Serial.print(micros() - current_time);
+  // if(micros() - current_time > 300) {
+  //   Serial.println("Time: " + String(micros() - current_time));
+  // }
   // Serial.print("  ");
 }
