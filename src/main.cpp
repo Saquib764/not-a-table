@@ -348,10 +348,10 @@ void setup() {
   setup_arm(EN_PIN, motor1DirPin, motor1StepPin, motor1HomingPin, motor2DirPin, motor2StepPin, motor2HomingPin);
 }
 
-double points[2][3] = {
+double points[3][3] = {
   {0., 0.0, 0.0},
   {0., 2*PI, 2*PI},
-  // {0., 628.0, 0.0}
+  {0., -2*PI, 4*PI}
 };
 int current_index = 0;
 void loop() {
@@ -397,25 +397,29 @@ void loop() {
   EVERY_N_MILLISECONDS(25) {
     move_led();
   }
-  if(is_printing_design) {
-    long int delta[2] = {0, 0};
-    move_arm(delta, target_q1, target_q2);
-    if(abs(delta[0]) < 11 && abs(delta[1]) < 11) {
-      // double* points = player.next_line(SD);
-      // if(points[0] == 0.0) {
-      //   is_printing_design = false;
-      //   should_play_next = true;
-      //   return;
-      // }
-      target_q1 = points[current_index][1];
-      target_q2 = points[current_index][2];
-      current_index = (current_index + 1) % 2;
+  EVERY_N_MILLISECONDS(4) {
+    if(is_printing_design) {
+      long int delta[2] = {0, 0};
+      move_arm(delta, target_q1, target_q2);
+      if(abs(delta[0]) < 11 && abs(delta[1]) < 11) {
+        // double* points = player.next_line(SD);
+        // if(points[0] == 0.0) {
+        //   is_printing_design = false;
+        //   // should_play_next = true;
+        //   return;
+        // }
+        // target_q1 = points[1];
+        // target_q2 = points[2];
+        target_q1 = points[current_index][1];
+        target_q2 = points[current_index][2];
+        current_index = (current_index + 1) % 3;
+      }
     }
   }
   // delay(300);
   // Serial.print("Time for servo run: ");
-  // if(micros() - current_time > 300) {
-  //   Serial.println("Time: " + String(micros() - current_time));
-  // }
+  EVERY_N_MILLISECONDS(2070){
+    Serial.println("Time: " + String(micros() - current_time));
+  }
   // Serial.print("  ");
 }

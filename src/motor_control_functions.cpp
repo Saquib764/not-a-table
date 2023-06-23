@@ -1,6 +1,6 @@
 #include "motor_control_functions.h"
 
-#define MAX_SPEED                 0.02  // m/s
+#define MAX_SPEED                 0.04  // m/s
 #define MAX_ANGULAR_SPEED         4000.0  // steps/s
 #define MICROSTEPS                16
 #define STEPS_PER_REV             200
@@ -192,10 +192,10 @@ void move_arm(long int * delta, double theta1, double theta2) {
   double error[2] = { 0.0, 0.0 };
   int motor_to_slow = -1;
   
+  int s = 0;
+  int b = 1;
   if( initial_delta[0] != 0 && initial_delta[1] != 0 ) {
     error[0] = 0.0;
-    int s = 0;
-    int b = 1;
     if(abs(initial_delta[0]) > abs(initial_delta[1])) {
       b = 0;
       s = 1;
@@ -204,18 +204,31 @@ void move_arm(long int * delta, double theta1, double theta2) {
     // error[1] > 0 => motor 2 is too slow=> slow down motor 1
     // error[1] < 0 => motor 2 is too fast=> slow down motor 2
     // we always slow down the motor
-    double f = 100.0;
     error_integral += error[1];
     error_integral = min(100.0, max(-100.0, error_integral));
-    stepper1->setSpeedInHz( current_speed_targets[0] * (1 - ( f * error[1] + error_integral)/abs(current_speed_targets[0])) );
-    stepper1->setAcceleration( - f * 10* error[1] * current_speed_targets[0]/abs(current_speed_targets[0]) );
-
-    stepper2->setSpeedInHz( current_speed_targets[1] * (1 + (f * error[1] + error_integral) / abs(current_speed_targets[1])) );
-    stepper2->setAcceleration( f* 10 * error[1] * current_speed_targets[1]/abs(current_speed_targets[1]) );
-
-    stepper1->applySpeedAcceleration();
-    stepper2->applySpeedAcceleration();
+  }else {
+    error_integral = 0.0;
   }
+  
+  double f = 100.0;
+  stepper1->setSpeedInHz( current_speed_targets[0] * (1 - ( f * error[1] + error_integral)/abs(current_speed_targets[0])) );
+
+  if(abs(error[0]) > 1) {
+    stepper1->setAcceleration( - f * 10* error[1] * current_speed_targets[0]/abs(current_speed_targets[0]) );
+  }else{
+    stepper1->setAcceleration( current_accelerations[0] );
+  }
+
+  stepper2->setSpeedInHz( current_speed_targets[1] * (1 + (f * error[1] + error_integral) / abs(current_speed_targets[1])) );
+  
+  if(abs(error[0]) > 1) {
+    stepper2->setAcceleration( f* 10 * error[1] * current_speed_targets[1]/abs(current_speed_targets[1]) );
+  }else{
+    stepper2->setAcceleration( current_accelerations[1] );
+  }
+
+  stepper1->applySpeedAcceleration();
+  stepper2->applySpeedAcceleration();
 
 
   EVERY_N_MILLISECONDS(2000) {
