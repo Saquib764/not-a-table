@@ -1,7 +1,6 @@
 
 #include "ota.h"
 
-#define OTA_SERVER_IP "192.0.0.0"
 
 bool update_firmware(String url) {
   force_stop();

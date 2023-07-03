@@ -133,15 +133,22 @@ bool check_if_mode_is_pairing() {
 }
 
 
-void update_counter(Preferences &preferences) {
-  int counter = preferences.getInt("counter", 0);
-  preferences.putInt("counter", counter + 1);
+void update_counter(fs::FS &fs) {
+  // Append counter to file
+  File file = open_file(fs, "/restart_counter.txt", FILE_APPEND);
+  file.print("1");
+  file.close();
 }
-bool should_reset(Preferences &preferences) {
-  int counter = preferences.getInt("counter", 0);
-  return counter >= 3;
+bool should_reset(fs::FS &fs) {
+  File file = open_file(fs, "/restart_counter.txt", FILE_READ);
+  String counter = file.readString();
+  counter.trim();
+  file.close();
+  return counter == "111";
 }
 
-void clear_counter(Preferences &preferences) {
-  preferences.putInt("counter", 0);  
+void clear_counter(fs::FS &fs) {
+  File file = open_file(fs, "/restart_counter.txt", FILE_WRITE);
+  file.print("");
+  file.close();
 }

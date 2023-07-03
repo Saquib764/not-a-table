@@ -15,6 +15,78 @@
 FastAccelStepperEngine engine = FastAccelStepperEngine();
 FastAccelStepper *stepper1 = NULL;
 FastAccelStepper *stepper2 = NULL;
+uint8_t homing_pin1;
+uint8_t homing_pin2;
+double K = STEPS_PER_REV * MICROSTEPS/ (2.0*PI);
+float R = 0.63/2;
+
+double mod(double x, double y) {
+  double r = x - y * floor(x/y);
+  if(r < 0) {
+    r += y;
+    r = mod(r, y);
+  }
+  return r;
+}
+
+void home_motor(FastAccelStepper *m, uint8_t homing_pin, int multiplier) {
+  const float hall_effect_reference_value = 2000.0;
+  const float hall_effect_threshold = 250;
+  Serial.println("Homing motor");
+  // Run motor in clockwise direction until home position is reached
+  m->setSpeedInHz(0.1 * MAX_ANGULAR_SPEED);
+  m->setAcceleration(MAX_ANGULAR_SPEED / ACCELERATION_TIME);
+  double current_theta = m->getCurrentPosition() / (3*K * multiplier);
+  current_theta = mod(current_theta, 2 * PI);
+  int dir = 1;
+  if(current_theta > PI) {
+    dir = -1;
+  }
+  m->moveTo(m->getCurrentPosition() + dir * 3 * K * multiplier);
+
+
+  float value = 0.0;
+  while(digitalRead(homing_pin) == HIGH) {
+    value = abs(hall_effect_reference_value - analogRead(homing_pin));
+    if(value > hall_effect_threshold) {
+      // Hall effect sensor is triggered, stop motor
+      m->stopMove();
+      break;
+    }
+    delay(10);
+  }
+
+  //  move motor step by step, record sensor reading 
+  int count = 0;
+  float max_value = 0;
+  int count_at_max = 0;
+  while(count < 1000) {
+    // move motor one step
+    m->moveTo(m->getCurrentPosition() + dir);
+    count++;
+    float avg_value = analogRead(homing_pin);
+    for(int i = 1; i < 5; i++) {
+      avg_value += analogRead(homing_pin);
+      delay(1);
+    }
+    avg_value /= 5;
+    if(avg_value > max_value) {
+      max_value = avg_value;
+      count_at_max = count;
+    }
+    if(abs(hall_effect_reference_value - avg_value) < hall_effect_threshold) {
+      // arm out of range, stop motor
+      break;
+    }
+  }
+  // move motor back to max value
+  m->moveTo(m->getCurrentPosition() - (count - count_at_max) * dir);
+  
+  // reset motor position to 0
+  m->setCurrentPosition(0);
+}
+
+
 
 void setup_driver(TMC2209Stepper &driver, int EN_PIN, int MS1, int MS2) {
   Serial.println("Setting up driver");
@@ -47,9 +119,6 @@ void setup_driver(TMC2209Stepper &driver, int EN_PIN, int MS1, int MS2) {
   Serial.println("Done setting up driver");
 }
 
-double K = STEPS_PER_REV * MICROSTEPS/ (2.0*PI);
-float R = 0.63/2;
-
 void setup_arm(uint8_t EN_PIN, uint8_t DIR_1, uint8_t STEPPER_1, uint8_t HOMING_1, uint8_t DIR_2, uint8_t STEPPER_2, uint8_t HOMING_2) {
   engine.init();
   stepper1 = engine.stepperConnectToPin(STEPPER_1);
@@ -68,6 +137,11 @@ void setup_arm(uint8_t EN_PIN, uint8_t DIR_1, uint8_t STEPPER_1, uint8_t HOMING_
 
     // stepper2->keepRunning();
   }
+  homing_pin1 = HOMING_1;
+  homing_pin2 = HOMING_2;
+  // Set pins to output
+  pinMode(homing_pin1, OUTPUT);
+  pinMode(homing_pin2, OUTPUT);
 }
 
 long previous_targets[2] = {0, 0};
@@ -77,7 +151,6 @@ long next_initial_displacements[2] = {0, 0};
 double next_speeds[2] = {0.0, 0.0};
 double current_speed_targets[2] = {0.0, 0.0};
 double current_accelerations[2] = {0.0, 0.0};
-int caution_distances[2] = { 0,0};
 
 
 double error_integral = 0.0;
@@ -85,6 +158,27 @@ double error_integral = 0.0;
 bool has_new_target = false;
 bool needs_update[2] = {false, false};
 bool will_direction_change[2] = {false, false};
+
+
+void home_arm() {
+  home_motor(stepper1, homing_pin1, 1);
+  previous_targets[0] = 0;
+  current_targets[0] = 0;
+  next_targets[0] = 0;
+  next_initial_displacements[0] = 0;
+  next_speeds[0] = 0;
+  current_speed_targets[0] = 0;
+  current_accelerations[0] = 0;
+
+  home_motor(stepper2, homing_pin2, 3);
+  previous_targets[1] = 0;
+  current_targets[1] = 0;
+  next_targets[1] = 0;
+  next_initial_displacements[1] = 0;
+  next_speeds[1] = 0;
+  current_speed_targets[1] = 0;
+  current_accelerations[1] = 0;
+}
 
 double* compute_speeds_to_next_target(double* speeds, long * current_positions, long * next_positions, double* max_speeds) {
   // Serial.println("MAx: " + String(max_speeds[0]) + ", " + String(max_speeds[1]));

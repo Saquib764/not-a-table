@@ -45,12 +45,12 @@ String SAVED_PWD = "Haweli@1504";
 int EN_PIN = 32;
 uint8_t motor1DirPin = 27;
 uint8_t motor1StepPin = 26;
-uint8_t motor1HomingPin = 22;
+uint8_t motor1HomingPin = 13;
 
 
 uint8_t motor2DirPin = 13;
 uint8_t motor2StepPin = 14;
-uint8_t motor2HomingPin = 21;
+uint8_t motor2HomingPin = 14;
 
 StaticJsonDocument<250> jsonDocument;
 char buffer[250];
@@ -292,12 +292,12 @@ void setup() {
   
   list_dir(SD, "/", 0);
 
-  // update_counter(preferences);
-  // is_in_pairing_mode = should_reset(preferences);
-  // if(!is_in_pairing_mode) {
-  //   delay(5000);
-  // }
-  // clear_counter(preferences);
+  update_counter(SD);
+  is_in_pairing_mode = should_reset(SD);
+  if(!is_in_pairing_mode) {
+    delay(5000);
+  }
+  clear_counter(SD);
 
   // Serial.println("List playlist:");
   // Serial.println(player.get_playlist(SD));
@@ -363,29 +363,26 @@ void loop() {
   //   return;
   // }
   server.handleClient();
-  // if(is_in_pairing_mode) {
-  //   set_led_status(status_code);
-  //   delay(5);
-  //   return;
-  // }
+  if(is_in_pairing_mode) {
+    set_led_status(status_code);
+    delay(5);
+    return;
+  }
   // if(should_clear) {
   //   // Clear the table
   //   should_clear = false;
   //   return;
   // }
-  // if(should_perform_homing && false) {
-  //   // Perform homing
-  //   Serial.println("Homing start");
-  //   perform_homing(motor1);
-  //   motor1.reset();
-  //   motor2.reset();
-  //   target_q1 = 0.0;
-  //   target_q2 = 0.0;
-  //   // perform_homing(motor2);
-  //   should_perform_homing = false;
-  //   Serial.println("Homing DONE!");
-  //   return;
-  // }
+  if(should_perform_homing) {
+    // Perform homing
+    Serial.println("Homing start");
+    home_arm();
+    target_q1 = 0.0;
+    target_q2 = 0.0;
+    should_perform_homing = false;
+    Serial.println("Homing DONE!");
+    return;
+  }
   // if(should_play_next) {
   //   // Play next design
   //   String next_design = player.get_next_design(SD);

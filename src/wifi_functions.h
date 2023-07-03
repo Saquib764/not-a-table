@@ -7,6 +7,7 @@
 #include <array>
 #include <HTTPClient.h>
 #include <Preferences.h>
+#include "file_functions.h"
 using namespace std;
 
 
@@ -21,8 +22,8 @@ bool check_if_mode_is_pairing();
 std::array<String, 2> get_wifi_login(Preferences &preferences);
 void save_wifi_login(Preferences &preferences, String ssid, String pwd);
 
-void update_counter(Preferences &preferences);
-bool should_reset(Preferences &preferences);
-void clear_counter(Preferences &preferences);
+void update_counter(fs::FS &fs);
+bool should_reset(fs::FS &fs);
+void clear_counter(fs::FS &fs);
 
 #endif
