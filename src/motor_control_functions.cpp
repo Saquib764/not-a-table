@@ -30,11 +30,11 @@ double mod(double x, double y) {
 }
 
 void home_motor(FastAccelStepper *m, uint8_t homing_pin, int multiplier) {
-  const float hall_effect_reference_value = 2000.0;
-  const float hall_effect_threshold = 350;
+  const float hall_effect_reference_value = 2100.0;
+  const float hall_effect_threshold = 200;
   Serial.println("Homing motor");
   // Run motor in clockwise direction until home position is reached
-  m->setSpeedInHz(0.1 * MAX_ANGULAR_SPEED);
+  m->setSpeedInHz(0.1 * multiplier * MAX_ANGULAR_SPEED);
   m->setAcceleration(MAX_ANGULAR_SPEED / ACCELERATION_TIME);
   double current_theta = m->getCurrentPosition() / (3*K * multiplier);
   current_theta = mod(current_theta, 2 * PI);
@@ -47,7 +47,6 @@ void home_motor(FastAccelStepper *m, uint8_t homing_pin, int multiplier) {
   float value = 0.0;
   while(value < hall_effect_threshold) {
     value = abs(hall_effect_reference_value - analogRead(homing_pin));
-    Serial.println(value);
     if(value > hall_effect_threshold) {
       // Hall effect sensor is triggered, stop motor
       m->stopMove();
@@ -105,7 +104,7 @@ void setup_driver(TMC2209Stepper &driver, int EN_PIN) {
                                   // UART: Init SW UART (if selected) with default 115200 baudrate
   driver.toff(3);                 // Enables driver in software
   // driver.pdn_disable(true);
-  driver.rms_current(500);        // Set motor RMS current
+  driver.rms_current(700);        // Set motor RMS current
   driver.microsteps( MICROSTEPS );          // Set microsteps to 1/16th
   // driver.irun(31);
 
