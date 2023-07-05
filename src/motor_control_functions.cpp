@@ -30,8 +30,8 @@ double mod(double x, double y) {
 }
 
 void home_motor(FastAccelStepper *m, uint8_t homing_pin, int multiplier) {
-  const float hall_effect_reference_value = 2100.0;
-  const float hall_effect_threshold = 200;
+  const float hall_effect_reference_value = 2000.0;
+  const float hall_effect_threshold = 250;
   Serial.println("Homing motor");
   // Run motor in clockwise direction until home position is reached
   m->setSpeedInHz(0.1 * multiplier * MAX_ANGULAR_SPEED);
