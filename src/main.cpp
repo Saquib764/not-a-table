@@ -337,8 +337,8 @@ void setup() {
   // if(has_resumed) {
   //   is_printing_design = false;
   // }
-  set_led_status(status_code);
   server.begin();
+  set_led_status(status_code);
   Serial.println("Server started. Listening on port 80");
 
   // Remove this

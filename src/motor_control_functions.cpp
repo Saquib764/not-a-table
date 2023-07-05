@@ -44,9 +44,13 @@ void home_motor(FastAccelStepper *m, uint8_t homing_pin, int multiplier) {
   }
   m->moveTo(m->getCurrentPosition() + dir * 3 * K * multiplier);
 
+  while(true) {
+    delay(1000);
+  }
+
 
   float value = 0.0;
-  while(digitalRead(homing_pin) == HIGH) {
+  while(value < hall_effect_threshold) {
     value = abs(hall_effect_reference_value - analogRead(homing_pin));
     if(value > hall_effect_threshold) {
       // Hall effect sensor is triggered, stop motor
