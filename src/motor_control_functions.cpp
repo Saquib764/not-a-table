@@ -31,7 +31,7 @@ double mod(double x, double y) {
 
 void home_motor(FastAccelStepper *m, uint8_t homing_pin, int multiplier) {
   const float hall_effect_reference_value = 2000.0;
-  const float hall_effect_threshold = 250;
+  const float hall_effect_threshold = 350;
   Serial.println("Homing motor");
   // Run motor in clockwise direction until home position is reached
   m->setSpeedInHz(0.1 * MAX_ANGULAR_SPEED);
@@ -42,16 +42,12 @@ void home_motor(FastAccelStepper *m, uint8_t homing_pin, int multiplier) {
   if(current_theta > PI) {
     dir = -1;
   }
-  m->moveTo(m->getCurrentPosition() + dir * 3 * K * multiplier);
-
-  while(true) {
-    delay(1000);
-  }
-
+  m->moveTo(m->getCurrentPosition() + dir * 3 * K * multiplier * 2 * PI);
 
   float value = 0.0;
   while(value < hall_effect_threshold) {
     value = abs(hall_effect_reference_value - analogRead(homing_pin));
+    Serial.println(value);
     if(value > hall_effect_threshold) {
       // Hall effect sensor is triggered, stop motor
       m->stopMove();
@@ -64,9 +60,9 @@ void home_motor(FastAccelStepper *m, uint8_t homing_pin, int multiplier) {
   int count = 0;
   float max_value = 0;
   int count_at_max = 0;
-  while(count < 1000) {
+  while(count < 3000) {
     // move motor one step
-    m->moveTo(m->getCurrentPosition() + dir);
+    m->moveTo(m->getCurrentPosition() + dir, true);
     count++;
     float avg_value = analogRead(homing_pin);
     for(int i = 1; i < 5; i++) {
@@ -74,6 +70,7 @@ void home_motor(FastAccelStepper *m, uint8_t homing_pin, int multiplier) {
       delay(1);
     }
     avg_value /= 5;
+    Serial.println(avg_value);
     if(avg_value > max_value) {
       max_value = avg_value;
       count_at_max = count;
@@ -84,23 +81,20 @@ void home_motor(FastAccelStepper *m, uint8_t homing_pin, int multiplier) {
     }
   }
   // move motor back to max value
-  m->moveTo(m->getCurrentPosition() - (count - count_at_max) * dir);
+  m->moveTo(m->getCurrentPosition() - (count - count_at_max) * dir, true);
   
   // reset motor position to 0
   m->setCurrentPosition(0);
+  m->moveTo(0);
 }
 
 
 
-void setup_driver(TMC2209Stepper &driver, int EN_PIN, int MS1, int MS2) {
+void setup_driver(TMC2209Stepper &driver, int EN_PIN) {
   Serial.println("Setting up driver");
   pinMode(EN_PIN, OUTPUT);
-  pinMode(MS1, OUTPUT);
-  pinMode(MS2, OUTPUT);
 
   digitalWrite(EN_PIN, LOW);      // Enable driver in hardware
-  digitalWrite(MS1, LOW);
-  digitalWrite(MS2, LOW);
                                   // Enable one according to your setup
 //SPI.begin();                    // SPI drivers
   // NEVER increase the baud rate, its adds 10ms delay. probably related to buffer overflow and flush cycle

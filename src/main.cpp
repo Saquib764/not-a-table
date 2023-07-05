@@ -42,15 +42,15 @@ Preferences preferences;
 String SAVED_SSID = "Zapp";
 String SAVED_PWD = "Haweli@1504";
 
-int EN_PIN = 32;
-uint8_t motor1DirPin = 27;
-uint8_t motor1StepPin = 26;
-uint8_t motor1HomingPin = 13;
+int EN_PIN = 25;
+uint8_t motor1DirPin = 26;
+uint8_t motor1StepPin = 27;
+uint8_t motor1HomingPin = 32;
 
 
-uint8_t motor2DirPin = 13;
-uint8_t motor2StepPin = 14;
-uint8_t motor2HomingPin = 14;
+uint8_t motor2DirPin = 14;
+uint8_t motor2StepPin = 13;
+uint8_t motor2HomingPin = 33;
 
 StaticJsonDocument<250> jsonDocument;
 char buffer[250];
@@ -330,7 +330,7 @@ void setup() {
 
   sleep(1);
 
-  setup_driver(driver, EN_PIN, 33, 25);
+  setup_driver(driver, EN_PIN);
 
   setup_routing(server);
   // bool has_resumed = player.read(SD);
