@@ -342,7 +342,7 @@ void setup() {
   Serial.println("Server started. Listening on port 80");
 
   // Remove this
-  player.read(SD, "/designs/AngularRadiance.thr.txt");
+  player.read(SD, "/designs/rose3_2spin.thr.txt");
   is_printing_design = true;
 
   setup_arm(EN_PIN, motor1DirPin, motor1StepPin, motor1HomingPin, motor2DirPin, motor2StepPin, motor2HomingPin);
