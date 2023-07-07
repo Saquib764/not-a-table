@@ -419,7 +419,7 @@ void loop() {
   }
   // delay(300);
   // Serial.print("Time for servo run: ");
-  EVERY_N_MILLISECONDS(2070){
+  EVERY_N_MILLISECONDS(20070){
     Serial.println("Time: " + String(micros() - current_time));
   }
   // Serial.print("  ");

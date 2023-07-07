@@ -161,18 +161,25 @@ void reset() {
 
 double MAX_ACCELERATION = 1000.0;
 double dx = 0.00001;
+bool has_reached_targets[2] = {false, false};
 
 bool follow_trajectory() {
-  long current_positions[2] = {stepper1->getCurrentPosition(), stepper2->getCurrentPosition()};
-
-  long distance_to_target[2] = {
-    trajectory[1][0] - current_positions[0],
-    trajectory[1][1] - current_positions[1]
-  };
-  if(abs(distance_to_target[0]) < 1 && abs(distance_to_target[1]) < 1) {
+  if( has_reached_targets[0] && has_reached_targets[1]) {
     // need next point
     return true;
   }
+  has_reached_targets[0] = false;
+  has_reached_targets[1] = false;
+  long current_positions[2] = {stepper1->getCurrentPosition(), stepper2->getCurrentPosition()};
+
+  long distance_to_targets[2] = {
+    abs(trajectory[1][0] - current_positions[0]),
+    abs(trajectory[1][1] - current_positions[1])
+  };
+  long displacement_to_targets[2] = {
+    trajectory[1][0] - current_positions[0],
+    trajectory[1][1] - current_positions[1]
+  };
 
   /* Move the end affector at constant speed towards the target.
    * The speed and acceleration of each arm is proportional to the 
@@ -216,22 +223,22 @@ bool follow_trajectory() {
     desired_speeds[0] = max_speeds[1] * (initial_distance_to_targets[0] / (initial_distance_to_targets[1] + dx));
     desired_speeds[1] = max_speeds[1];
   }
-  if(should_stop_at_target[0]) {
-    desired_speeds[0] = 0;
-  }
-  if(should_stop_at_target[1]) {
-    desired_speeds[1] = 0;
-  }
+  // if(should_stop_at_target[0]) {
+  //   desired_speeds[0] = 0;
+  // }
+  // if(should_stop_at_target[1]) {
+  //   desired_speeds[1] = 0;
+  // }
   double desired_accelerations[2] = {
     MAX_ACCELERATION,
     MAX_ACCELERATION * (initial_distance_to_targets[1] / (initial_distance_to_targets[0] + dx))
   };
+  if(desired_accelerations[1] > MAX_ACCELERATION) {
+    desired_accelerations[0] = MAX_ACCELERATION * (initial_distance_to_targets[0] / (initial_distance_to_targets[1] + dx));
+    desired_accelerations[1] = MAX_ACCELERATION;
+  }
 
-  long distance_to_targets[2] = {
-    abs(trajectory[1][0] - current_positions[0]),
-    abs(trajectory[1][1] - current_positions[1])
-  };
-  long braking_distance[2] = {
+  double braking_distance[2] = {
     (desired_speeds[0] * desired_speeds[0]) / (2 * desired_accelerations[0]),
     (desired_speeds[1] * desired_speeds[1]) / (2 * desired_accelerations[1])
   };
@@ -249,20 +256,38 @@ bool follow_trajectory() {
   stepper2->setSpeedInHz(desired_speeds[1]);
 
   // Reach speed by applying acceleration
-  if(should_stop_at_target[0]) {
-    acceleration_directions[0] = -1;
-  }
-  if(should_stop_at_target[1]) {
-    acceleration_directions[1] = -1;
+  // if(should_stop_at_target[0]) {
+  //   acceleration_directions[0] = -1;
+  // }
+  // if(should_stop_at_target[1]) {
+  //   acceleration_directions[1] = -1;
+  // }
+  
+  EVERY_N_MILLISECONDS(2000) {
+    Serial.println("Speeds: " + String(desired_speeds[0]) + ", " + String(desired_speeds[1]));
+    Serial.println("Accel: " + String(desired_accelerations[0]) + ", " + String(desired_accelerations[1]));
+    Serial.println("Dir: " + String(acceleration_directions[0]) + ", " + String(acceleration_directions[1]));
+    Serial.println("Displ: " + String(displacement_to_targets[0]) + ", " + String(displacement_to_targets[1]));
+    Serial.println(" ");
   }
   stepper1->moveByAcceleration(desired_accelerations[0] * acceleration_directions[0], false);
   stepper2->moveByAcceleration(desired_accelerations[1] * acceleration_directions[1], false);
+
+  if(displacement_to_targets[0] < 1) {
+    stepper1->forceStop();
+    has_reached_targets[0] = true;
+  }
+  if(displacement_to_targets[1] < 1) {
+    stepper2->forceStop();
+    has_reached_targets[1] = true;
+  }
 
 
   return false;
 }
 
 bool add_target_to_trajectory(double theta1, double theta2) {
+  Serial.println("Add: " + String(theta1) + ", " + String(theta2));
   trajectory[0][0] = trajectory[1][0];
   trajectory[0][1] = trajectory[1][1];
   trajectory[1][0] = trajectory[2][0];
