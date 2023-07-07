@@ -16,7 +16,6 @@ using namespace std;
 #include "Player.h"
 #include "motor_control_functions.h"
 #include "wifi_functions.h"
-#include "homing_functions.h"
 #include "ota.h"
 #include <Preferences.h>
 
@@ -342,7 +341,7 @@ void setup() {
   Serial.println("Server started. Listening on port 80");
 
   // Remove this
-  player.read(SD, "/designs/rose3_2spin.thr.txt");
+  player.read(SD, "/test_designs/spiral.thr.txt");
   is_printing_design = true;
 
   setup_arm(EN_PIN, motor1DirPin, motor1StepPin, motor1HomingPin, motor2DirPin, motor2StepPin, motor2HomingPin);
@@ -398,17 +397,20 @@ void loop() {
   }
   EVERY_N_MILLISECONDS(4) {
     if(is_printing_design) {
-      long int delta[2] = {0, 0};
-      bool should_read_next = move_arm(delta, target_q1, target_q2);
+      bool should_read_next = follow_trajectory();
+      // long int delta[2] = {0, 0};
+      // bool should_read_next = move_arm(delta, target_q1, target_q2);
       if(should_read_next) {
         double* points = player.next_line(SD);
         if(points[0] == 0.0) {
           is_printing_design = false;
+          add_target_to_trajectory(0.0, 0.0);
           // should_play_next = true;
           return;
         }
         target_q1 = points[1];
         target_q2 = points[2];
+        add_target_to_trajectory(target_q1, target_q2);
         // target_q1 = points[current_index][1];
         // target_q2 = points[current_index][2];
         // current_index = (current_index + 1) % 5;
