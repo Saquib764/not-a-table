@@ -189,14 +189,7 @@ bool follow_trajectory() {
    * The arms move at maximum possible speed, with sooth transitions between the speeds.
    * Arms must stop where trajectory is not smooth, i.e non-diffrentialble.
   */
-  int bigger_distance_index = distance_to_targets[1]>distance_to_targets[0]? 1:0;
-  double theta1 = current_positions[0] / (3 * K);
-  double theta2 = current_positions[1] / (9 * K) - theta1/3.0;
-  double max_speeds[2] = {
-    min( 18.0 * MAX_SPEED * K / (R * (5*abs(cos(theta2/2)) + 1)), MAX_ANGULAR_SPEED),
-    min( 18.0 * MAX_SPEED * K / R, MAX_ANGULAR_SPEED)
-  };
-
+ 
   long initial_displacement_to_targets[2] = {
     trajectory[1][0] - trajectory[0][0],
     trajectory[1][1] - trajectory[0][1]
@@ -205,9 +198,23 @@ bool follow_trajectory() {
     trajectory[2][0] - trajectory[1][0],
     trajectory[2][1] - trajectory[1][1]
   };
+
+  int bigger_distance_index = distance_to_targets[1]>distance_to_targets[0]? 1:0;
+  int smaller_distance_index = abs(1 - bigger_distance_index);
+  // Smaller distance is assumed correct
+
+  double error = displacement_to_targets[bigger_distance_index] - distance_to_targets[smaller_distance_index] *
+                        ( initial_displacement_to_targets[bigger_distance_index] / (abs(initial_displacement_to_targets[smaller_distance_index]) + dx));
+  double theta1 = current_positions[0] / (3 * K);
+  double theta2 = current_positions[1] / (9 * K) - theta1/3.0;
+  double max_speeds[2] = {
+    min( 18.0 * MAX_SPEED * K / (R * (5*abs(cos(theta2/2)) + 1)), MAX_ANGULAR_SPEED),
+    min( 18.0 * MAX_SPEED * K / R, MAX_ANGULAR_SPEED)
+  };
+
   long should_stop_at_target[2] = {
-    (initial_displacement_to_targets[0] * next_segment_displacement_to_targets[0] < 0) ? 1 : 0,
-    (initial_displacement_to_targets[1] * next_segment_displacement_to_targets[1] < 0) ? 1 : 0
+    (initial_displacement_to_targets[0] * next_segment_displacement_to_targets[0] < 0),
+    (initial_displacement_to_targets[1] * next_segment_displacement_to_targets[1] < 0)
   };
   long initial_distance_to_targets[2] = {
     abs(initial_displacement_to_targets[0]),
@@ -241,37 +248,39 @@ bool follow_trajectory() {
     (desired_speeds[0] * desired_speeds[0]) / (2 * desired_accelerations[0]),
     (desired_speeds[1] * desired_speeds[1]) / (2 * desired_accelerations[1])
   };
-  boolean should_brake = false;
+  boolean should_brake[2] = {
+    braking_distance[0] > distance_to_targets[0],
+    braking_distance[1] > distance_to_targets[1]
+  };
   int acceleration_directions[2] = {
     initial_displacement_to_targets[0] > 0 ? 1 : -1,
     initial_displacement_to_targets[1] > 0 ? 1 : -1
   };
-  if(braking_distance[0] > distance_to_targets[0]) {
-    should_brake = true;
-  }
 
   // Set stepper speed
   stepper1->setSpeedInHz(desired_speeds[0]);
   stepper2->setSpeedInHz(desired_speeds[1]);
 
   // Reach speed by applying acceleration
-  if(should_stop_at_target[0] && should_brake) {
+  if(should_stop_at_target[0] && braking_distance[0] > distance_to_targets[0]) {
     acceleration_directions[0] = -1;
   }
-  if(should_stop_at_target[1] && should_brake) {
+  if(should_stop_at_target[1] && braking_distance[1] > distance_to_targets[1]) {
     acceleration_directions[1] = -1;
   }
   
-  EVERY_N_MILLISECONDS(2000) {
+  EVERY_N_MILLISECONDS(200) {
     Serial.println("Speeds: " + String(desired_speeds[0]) + ", " + String(desired_speeds[1]));
     Serial.println("Accel: " + String(desired_accelerations[0]) + ", " + String(desired_accelerations[1]));
     Serial.println("Dir: " + String(acceleration_directions[0]) + ", " + String(acceleration_directions[1]));
+    Serial.println("Should stop: " + String(should_stop_at_target[0]) + ", " + String(should_stop_at_target[1]));
     Serial.println("Displ: " + String(displacement_to_targets[0]) + ", " + String(displacement_to_targets[1]));
     Serial.println("Braking dist: " + String(braking_distance[0]) + ", " + String(braking_distance[1]));
+    Serial.println("Error: " + String(error));
     Serial.println(" ");
   }
-  stepper1->moveByAcceleration(desired_accelerations[0] * acceleration_directions[0], should_brake);
-  stepper2->moveByAcceleration(desired_accelerations[1] * acceleration_directions[1], should_brake);
+  stepper1->moveByAcceleration(desired_accelerations[0] * acceleration_directions[0], false);
+  stepper2->moveByAcceleration(desired_accelerations[1] * acceleration_directions[1], true);
 
   // if(displacement_to_targets[0] < 1) {
   //   stepper1->forceStop();
