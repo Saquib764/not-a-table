@@ -174,7 +174,8 @@ bool follow_trajectory() {
     trajectory[1][1] - current_positions[1]
   };
 
-  if( displacement_to_targets[0] < 1 && displacement_to_targets[1] < 1 ) {
+  if( distance_to_targets[0] < 15 && distance_to_targets[1] < 15 ) {
+    Serial.println("displacement_to_targetst: " + String(displacement_to_targets[0]) + ", " + String(displacement_to_targets[1]));
     // need next point
     return true;
   }
@@ -188,7 +189,7 @@ bool follow_trajectory() {
    * The arms move at maximum possible speed, with sooth transitions between the speeds.
    * Arms must stop where trajectory is not smooth, i.e non-diffrentialble.
   */
-
+  int bigger_distance_index = distance_to_targets[1]>distance_to_targets[0]? 1:0;
   double theta1 = current_positions[0] / (3 * K);
   double theta2 = current_positions[1] / (9 * K) - theta1/3.0;
   double max_speeds[2] = {
@@ -254,12 +255,12 @@ bool follow_trajectory() {
   stepper2->setSpeedInHz(desired_speeds[1]);
 
   // Reach speed by applying acceleration
-  // if(should_stop_at_target[0]) {
-  //   acceleration_directions[0] = -1;
-  // }
-  // if(should_stop_at_target[1]) {
-  //   acceleration_directions[1] = -1;
-  // }
+  if(should_stop_at_target[0] && should_brake) {
+    acceleration_directions[0] = -1;
+  }
+  if(should_stop_at_target[1] && should_brake) {
+    acceleration_directions[1] = -1;
+  }
   
   EVERY_N_MILLISECONDS(2000) {
     Serial.println("Speeds: " + String(desired_speeds[0]) + ", " + String(desired_speeds[1]));
@@ -269,22 +270,22 @@ bool follow_trajectory() {
     Serial.println("Braking dist: " + String(braking_distance[0]) + ", " + String(braking_distance[1]));
     Serial.println(" ");
   }
-  stepper1->moveByAcceleration(desired_accelerations[0] * acceleration_directions[0], false);
-  stepper2->moveByAcceleration(desired_accelerations[1] * acceleration_directions[1], false);
+  stepper1->moveByAcceleration(desired_accelerations[0] * acceleration_directions[0], should_brake);
+  stepper2->moveByAcceleration(desired_accelerations[1] * acceleration_directions[1], should_brake);
 
-  if(displacement_to_targets[0] < 1) {
-    stepper1->forceStop();
-  }
-  if(displacement_to_targets[1] < 1) {
-    stepper2->forceStop();
-  }
+  // if(displacement_to_targets[0] < 1) {
+  //   stepper1->forceStop();
+  // }
+  // if(displacement_to_targets[1] < 1) {
+  //   stepper2->forceStop();
+  // }
 
 
   return false;
 }
 
 bool add_target_to_trajectory(double theta1, double theta2) {
-  Serial.println("Add: " + String(theta1) + ", " + String(theta2));
+  // Serial.println("Add: " + String(theta1) + ", " + String(theta2));
   trajectory[0][0] = trajectory[1][0];
   trajectory[0][1] = trajectory[1][1];
   trajectory[1][0] = trajectory[2][0];
