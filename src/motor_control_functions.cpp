@@ -161,15 +161,8 @@ void reset() {
 
 double MAX_ACCELERATION = 1000.0;
 double dx = 0.00001;
-bool has_reached_targets[2] = {false, false};
 
 bool follow_trajectory() {
-  if( has_reached_targets[0] && has_reached_targets[1]) {
-    // need next point
-    return true;
-  }
-  has_reached_targets[0] = false;
-  has_reached_targets[1] = false;
   long current_positions[2] = {stepper1->getCurrentPosition(), stepper2->getCurrentPosition()};
 
   long distance_to_targets[2] = {
@@ -180,6 +173,11 @@ bool follow_trajectory() {
     trajectory[1][0] - current_positions[0],
     trajectory[1][1] - current_positions[1]
   };
+
+  if( displacement_to_targets[0] < 1 && displacement_to_targets[1] < 1 ) {
+    // need next point
+    return true;
+  }
 
   /* Move the end affector at constant speed towards the target.
    * The speed and acceleration of each arm is proportional to the 
@@ -268,6 +266,7 @@ bool follow_trajectory() {
     Serial.println("Accel: " + String(desired_accelerations[0]) + ", " + String(desired_accelerations[1]));
     Serial.println("Dir: " + String(acceleration_directions[0]) + ", " + String(acceleration_directions[1]));
     Serial.println("Displ: " + String(displacement_to_targets[0]) + ", " + String(displacement_to_targets[1]));
+    Serial.println("Braking dist: " + String(braking_distance[0]) + ", " + String(braking_distance[1]));
     Serial.println(" ");
   }
   stepper1->moveByAcceleration(desired_accelerations[0] * acceleration_directions[0], false);
@@ -275,11 +274,9 @@ bool follow_trajectory() {
 
   if(displacement_to_targets[0] < 1) {
     stepper1->forceStop();
-    has_reached_targets[0] = true;
   }
   if(displacement_to_targets[1] < 1) {
     stepper2->forceStop();
-    has_reached_targets[1] = true;
   }
 
 
