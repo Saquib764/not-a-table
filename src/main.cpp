@@ -404,13 +404,13 @@ void loop() {
         double* points = player.next_line(SD);
         if(points[0] == 0.0) {
           is_printing_design = false;
-          add_target_to_trajectory(0.0, 0.0);
+          add_point_to_trajectory(0.0, 0.0);
           // should_play_next = true;
           return;
         }
         target_q1 = points[1];
         target_q2 = points[2];
-        add_target_to_trajectory(target_q1, target_q2);
+        add_point_to_trajectory((float)target_q1, (float)target_q2);
         // target_q1 = points[current_index][1];
         // target_q2 = points[current_index][2];
         // current_index = (current_index + 1) % 5;

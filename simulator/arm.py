@@ -40,7 +40,7 @@ def add_point_to_trajectory(pt):
         keypoints[i] = copy(keypoints[i + 1])
         targets[i] = copy(targets[i + 1])
     
-    for i in range(len(angles_at_keypoints) - 1):
+    for i in range(len(max_speeds) - 1):
         angles_at_keypoints[i] = copy(angles_at_keypoints[i + 1])
         target_speeds[i] = copy(target_speeds[i + 1])
         target_directions[i] = copy(target_directions[i + 1])
