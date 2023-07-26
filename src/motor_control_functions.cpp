@@ -195,7 +195,7 @@ bool follow_trajectory() {
   current_position[0] = stepper1->getCurrentPosition();
   current_position[1] = stepper2->getCurrentPosition();
 
-  current_speed[0] = stepper1->getCurrentSpeedInMilliHz()/1000.0;
+  current_speed[0] = stepper1->getCurrentSpeedInMilliHz() / 1000.0;
   current_speed[1] = stepper2->getCurrentSpeedInMilliHz() / 1000.0;
 
   float displacement_to_target[2] = {targets[curent_target_index][0] - current_position[0], targets[curent_target_index][1] - current_position[1]};
@@ -263,8 +263,8 @@ bool follow_trajectory() {
     Serial.println("m2: " + String(current_speed[1]) + ", " + String(_max_speed[1]));
   }
 
-  stepper1->setSpeedInTicks((uint32_t)_max_speed[0]);
-  stepper2->setSpeedInTicks((uint32_t)_max_speed[1]);
+  stepper1->setSpeedInHz((uint32_t)_max_speed[0]);
+  stepper2->setSpeedInHz((uint32_t)_max_speed[1]);
 
   stepper1->moveByAcceleration(current_acceleration[0], true);
   stepper2->moveByAcceleration(current_acceleration[1], true);
@@ -302,8 +302,8 @@ void add_point_to_trajectory(float a1, float a2) {
   keypoints[4][1] = a2;
 
   to_xy(keypoints[4][0], keypoints[4][1], _pt[0], _pt[1]);
-  targets[4][0] = int(_pt[0] * K);
-  targets[4][1] = int(_pt[1] * K);
+  targets[4][0] = int(3 * _pt[0] * K);
+  targets[4][1] = int((9 * _pt[1] - 3 * _pt[0]) * K);
   target_speeds[3] = target_speed_to_new_point;
 
   if (keypoints[4][0] - keypoints[3][0] > 0) {
