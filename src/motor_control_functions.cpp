@@ -259,8 +259,8 @@ bool follow_trajectory() {
   EVERY_N_MILLISECONDS(200) {
     Serial.print("disp: " + String(displacement_to_target[0] * target_directions[curent_target_index - 1][0]));
     Serial.println(", " + String(displacement_to_target[1] * target_directions[curent_target_index - 1][1]));
-    Serial.println("m1: " + String(current_speed[0]) + ", " + String(_max_speed[0]));
-    Serial.println("m2: " + String(current_speed[1]) + ", " + String(_max_speed[1]));
+    // Serial.println("m1: " + String(current_speed[0]) + ", " + String(_max_speed[0]));
+    // Serial.println("m2: " + String(current_speed[1]) + ", " + String(_max_speed[1]));
   }
 
   stepper1->setSpeedInHz((uint32_t)_max_speed[0]);
@@ -302,7 +302,7 @@ void add_point_to_trajectory(float a1, float a2) {
   keypoints[4][1] = a2;
 
   targets[4][0] = int(3 * a1 * K);
-  targets[4][1] = int((9 * a2 - 3 * a1) * K);
+  targets[4][1] = int((9 * a2 + 3 * a1) * K);
   target_speeds[3] = target_speed_to_new_point;
 
   if (keypoints[4][0] - keypoints[3][0] > 0) {
