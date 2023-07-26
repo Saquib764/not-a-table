@@ -21,7 +21,7 @@ double K = STEPS_PER_REV * MICROSTEPS/ (2.0*PI);
 float R = 0.63/2;
 
 // Define constants
-const int MAX_SPEED = 50;
+const int MAX_SPEED = 200;
 const int MAX_ACCELERATION = 3 * MAX_SPEED;
 const float ARM = 0.33;
 
@@ -181,7 +181,6 @@ void reset() {
 }
 
 // double MAX_ACCELERATION = 1000.0;
-double dx = 0.00001;
 
 void to_xy(float a1, float a2, float& x, float& y) {
   x = ARM * cos(a1) + ARM * cos(a1 + a2);
@@ -189,15 +188,19 @@ void to_xy(float a1, float a2, float& x, float& y) {
 }
 
 // Function to follow the trajectory
-// Function to follow the trajectory
 bool follow_trajectory() {
   if (curent_target_index >= 5) {
     return false;
   }
+  current_position[0] = stepper1->getCurrentPosition();
+  current_position[1] = stepper2->getCurrentPosition();
+
+  current_speed[0] = stepper1->getCurrentSpeedInMilliHz()/1000.0;
+  current_speed[1] = stepper2->getCurrentSpeedInMilliHz() / 1000.0;
 
   float displacement_to_target[2] = {targets[curent_target_index][0] - current_position[0], targets[curent_target_index][1] - current_position[1]};
 
-  if (displacement_to_target[0] * target_directions[curent_target_index - 1][0] < MAX_SPEED * 0.5 && displacement_to_target[1] * target_directions[curent_target_index - 1][1] < MAX_SPEED * 0.5) {
+  if (displacement_to_target[0] * target_directions[curent_target_index - 1][0] < 4 && displacement_to_target[1] * target_directions[curent_target_index - 1][1] < 4) {
     curent_target_index++;
     return true;
   }
@@ -233,8 +236,8 @@ bool follow_trajectory() {
   }
 
   float _max_speed[2] = {
-    max_speeds[curent_target_index - 1][0],
-    max_speeds[curent_target_index - 1][1]
+    max(151.0f, max_speeds[curent_target_index - 1][0]),
+    max(151.0f, max_speeds[curent_target_index - 1][1])
   };
 
   current_acceleration[0] = (_max_speed[0] * target_directions[curent_target_index - 1][0] - current_speed[0]) * 2;
@@ -251,6 +254,13 @@ bool follow_trajectory() {
     if (abs(current_speed[1]) > 0.3 * _max_speed[1]) {
       current_acceleration[1] = -0.9 * current_speed[1];
     }
+  }
+  
+  EVERY_N_MILLISECONDS(25) {
+    // Serial.print("disp: " + String(displacement_to_target[0] * target_directions[curent_target_index - 1][0]));
+    // Serial.println(", " + String(displacement_to_target[1] * target_directions[curent_target_index - 1][1]));
+    Serial.println("m1: " + String(current_speed[0]) + ", " + String(_max_speed[0]));
+    Serial.println("m2: " + String(current_speed[1]) + ", " + String(_max_speed[1]));
   }
 
   stepper1->setSpeedInTicks((uint32_t)_max_speed[0]);
@@ -330,52 +340,54 @@ void add_point_to_trajectory(float a1, float a2) {
   max_speeds[3][0] = ceil(max_speeds[3][0]);
   max_speeds[3][1] = ceil(max_speeds[3][1]);
 
-  Serial.print("keypoints: ");
-  for (int i = 0; i < 5; i++) {
-    Serial.print("[" + String(keypoints[i][0]) + ", " + String(keypoints[i][1]) + "] ");
+  if(false) {
+    Serial.print("keypoints: ");
+    for (int i = 0; i < 5; i++) {
+      Serial.print("[" + String(keypoints[i][0]) + ", " + String(keypoints[i][1]) + "] ");
+    }
+    Serial.println();
+
+    Serial.print("targets: ");
+    for (int i = 0; i < 5; i++) {
+      Serial.print("[" + String(targets[i][0]) + ", " + String(targets[i][1]) + "] ");
+    }
+    Serial.println();
+
+    Serial.print("angles_at_keypoints: ");
+    for (int i = 0; i < 4; i++) {
+      Serial.print(String(angles_at_keypoints[i]) + " ");
+    }
+    Serial.println();
+
+    Serial.print("targets speed: ");
+    for (int i = 0; i < 4; i++) {
+      Serial.print(String(target_speeds[i]) + " ");
+    }
+    Serial.println();
+
+    Serial.print("directions: ");
+    for (int i = 0; i < 4; i++) {
+      Serial.print("[" + String(target_directions[i][0]) + ", " + String(target_directions[i][1]) + "] ");
+    }
+    Serial.println();
+
+    Serial.print("max speed: ");
+    for (int i = 0; i < 4; i++) {
+      Serial.print("[" + String(max_speeds[i][0]) + ", " + String(max_speeds[i][1]) + "] ");
+    }
+    Serial.println();
+
+    Serial.print("should_stop: ");
+    for (int i = 0; i < 4; i++) {
+      Serial.print(should_stop[i] + " ");
+    }
+    Serial.println();
+
+    Serial.print("curent_target_index: ");
+    Serial.println(curent_target_index);
+
+    Serial.println();
   }
-  Serial.println();
-
-  Serial.print("targets: ");
-  for (int i = 0; i < 5; i++) {
-    Serial.print("[" + String(targets[i][0]) + ", " + String(targets[i][1]) + "] ");
-  }
-  Serial.println();
-
-  Serial.print("angles_at_keypoints: ");
-  for (int i = 0; i < 4; i++) {
-    Serial.print(angles_at_keypoints[i]);
-  }
-  Serial.println();
-
-  Serial.print("targets speed: ");
-  for (int i = 0; i < 4; i++) {
-    Serial.print(target_speeds[i]);
-  }
-  Serial.println();
-
-  Serial.print("directions: ");
-  for (int i = 0; i < 4; i++) {
-    Serial.print("[" + String(target_directions[i][0]) + ", " + String(target_directions[i][1]) + "] ");
-  }
-  Serial.println();
-
-  Serial.print("max speed: ");
-  for (int i = 0; i < 4; i++) {
-    Serial.print("[" + String(max_speeds[i][0]) + ", " + String(max_speeds[i][1]) + "] ");
-  }
-  Serial.println();
-
-  Serial.print("should_stop: ");
-  for (int i = 0; i < 4; i++) {
-    Serial.print(should_stop[i] + " ");
-  }
-  Serial.println();
-
-  Serial.print("curent_target_index: ");
-  Serial.println(curent_target_index);
-
-  Serial.println();
 }
 
 void force_stop() {
