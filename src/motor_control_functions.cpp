@@ -21,7 +21,7 @@ double K = STEPS_PER_REV * MICROSTEPS/ (2.0*PI);
 float R = 0.63/2;
 
 // Define constants
-const int MAX_SPEED = 200;
+const int MAX_SPEED = 600;
 const int MAX_ACCELERATION = 3 * MAX_SPEED;
 const float ARM = 0.33;
 
@@ -236,8 +236,8 @@ bool follow_trajectory() {
   }
 
   float _max_speed[2] = {
-    max(151.0f, max_speeds[curent_target_index - 1][0]),
-    max(151.0f, max_speeds[curent_target_index - 1][1])
+    max_speeds[curent_target_index - 1][0],
+    max_speeds[curent_target_index - 1][1]
   };
 
   current_acceleration[0] = (_max_speed[0] * target_directions[curent_target_index - 1][0] - current_speed[0]) * 2;
@@ -256,9 +256,9 @@ bool follow_trajectory() {
     }
   }
   
-  EVERY_N_MILLISECONDS(25) {
-    // Serial.print("disp: " + String(displacement_to_target[0] * target_directions[curent_target_index - 1][0]));
-    // Serial.println(", " + String(displacement_to_target[1] * target_directions[curent_target_index - 1][1]));
+  EVERY_N_MILLISECONDS(200) {
+    Serial.print("disp: " + String(displacement_to_target[0] * target_directions[curent_target_index - 1][0]));
+    Serial.println(", " + String(displacement_to_target[1] * target_directions[curent_target_index - 1][1]));
     Serial.println("m1: " + String(current_speed[0]) + ", " + String(_max_speed[0]));
     Serial.println("m2: " + String(current_speed[1]) + ", " + String(_max_speed[1]));
   }
@@ -301,9 +301,8 @@ void add_point_to_trajectory(float a1, float a2) {
   keypoints[4][0] = a1;
   keypoints[4][1] = a2;
 
-  to_xy(keypoints[4][0], keypoints[4][1], _pt[0], _pt[1]);
-  targets[4][0] = int(3 * _pt[0] * K);
-  targets[4][1] = int((9 * _pt[1] - 3 * _pt[0]) * K);
+  targets[4][0] = int(3 * a1 * K);
+  targets[4][1] = int((9 * a2 - 3 * a1) * K);
   target_speeds[3] = target_speed_to_new_point;
 
   if (keypoints[4][0] - keypoints[3][0] > 0) {
@@ -330,7 +329,7 @@ void add_point_to_trajectory(float a1, float a2) {
 
   float distance_to_target[2] = {abs(targets[4][0] - targets[3][0]), abs(targets[4][1] - targets[3][1])};
   max_speeds[3][0] = MAX_SPEED * (1.0 * distance_to_target[0]) / (distance_to_target[0] + 0.001);
-  max_speeds[3][1] = MAX_SPEED * (1.0 * distance_to_target[1]) / (distance_to_target[1] + 0.001);
+  max_speeds[3][1] = MAX_SPEED * (1.0 * distance_to_target[1]) / (distance_to_target[0] + 0.001);
 
   if (max_speeds[3][1] > MAX_SPEED) {
     max_speeds[3][0] = MAX_SPEED * (1.0 * distance_to_target[0]) / (distance_to_target[1] + 0.001);
@@ -340,7 +339,7 @@ void add_point_to_trajectory(float a1, float a2) {
   max_speeds[3][0] = ceil(max_speeds[3][0]);
   max_speeds[3][1] = ceil(max_speeds[3][1]);
 
-  if(false) {
+  if(true) {
     Serial.print("keypoints: ");
     for (int i = 0; i < 5; i++) {
       Serial.print("[" + String(keypoints[i][0]) + ", " + String(keypoints[i][1]) + "] ");
