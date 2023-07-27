@@ -214,7 +214,10 @@ bool follow_trajectory() {
   current_acceleration[0] = (target_speeds[0] - current_speed[0]) * 5;
   current_acceleration[1] = (target_speeds[1] - current_speed[1]) * 5;
 
-  float original_displacement[2] = {targets[curent_target_index][0] - targets[curent_target_index - 1][0], targets[curent_target_index][1] - targets[curent_target_index - 1][1]};
+  float original_displacement[2] = {
+    targets[curent_target_index][0] - targets[curent_target_index - 1][0],
+    targets[curent_target_index][1] - targets[curent_target_index - 1][1]
+  };
 
   float error = 0;
   float speed_adjust[2] = {0., 0.};
@@ -229,31 +232,32 @@ bool follow_trajectory() {
     current_acceleration[1] += speed_adjust[1];
   }
 
-  if (displacement_to_target[0] * target_directions[curent_target_index - 1][0] < 1 * abs(current_speed[0]) || displacement_to_target[1] * target_directions[curent_target_index - 1][1] < 1 * abs(current_speed[1])) {
-    if (abs(current_speed[0]) > 0.3 * abs(target_speeds[0])) {
-      current_acceleration[0] += -0.2 * current_speed[0];
-    }
-    if (abs(current_speed[1]) > 0.3 * abs(target_speeds[1])) {
-      current_acceleration[1] += -0.2 * current_speed[1];
-    }
-  }
-  
-  EVERY_N_MILLISECONDS(200) {
-    Serial.print("disp: " + String(displacement_to_target[0] * target_directions[curent_target_index - 1][0]));
-    Serial.println(", " + String(displacement_to_target[1] * target_directions[curent_target_index - 1][1]));
-    // Serial.println("m1: " + String(current_speed[0]) + ", " + String(_max_speed[0]));
-    // Serial.println("m2: " + String(current_speed[1]) + ", " + String(_max_speed[1]));
-  }
+  // if (displacement_to_target[0] * target_directions[curent_target_index - 1][0] < 1 * abs(current_speed[0]) || displacement_to_target[1] * target_directions[curent_target_index - 1][1] < 1 * abs(current_speed[1])) {
+  //   if (abs(current_speed[0]) > 0.3 * abs(target_speeds[0])) {
+  //     current_acceleration[0] += -0.2 * current_speed[0];
+  //   }
+  //   if (abs(current_speed[1]) > 0.3 * abs(target_speeds[1])) {
+  //     current_acceleration[1] += -0.2 * current_speed[1];
+  //   }
+  // }
 
   float _max_speeds[2] = {
     target_speeds[0] + speed_adjust[0],
     target_speeds[1] + target_speeds[0] + speed_adjust[1] + speed_adjust[0]
   };
-  stepper1->setSpeedInHz((uint32_t)_max_speeds[0]);
-  stepper2->setSpeedInHz((uint32_t)_max_speeds[1]);
+  stepper1->setSpeedInHz((uint32_t)abs(_max_speeds[0]));
+  stepper2->setSpeedInHz((uint32_t)abs(_max_speeds[1]));
 
   stepper1->moveByAcceleration(current_acceleration[0], true);
   stepper2->moveByAcceleration(current_acceleration[1] + current_acceleration[0], true);
+  
+  EVERY_N_MILLISECONDS(200) {
+    Serial.print("disp: " + String(displacement_to_target[0] * target_directions[curent_target_index - 1][0]));
+    Serial.println(", " + String(displacement_to_target[1] * target_directions[curent_target_index - 1][1]));
+    Serial.println("m1: " + String(current_speed[0]) + ", " + String(_max_speeds[0]));
+    Serial.println("m2: " + String(current_speed[1]) + ", " + String(target_speeds[1]));
+    Serial.println("Error: " + String(error));
+  }
   return false;
 }
 
