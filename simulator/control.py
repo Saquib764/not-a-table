@@ -11,13 +11,8 @@ m = Model(ARM, ARM)
 
 keypoints = [
     [0, 0],
-    [0, -0.25],
-    [0.1, 0.15],
-    [0, 0.3],
-    [0.4, 0.0],
-    [0.0, 0.5],
-    [0.0, 0.4],
-    [0.0, 0.7],
+    [-1.5, 3],
+    [0., 0.]
 ]
 def read(name):
   with open(f'../test_designs/{name}', 'r') as f:
@@ -33,7 +28,7 @@ def read(name):
     theta.append([float(theta1), float(theta2)])
   return theta
 
-keypoints = read("spiral.thr.txt")
+keypoints = read("square.thr.txt")
 count = 0
 has_completed_path = False
 def loop():
@@ -50,7 +45,7 @@ image = None
 while i < T:
   i += 1
   random = np.random.rand(1)
-  if random < 0.01 or i % 10 == 0:
+  if random < 0.01 or i % 5 == 0:
     loop()
 
   if not has_completed_path:
@@ -74,12 +69,12 @@ e = np.array(arm.e) * 0.01
 
 plt.plot(p[:,0], label="x")
 plt.plot(v[:,0], label="vx")
-# plt.plot(mv[:,0], label="mvx")
+plt.plot(mv[:,0], label="mvx")
 # plt.plot(a[:,0], label="ax")
 
 plt.plot(p[:,1], label="y")
 plt.plot(v[:,1], label="vy")
-# plt.plot(mv[:,1], label="mvy")
+plt.plot(mv[:,1], label="mvy")
 # plt.plot(a[:,1], label="ay")
 
 plt.plot(e, label="e")
