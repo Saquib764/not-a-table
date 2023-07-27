@@ -120,10 +120,6 @@ def follow_trajectory():
     current_acceleration[0] = (target_speeds[0] - current_speed[0]) * 5
     current_acceleration[1] = (target_speeds[1] - (current_speed[1] - current_speed[0])) * 5
 
-    prev_directions = [1, 1]
-    prev_directions[0] = 1 if current_speed[0]>=0 else -1
-    prev_directions[1] = 1 if current_speed[1]>=0 else -1
-
     original_displacement = [
         targets[curent_target_index][0] - targets[curent_target_index - 1][0],
         targets[curent_target_index][1] - targets[curent_target_index - 1][1]]
@@ -141,7 +137,7 @@ def follow_trajectory():
         print("error: ", error)
 
     
-    if (displacement_to_target[0] * target_directions[curent_target_index -1 ][0] < 2.3 * abs(current_speed[0]) or displacement_to_target[1] * target_directions[curent_target_index -1 ][1] < 2.3 * abs(current_speed[1])) and should_stop[curent_target_index - 1 ]:
+    if (displacement_to_target[0] * target_directions[curent_target_index -1 ][0] < 1 * abs(current_speed[0]) or displacement_to_target[1] * target_directions[curent_target_index -1 ][1] < 1 * abs(current_speed[1])) and should_stop[curent_target_index - 1 ]:
         if abs(current_speed[0]) > 0.3 * abs(target_speeds[0]):
             current_acceleration[0] += -0.2 * current_speed[0]
         if abs(current_speed[1]) > 0.3 * abs(target_speeds[1]):

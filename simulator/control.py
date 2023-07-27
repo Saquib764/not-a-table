@@ -28,7 +28,7 @@ def read(name):
     theta.append([float(theta1), float(theta2)])
   return theta
 
-keypoints = read("square.thr.txt")
+keypoints = read("triangle.thr.txt")
 count = 0
 has_completed_path = False
 def loop():
