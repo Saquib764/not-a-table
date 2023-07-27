@@ -193,66 +193,48 @@ bool follow_trajectory() {
     return false;
   }
   current_position[0] = stepper1->getCurrentPosition();
-  current_position[1] = stepper2->getCurrentPosition();
+  current_position[1] = stepper2->getCurrentPosition() - current_position[0];
 
   current_speed[0] = stepper1->getCurrentSpeedInMilliHz() / 1000.0;
-  current_speed[1] = stepper2->getCurrentSpeedInMilliHz() / 1000.0;
+  current_speed[1] = stepper2->getCurrentSpeedInMilliHz() / 1000.0 - current_speed[0];
 
-  float displacement_to_target[2] = {targets[curent_target_index][0] - current_position[0], targets[curent_target_index][1] - current_position[1]};
+  float displacement_to_target[2] = {
+    targets[curent_target_index][0] - current_position[0],
+    targets[curent_target_index][1] - current_position[1]};
 
-  if (displacement_to_target[0] * target_directions[curent_target_index - 1][0] < 4 && displacement_to_target[1] * target_directions[curent_target_index - 1][1] < 4) {
+  float target_speeds[2] = {
+    max_speeds[curent_target_index - 1][0],
+    max_speeds[curent_target_index - 1][1]
+  };
+  if (displacement_to_target[0] * target_directions[curent_target_index - 1][0] < MAX_SPEED/10.0 && displacement_to_target[1] * target_directions[curent_target_index - 1][1] < MAX_SPEED/10.0) {
     curent_target_index++;
     return true;
   }
 
-  float distance_to_target[2] = {abs(displacement_to_target[0]) + 0.001, abs(displacement_to_target[1]) + 0.001};
-
-  current_acceleration[0] = MAX_ACCELERATION;
-  current_acceleration[1] = MAX_ACCELERATION * distance_to_target[1] / distance_to_target[0];
-
-  float prev_directions[2] = {1, 1};
-  prev_directions[0] = current_speed[0] >= 0 ? 1 : -1;
-  prev_directions[1] = current_speed[1] >= 0 ? 1 : -1;
+  current_acceleration[0] = (target_speeds[0] - current_speed[0]) * 5;
+  current_acceleration[1] = (target_speeds[1] - current_speed[1]) * 5;
 
   float original_displacement[2] = {targets[curent_target_index][0] - targets[curent_target_index - 1][0], targets[curent_target_index][1] - targets[curent_target_index - 1][1]};
 
   float error = 0;
-  int error_correction_index = 0;
-  if (abs(original_displacement[0]) > 10 && abs(original_displacement[1]) > 10 && abs(displacement_to_target[0]) > 10 && abs(displacement_to_target[1]) > 10) {
+  float speed_adjust[2] = {0., 0.};
+  if (abs(original_displacement[0]) > 5) {
     // Correct the motor with the smaller distance
-    float r1 = abs(1 - displacement_to_target[0] / original_displacement[0]);
-    float r2 = abs(1 - displacement_to_target[1] / original_displacement[1]);
-    if (r1 < r2) {
-      // Motor 1 is faster, slow it down
-      error_correction_index = 0;
-    } else {
-      // Motor 2 is faster, slow it down
-      error_correction_index = 1;
-    }
-    int reference_index = (error_correction_index == 0) ? 1 : 0;
-    float expected_position_of_error_index = original_displacement[error_correction_index] * abs(displacement_to_target[reference_index] / original_displacement[reference_index]);
+    float r1 = abs((current_position[0] - targets[curent_target_index - 1][0]) / original_displacement[0]);
+    
+    float expected_position = targets[curent_target_index - 1][1] + r1 * original_displacement[1];
+    float error = expected_position - current_position[1];
 
-    error = (expected_position_of_error_index - displacement_to_target[error_correction_index]) * target_directions[curent_target_index - 1][error_correction_index];
+    speed_adjust[1] = error * 5;
+    current_acceleration[1] += speed_adjust[1];
   }
 
-  float _max_speed[2] = {
-    max_speeds[curent_target_index - 1][0],
-    max_speeds[curent_target_index - 1][1]
-  };
-
-  current_acceleration[0] = (_max_speed[0] * target_directions[curent_target_index - 1][0] - current_speed[0]) * 2;
-  current_acceleration[1] = (_max_speed[1] * target_directions[curent_target_index - 1][1] - current_speed[1]) * 2;
-
-  if (error >= 1) {
-    current_acceleration[error_correction_index] = -0.2 * current_speed[error_correction_index];
-  }
-
-  if (displacement_to_target[0] * target_directions[curent_target_index - 1][0] < 0.3 * abs(current_speed[0]) || displacement_to_target[1] * target_directions[curent_target_index - 1][1] < 0.3 * abs(current_speed[1])) {
-    if (abs(current_speed[0]) > 0.3 * _max_speed[0]) {
-      current_acceleration[0] = -0.9 * current_speed[0];
+  if (displacement_to_target[0] * target_directions[curent_target_index - 1][0] < 1 * abs(current_speed[0]) || displacement_to_target[1] * target_directions[curent_target_index - 1][1] < 1 * abs(current_speed[1])) {
+    if (abs(current_speed[0]) > 0.3 * abs(target_speeds[0])) {
+      current_acceleration[0] += -0.2 * current_speed[0];
     }
-    if (abs(current_speed[1]) > 0.3 * _max_speed[1]) {
-      current_acceleration[1] = -0.9 * current_speed[1];
+    if (abs(current_speed[1]) > 0.3 * abs(target_speeds[1])) {
+      current_acceleration[1] += -0.2 * current_speed[1];
     }
   }
   
@@ -263,11 +245,15 @@ bool follow_trajectory() {
     // Serial.println("m2: " + String(current_speed[1]) + ", " + String(_max_speed[1]));
   }
 
-  stepper1->setSpeedInHz((uint32_t)_max_speed[0]);
-  stepper2->setSpeedInHz((uint32_t)_max_speed[1]);
+  float _max_speeds[2] = {
+    target_speeds[0] + speed_adjust[0],
+    target_speeds[1] + target_speeds[0] + speed_adjust[1] + speed_adjust[0]
+  };
+  stepper1->setSpeedInHz((uint32_t)_max_speeds[0]);
+  stepper2->setSpeedInHz((uint32_t)_max_speeds[1]);
 
   stepper1->moveByAcceleration(current_acceleration[0], true);
-  stepper2->moveByAcceleration(current_acceleration[1], true);
+  stepper2->moveByAcceleration(current_acceleration[1] + current_acceleration[0], true);
   return false;
 }
 
@@ -302,7 +288,7 @@ void add_point_to_trajectory(float a1, float a2) {
   keypoints[4][1] = a2;
 
   targets[4][0] = int(3 * a1 * K);
-  targets[4][1] = int((9 * a2 + 3 * a1) * K);
+  targets[4][1] = int(9 * a2 * K);
   target_speeds[3] = target_speed_to_new_point;
 
   if (keypoints[4][0] - keypoints[3][0] > 0) {
@@ -327,19 +313,19 @@ void add_point_to_trajectory(float a1, float a2) {
     should_stop[3] = target_speed_to_new_point != 0;
   }
 
-  float distance_to_target[2] = {abs(targets[4][0] - targets[3][0]), abs(targets[4][1] - targets[3][1])};
-  max_speeds[3][0] = MAX_SPEED * (1.0 * distance_to_target[0]) / (distance_to_target[0] + 0.001);
-  max_speeds[3][1] = MAX_SPEED * (1.0 * distance_to_target[1]) / (distance_to_target[0] + 0.001);
+  float displacement_to_target[2] = {
+    targets[4][0] - targets[3][0],
+    targets[4][1] - targets[3][1]
+  };
+  max_speeds[3][0] = MAX_SPEED * (1.0 * displacement_to_target[0]) / (abs(displacement_to_target[0]) + 0.001);
+  max_speeds[3][1] = MAX_SPEED * (1.0 * displacement_to_target[1]) / (abs(displacement_to_target[0]) + 0.001);
 
-  if (max_speeds[3][1] > MAX_SPEED) {
-    max_speeds[3][0] = MAX_SPEED * (1.0 * distance_to_target[0]) / (distance_to_target[1] + 0.001);
-    max_speeds[3][1] = MAX_SPEED * (1.0 * distance_to_target[1]) / (distance_to_target[1] + 0.001);
+  if (abs(max_speeds[3][1]) > MAX_SPEED) {
+    max_speeds[3][0] = MAX_SPEED * (1.0 * displacement_to_target[0]) / (abs(displacement_to_target[1]) + 0.001);
+    max_speeds[3][1] = MAX_SPEED * (1.0 * displacement_to_target[1]) / (abs(displacement_to_target[1]) + 0.001);
   }
 
-  max_speeds[3][0] = ceil(max_speeds[3][0]);
-  max_speeds[3][1] = ceil(max_speeds[3][1]);
-
-  if(true) {
+  if(false) {
     Serial.print("keypoints: ");
     for (int i = 0; i < 5; i++) {
       Serial.print("[" + String(keypoints[i][0]) + ", " + String(keypoints[i][1]) + "] ");
