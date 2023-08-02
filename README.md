@@ -7,3 +7,5 @@
 6. Interpolate the points by 1mm distance.
 7. compute an array of distance, speed and acceleration pair. transition to low speed should happen atleast 3mm
 8. Wait for both motors at corners.
+
+

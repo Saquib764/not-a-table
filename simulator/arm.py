@@ -18,7 +18,7 @@ speed_adjust = [0,0]
 
 MAX_SPEED = 100
 MAX_ACCELERATION = 3 * MAX_SPEED
-N = 200 * 32 / (2 * np.pi)
+N = 200 * 16 / (2 * np.pi)
 
 def to_xy(a1, a2):
     ARM = 0.33

@@ -397,23 +397,25 @@ void loop() {
   }
   EVERY_N_MILLISECONDS(4) {
     if(is_printing_design) {
-      bool should_read_next = follow_trajectory();
+      int should_read_next = follow_trajectory();
       // long int delta[2] = {0, 0};
       // bool should_read_next = move_arm(delta, target_q1, target_q2);
-      if(should_read_next) {
+      if(should_read_next == 1) {
         double* points = player.next_line(SD);
-        if(points[0] == 0.0) {
-          is_printing_design = false;
-          add_point_to_trajectory(0.0, 0.0);
-          // should_play_next = true;
-          return;
+        if(points[0] != 0.0) {
+          target_q1 = points[1];
+          target_q2 = points[2];
         }
-        target_q1 = points[1];
-        target_q2 = points[2];
-        add_point_to_trajectory((float)target_q1, (float)target_q2);
+        add_point_to_trajectory(target_q1, target_q2);
         // target_q1 = points[current_index][1];
         // target_q2 = points[current_index][2];
         // current_index = (current_index + 1) % 5;
+      }
+      if(should_read_next == 2) {
+        is_printing_design = false;
+        // should_play_next = true;
+        target_q1 = 0.0;
+        target_q2 = 0.0;
       }
     }
   }

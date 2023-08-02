@@ -31,7 +31,7 @@ class Model:
     end_effector_pixel = (self.cx + self.scale * end_effector[0], self.cy - self.scale * end_effector[1])
     cv2.line(image, (int(joint_pos_pixel[0]), int(joint_pos_pixel[1])), (int(end_effector_pixel[0]), int(end_effector_pixel[1])), self.arm2_color, 12)
 
-    cv2.circle(self.drawing, (int(end_effector_pixel[0]), int(end_effector_pixel[1])), 1, (0,255, 0), -1)
+    cv2.circle(self.drawing, (int(end_effector_pixel[0]), int(end_effector_pixel[1])), 1, (255,5, 0), -1)
 
     image[np.where(self.drawing[:,:,1] > 0)] = self.drawing[np.where(self.drawing[:,:,1] > 0)]
     return image

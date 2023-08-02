@@ -5,3 +5,5 @@
 .vscode/ipch
 build/
 __pycache__
+simulator/*.out
+simulator/*.txt

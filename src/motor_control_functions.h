@@ -14,8 +14,8 @@ void setup_arm(uint8_t EN_PIN, uint8_t DIR_1, uint8_t STEPPER_1, uint8_t HOMING_
 void force_stop();
 
 void reset();
-void to_xy(float a1, float a2, float& x, float& y);
-bool follow_trajectory();
-void add_point_to_trajectory(float theta1, float theta2);
+void to_xy(double a1, double a2, double& x, double& y);
+int follow_trajectory();
+void add_point_to_trajectory(double theta1, double theta2);
 
 #endif
