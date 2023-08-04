@@ -2,19 +2,24 @@
 #include <cmath>
 using namespace std;
 
-#include "model.cpp"
+// #include "model.cpp"
 
-#define MICROSTEPS                32
+#include "../src/arm_model.cpp"
+
+#define MICROSTEPS                64
 #define STEPS_PER_REV             200
 #define PI                        3.14159265358979323846
 
+double K = STEPS_PER_REV * MICROSTEPS/ (2.0*PI);
+double R = 0.63/2;
+
+
+ArmModel arm = ArmModel(stepper1, stepper2, R, K);
 
 int point_count = 0;
 
-double K = STEPS_PER_REV * MICROSTEPS/ (2.0*PI);
-double R = 0.63/2;
 // Define constants
-const int MAX_SPEED = 200;
+const int MAX_SPEED = 1000;
 const int MAX_ACCELERATION = 3 * MAX_SPEED;
 
 // Define global variables
@@ -40,30 +45,6 @@ void to_xy(double a1, double a2, double& x, double& y) {
   y = R * sin(a1) + R * sin(a1 + a2);
 }
 
-void getJointPositions(double* pt) {
-  pt[0] = getCurrentPosition(0);
-  pt[1] = getCurrentPosition(1) - pt[0];
-  // cout << "pos: " << pt[0] << " " << pt[1] << endl;
-}
-void getJointAngles(double* pt) {
-  pt[0] = 1.0 * getCurrentPosition(0) / (3*K);
-  pt[1] = 1.0 * (getCurrentPosition(1) - getCurrentPosition(0)) / (9*K);
-}
-
-void getJointSpeeds(double* v) {
-  v[0] = getCurrentSpeedInMilliHz(0) / 1000.0;
-  v[1] = getCurrentSpeedInMilliHz(1) / 1000.0 - v[0];
-}
-void getJointSpeedsAngle(double* v) {
-  v[0] = getCurrentSpeedInMilliHz(0) / 1000.0 / (3*K);
-  v[1] = (getCurrentSpeedInMilliHz(1) / 1000.0 - getCurrentSpeedInMilliHz(0) / 1000.0 ) / (9*K);
-}
-
-void getJointAccelerations(double* a) {
-  a[0] = getCurrentAcceleration(0);
-  a[1] = getCurrentAcceleration(1) - a[0];
-}
-
 // Function to follow the trajectory
 int follow_trajectory() {
   if (current_target_indexes[0] >= 5 && current_target_indexes[1] >= 5) {
@@ -82,10 +63,10 @@ int follow_trajectory() {
   error = 0;
   double current_acceleration[2] = {0, 0};
   double current_position[2] = {0, 0};
-  getJointPositions( current_position );
+  arm.getJointPositionInSteps( current_position );
 
   double current_speed[2] = {0, 0};
-  getJointSpeeds( current_speed );
+  arm.getJointSpeedInSteps( current_speed );
 
 
   double displacement_to_target[2] = {
@@ -211,11 +192,10 @@ int follow_trajectory() {
   }
 
   // current_acceleration[0] = max(current_acceleration[0], 0.1);
-
-  setSpeedInHz( target_speeds[0], target_speeds[1] );
+  // arm.setSpeedInHz( target_speeds[0], target_speeds[1] );
   // setSpeedInHz( abs(_max_speeds[0]), abs(_max_speeds[1]) );
 
-  moveByAcceleration(current_acceleration[0], current_acceleration[1] + current_acceleration[0]);
+  arm.moveByAcceleration(current_acceleration[0], current_acceleration[1]);
 
   if(true) {
     cout << "distance to target: " << displacement_to_target[0] * target_directions[current_target_indexes[0] - 1][0]<< ", " << displacement_to_target[1] * target_directions[current_target_indexes[1] - 1][1] << endl;
@@ -236,6 +216,7 @@ int follow_trajectory() {
 void add_point_to_trajectory(double a1, double a2) {
   point_count++;
   double _pt[2];
+  cout << "adding point: " << a1 << ", " << a2 << endl;
   to_xy(a1, a2, _pt[0], _pt[1]);
   double _lpt[2];
   to_xy(keypoints[4][0], keypoints[4][1], _lpt[0], _lpt[1]);
@@ -308,7 +289,7 @@ void add_point_to_trajectory(double a1, double a2) {
     max_speeds[3][1] = MAX_SPEED * (1.0 * displacement_to_target[1]) / (abs(displacement_to_target[1]) + 0.001);
   }
   double current_position[2] = {0, 0};
-  getJointPositions( current_position );
+  arm.getJointPositionInSteps( current_position );
   if(true) {
     // cout targets array
     cout << "targets: ";
@@ -351,4 +332,134 @@ void add_point_to_trajectory(double a1, double a2) {
     cout << "current_target_index: " << current_target_indexes[0] << " " << current_target_indexes[1] << endl << endl;
 
   }
+}
+
+void move() {
+  stepper1->move();
+  stepper2->move();
+}
+
+bool is_hall_sensor_detected = false;
+double position_at_max_speed = 0.0;
+double max_hall_value = 0.0;
+double homing_started_at_angle = 0.0;
+bool is_homing = false;
+bool has_started_in_hall_region = false;
+void home() {
+  if(!arm.is_homed[0]) {
+    double pos[2] = {0, 0};
+    double pos_steps[2] = {0, 0};
+    arm.getJointPositionInRadians(pos);
+    arm.getJointPositionInSteps(pos_steps);
+
+    double value = hall1.readValue( pos[0] ) - 2000.0;
+    for(int i = 1; i<5; i++) {
+      value += hall1.readValue( pos[0] ) - 2000.0;
+    }
+    value /= 5.0;
+
+    if(!is_homing) {
+      // start homing
+      is_homing = true;
+      is_hall_sensor_detected = false;
+      position_at_max_speed = 0.0;
+      max_hall_value = 0.0;
+      if( value > 100.0 ) {
+        // get out of hall region
+        arm.setSpeedInHz(100.0, 100.0);
+        arm.moveByAcceleration(-500.0, 500.0);
+        has_started_in_hall_region = true;
+      }else{
+        arm.setSpeedInHz(200.0, -200.0);
+        arm.moveByAcceleration(500.0, -500.0);
+      }
+    }else if(value < 20 && has_started_in_hall_region) {
+      // got out of hall region
+      // reverse and restart homing
+      has_started_in_hall_region = false;
+      is_homing = true;
+      is_hall_sensor_detected = false;
+      position_at_max_speed = 0.0;
+      max_hall_value = 0.0;
+      arm.setSpeedInHz(200.0, -200.0);
+      arm.moveByAcceleration(500.0, -500.0);
+    } else {
+      if( value > 100.0 && !is_hall_sensor_detected ) {
+        // slow down when hall sensor is detected
+        cout << "value1: " << value << endl;
+        arm.setSpeedInHz(50.0, -50.0);
+        is_hall_sensor_detected = true;
+        position_at_max_speed = pos_steps[0];
+        max_hall_value = value;
+        homing_started_at_angle = pos[0];
+      }
+      if(is_hall_sensor_detected && abs(pos[0] - homing_started_at_angle) > 45.0 * 3.14 / 180.0) {
+        // arm out of hall sensor, return to max value
+        cout << "max at : " << position_at_max_speed << endl;
+        arm.stepper1->moveToPositionInSteps(position_at_max_speed);
+        arm.is_homed[0] = true;
+        is_hall_sensor_detected = false;
+        is_homing = false;
+      }
+    }
+    // cout << "pos: " << pos[0] << endl;
+  }else if(!arm.is_homed[1]) {
+    double pos[2] = {0, 0};
+    double pos_steps[2] = {0, 0};
+    arm.getJointPositionInRadians(pos);
+    arm.getJointPositionInSteps(pos_steps);
+
+    double value = hall1.readValue( pos[1] ) - 2000.0;
+    for(int i = 1; i<5; i++) {
+      value += hall1.readValue( pos[1] ) - 2000.0;
+    }
+    value /= 5.0;
+
+    if(!is_homing) {
+      // start homing
+      is_homing = true;
+      is_hall_sensor_detected = false;
+      position_at_max_speed = 0.0;
+      max_hall_value = 0.0;
+      if( value > 100.0 ) {
+        // get out of hall region
+        arm.setSpeedInHz(0.0, -100.0);
+        arm.moveByAcceleration(0.0, -500.0);
+        has_started_in_hall_region = true;
+      }else{
+        arm.setSpeedInHz(0.0, 200.0);
+        arm.moveByAcceleration(0.0, 500.0);
+      }
+    }else if(value < 20 && has_started_in_hall_region) {
+      // got out of hall region
+      // reverse and restart homing
+      has_started_in_hall_region = false;
+      is_homing = true;
+      is_hall_sensor_detected = false;
+      position_at_max_speed = 0.0;
+      max_hall_value = 0.0;
+      arm.setSpeedInHz(0.0, 200.0);
+      arm.moveByAcceleration(0.0, 500.0);
+    } else {
+      if( value > 100.0 && !is_hall_sensor_detected ) {
+        // slow down when hall sensor is detected
+        cout << "value1: " << value << endl;
+        arm.setSpeedInHz(0.0, 50.0);
+        is_hall_sensor_detected = true;
+        position_at_max_speed = pos_steps[1];
+        max_hall_value = value;
+        homing_started_at_angle = pos[1];
+      }
+      if(is_hall_sensor_detected && abs(pos[1] - homing_started_at_angle) > 45.0 * 3.14 / 180.0) {
+        // arm out of hall sensor, return to max value
+        cout << "max at : " << position_at_max_speed << endl;
+        arm.stepper2->moveToPositionInSteps(position_at_max_speed);
+        arm.is_homed[1] = true;
+        is_hall_sensor_detected = false;
+        is_homing = false;
+      }
+    }
+    // cout << "pos: " << pos[0] << endl;
+  }
+
 }

@@ -31,8 +31,8 @@ for v in values:
     continue
   image = m.plot(v[0], v[1])
 
-  if np.random.rand(1)[0] > 0.1:
-    continue
+  # if np.random.rand(1)[0] > 0.1:
+  #   continue
   cv2.imshow("Code", image)
   cv2.waitKey(1)
 
@@ -52,19 +52,19 @@ mv = np.array(values[:, 8:10])
 
 e = np.array( values[:, 10:11] ) 
 
-# plt.plot(p[:,0], label="x")
-plt.plot(v[:,0], label="vx")
-plt.plot(tv[:,0], label="tvx")
-plt.plot(mv[:,0], label="mvx")
+plt.plot(p[:,0], label="x")
+# plt.plot(v[:,0], label="vx")
+# plt.plot(tv[:,0], label="tvx")
+# plt.plot(mv[:,0], label="mvx")
 # plt.plot(a[:,0], label="ax")
 
-# plt.plot(p[:,1], label="y")
-plt.plot(v[:,1], label="vy")
-plt.plot(tv[:,1], label="tvy")
-plt.plot(mv[:,1], label="mvy")
+plt.plot(p[:,1], label="y")
+# plt.plot(v[:,1], label="vy")
+# plt.plot(tv[:,1], label="tvy")
+# plt.plot(mv[:,1], label="mvy")
 # plt.plot(a[:,1], label="ay")
 
-plt.plot(e, label="e")
+# plt.plot(e, label="e")
 
 print(p.shape)
 print(e.sum() / e.shape[0])

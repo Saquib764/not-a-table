@@ -2,9 +2,22 @@
 #include <fstream>
 #include <sstream>
 #include <string>
-#include "control.cpp"
 
 using namespace std;
+
+#include "hardware/motor_model.cpp"
+
+
+MotorModel motor1 = MotorModel();
+MotorModel motor2 = MotorModel();
+
+
+MotorModel *stepper1 = &motor1;
+MotorModel *stepper2 = &motor2;
+
+
+#include "control.cpp"
+
 
 bool read_line(ifstream& file, double* value) {
     string line;
@@ -38,7 +51,7 @@ bool read_line(ifstream& file, double* value) {
 }
 
 int main() {
-    string filename = "../designs/floral_16_petals.thr.txt"; // Replace "example.txt" with the desired file name
+    string filename = "../test_designs/square.thr.txt"; // Replace "example.txt" with the desired file name
 
     ofstream fileout( "output.txt" );
     ifstream file(filename);
@@ -49,18 +62,18 @@ int main() {
     }
 
     double pt[2];
-    int T = 3000000;
+    int T = 1000000;
 
     double ps[2];
     double v[2];
     double a[2];
 
     for(int i = 0; i < T; i++) {
-      cout<< "i: " << i << endl;
+      // cout<< "i: " << i << endl;
       move();
-      getJointAngles(ps);
-      getJointSpeeds(v);
-      getJointAccelerations(a);
+      arm.getJointPositionInRadians(ps);
+      arm.getJointSpeedInSteps(v);
+      arm.getJointAccelerationInSteps(a);
       // cout << "p: " << ps[0] << " " << ps[1] << " v " << v[0] << " " << v[1] << " a: " << a[0] << " " << a[1] << endl;
       fileout << ps[0] << " " << ps[1] << " " << v[0] << " " << v[1] << " " << a[0] << " " << a[1] << " " << target_speeds[0] << " " << target_speeds[1] << " " << max_speeds[2][0] << " " << max_speeds[2][1] << " " << error << endl;
       if(i%10 !=0) {
