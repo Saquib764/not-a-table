@@ -1,6 +1,6 @@
 #include "arm_model.h"
 
-ArmModel::ArmModel(MotorModel* stepper1, MotorModel* stepper2, double ARM, double steps_per_radian) {
+ArmModel::ArmModel(FastAccelStepper* stepper1, FastAccelStepper* stepper2, double ARM, double steps_per_radian) {
   this->stepper1 = stepper1;
   this->stepper2 = stepper2;
   this->ARM = 0.0;
@@ -14,14 +14,11 @@ ArmModel::ArmModel(MotorModel* stepper1, MotorModel* stepper2, double ARM, doubl
 void ArmModel::setRandomPosition() {
   srand(time(0));
   // Generate two random numbers between 0 and 1
-  cout<< "ArmModel::setRandomPosition" << endl;
   double r1 = 2.0 * 3.14 * (double)rand() / (double)RAND_MAX;
   double r2 = 2.0 * 3.14 * (double)rand() / (double)RAND_MAX;
 
-  cout << "r1: " << r1 << " r2: " << r2 << endl;
-
-  stepper1->setPosition(r1 * 3.0 * steps_per_radian);
-  stepper2->setPosition((3.0 * r2 + r1) * 3.0 * steps_per_radian);
+  stepper1->setCurrentPosition(r1 * 3.0 * steps_per_radian);
+  stepper2->setCurrentPosition((3.0 * r2 + r1) * 3.0 * steps_per_radian);
 }
 
 void ArmModel::setSpeedInHz(double speed1, double speed2) {
@@ -67,23 +64,22 @@ void ArmModel::getJointAccelerationInRadians(double *acceleration) {
   acceleration[1] = acceleration[1] / (9 * steps_per_radian);
 }
 
-void ArmModel::move() {
-  stepper1->move();
-  stepper2->move();
-}
+// void ArmModel::move() {
+//   stepper1->move();
+//   stepper2->move();
+// }
 
 bool ArmModel::isHomed() {
   return is_homed[0] && is_homed[1];
 }
 
 void ArmModel::moveToPositionInSteps(double pos1, double pos2) {
-  cout << "Home: " << pos1 << " " << pos1 + pos2 << endl;
-  stepper1->moveToPositionInSteps(pos1);
-  stepper2->moveToPositionInSteps(pos2 + pos1);
+  stepper1->moveTo(pos1);
+  stepper2->moveTo(pos2 + pos1);
 }
 
 void ArmModel::resetToPositionInSteps(double pos1, double pos2) {
-  stepper1->resetToPositionInSteps(pos1);
-  stepper2->resetToPositionInSteps(pos2 + pos1);
+  stepper1->setCurrentPosition(pos1);
+  stepper2->setCurrentPosition(pos2 + pos1);
   setSpeedInHz(0, 0);
 }

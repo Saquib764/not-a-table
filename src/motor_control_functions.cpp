@@ -20,6 +20,7 @@ uint8_t homing_pin2;
 double K = STEPS_PER_REV * MICROSTEPS/ (2.0*PI);
 double R = 0.63/2;
 
+ArmModel arm = ArmModel(stepper1, stepper2, R, K);
 
 double mod(double x, double y) {
   double r = x - y * floor(x/y);
@@ -28,64 +29,6 @@ double mod(double x, double y) {
     r = mod(r, y);
   }
   return r;
-}
-
-void home_motor(FastAccelStepper *m, uint8_t homing_pin, int multiplier) {
-  const float hall_effect_reference_value = 2000.0;
-  const float hall_effect_threshold = 250;
-  Serial.println("Homing motor");
-  // Run motor in clockwise direction until home position is reached
-  m->setSpeedInHz(0.1 * multiplier * MAX_ANGULAR_SPEED);
-  m->setAcceleration(MAX_ANGULAR_SPEED / ACCELERATION_TIME);
-  double current_theta = m->getCurrentPosition() / (3*K * multiplier);
-  current_theta = mod(current_theta, 2 * PI);
-  int dir = 1;
-  if(current_theta > PI) {
-    dir = -1;
-  }
-  m->moveTo(m->getCurrentPosition() + dir * 3 * K * multiplier * 2 * PI);
-
-  float value = 0.0;
-  while(value < hall_effect_threshold) {
-    value = abs(hall_effect_reference_value - analogRead(homing_pin));
-    if(value > hall_effect_threshold) {
-      // Hall effect sensor is triggered, stop motor
-      m->stopMove();
-      break;
-    }
-    delay(10);
-  }
-
-  //  move motor step by step, record sensor reading 
-  int count = 0;
-  float max_value = 0;
-  int count_at_max = 0;
-  while(count < 3000) {
-    // move motor one step
-    m->moveTo(m->getCurrentPosition() + dir, true);
-    count++;
-    float avg_value = analogRead(homing_pin);
-    for(int i = 1; i < 5; i++) {
-      avg_value += analogRead(homing_pin);
-      delay(1);
-    }
-    avg_value /= 5;
-    Serial.println(avg_value);
-    if(avg_value > max_value) {
-      max_value = avg_value;
-      count_at_max = count;
-    }
-    if(abs(hall_effect_reference_value - avg_value) < hall_effect_threshold) {
-      // arm out of range, stop motor
-      break;
-    }
-  }
-  // move motor back to max value
-  m->moveTo(m->getCurrentPosition() - (count - count_at_max) * dir, true);
-  
-  // reset motor position to 0
-  m->setCurrentPosition(0);
-  m->moveTo(0);
 }
 
 void setup_driver(TMC2209Stepper &driver, int EN_PIN) {
@@ -140,12 +83,6 @@ void setup_arm(uint8_t EN_PIN, uint8_t DIR_1, uint8_t STEPPER_1, uint8_t HOMING_
   pinMode(homing_pin2, OUTPUT);
 }
 
-void home_arm() {
-  home_motor(stepper1, homing_pin1, 1);
-
-  home_motor(stepper2, homing_pin2, 3);
-  reset();
-}
 
 
 // double MAX_ACCELERATION = 1000.0;
@@ -445,4 +382,143 @@ void reset() {
     targets[i][0] = 0;
     targets[i][1] = 0;
   }
+}
+
+bool is_hall_sensor_detected = false;
+double position_at_max_speed = 0.0;
+double max_hall_value = 0.0;
+double homing_started_at_angle = 0.0;
+bool is_homing = false;
+bool has_started_in_hall_region = false;
+
+void home() {
+  if(!arm.is_homed[0]) {
+    int homing_pin = homing_pin1;
+    double pos[2] = {0, 0};
+    double pos_steps[2] = {0, 0};
+    arm.getJointPositionInRadians(pos);
+    arm.getJointPositionInSteps(pos_steps);
+
+    double value = analogRead(homing_pin) - 2000.0;
+    for(int i = 1; i<5; i++) {
+      value += analogRead(homing_pin) - 2000.0;
+    }
+    value /= 5.0;
+
+    if(!is_homing) {
+      // start homing
+      is_homing = true;
+      is_hall_sensor_detected = false;
+      position_at_max_speed = 0.0;
+      max_hall_value = 0.0;
+      if( value > 100.0 ) {
+        // get out of hall region
+        arm.setSpeedInHz(100.0, 100.0);
+        arm.moveByAcceleration(-500.0, 500.0);
+        has_started_in_hall_region = true;
+      }else{
+        arm.setSpeedInHz(200.0, -200.0);
+        arm.moveByAcceleration(500.0, -500.0);
+      }
+    }else if(value < 20 && has_started_in_hall_region) {
+      // got out of hall region
+      // reverse and restart homing
+      has_started_in_hall_region = false;
+      is_homing = true;
+      is_hall_sensor_detected = false;
+      position_at_max_speed = 0.0;
+      max_hall_value = 0.0;
+      arm.setSpeedInHz(200.0, -200.0);
+      arm.moveByAcceleration(500.0, -500.0);
+    } else {
+      if( value > 100.0 && !is_hall_sensor_detected ) {
+        // slow down when hall sensor is detected
+        arm.setSpeedInHz(50.0, -50.0);
+        is_hall_sensor_detected = true;
+        position_at_max_speed = pos_steps[0];
+        max_hall_value = value;
+        homing_started_at_angle = pos[0];
+      }
+      if(is_hall_sensor_detected && abs(pos[0] - homing_started_at_angle) > 45.0 * 3.14 / 180.0) {
+        // arm out of hall sensor, return to max value
+        arm.stepper1->forceStop();
+        arm.stepper2->forceStop();
+        delayMicroseconds(25);
+        arm.stepper1->moveTo(position_at_max_speed, true);
+        arm.is_homed[0] = true;
+        is_hall_sensor_detected = false;
+        is_homing = false;
+      }
+    }
+    // cout << "pos: " << pos[0] << endl;
+  } else if(!arm.is_homed[1]) {
+    int homing_pin = homing_pin2;
+    double pos[2] = {0, 0};
+    double pos_steps[2] = {0, 0};
+    arm.getJointPositionInRadians(pos);
+    arm.getJointPositionInSteps(pos_steps);
+
+    double value = analogRead(homing_pin) - 2000.0;
+    for(int i = 1; i<5; i++) {
+      value += analogRead(homing_pin) - 2000.0;
+    }
+    value /= 5.0;
+
+    if(!is_homing) {
+      // start homing
+      is_homing = true;
+      is_hall_sensor_detected = false;
+      position_at_max_speed = 0.0;
+      max_hall_value = 0.0;
+      if( value > 100.0 ) {
+        // get out of hall region
+        arm.setSpeedInHz(0.0, -100.0);
+        arm.moveByAcceleration(0.0, -500.0);
+        has_started_in_hall_region = true;
+      }else{
+        arm.setSpeedInHz(0.0, 200.0);
+        arm.moveByAcceleration(0.0, 500.0);
+      }
+    }else if(value < 20 && has_started_in_hall_region) {
+      // got out of hall region
+      // reverse and restart homing
+      has_started_in_hall_region = false;
+      is_homing = true;
+      is_hall_sensor_detected = false;
+      position_at_max_speed = 0.0;
+      max_hall_value = 0.0;
+      arm.setSpeedInHz(0.0, 200.0);
+      arm.moveByAcceleration(0.0, 500.0);
+    } else {
+      if( value > 100.0 && !is_hall_sensor_detected ) {
+        // slow down when hall sensor is detected
+        arm.setSpeedInHz(0.0, 50.0);
+        is_hall_sensor_detected = true;
+        position_at_max_speed = pos_steps[1];
+        max_hall_value = value;
+        homing_started_at_angle = pos[1];
+      }
+      if(is_hall_sensor_detected && abs(pos[1] - homing_started_at_angle) > 45.0 * 3.14 / 180.0) {
+        // arm out of hall sensor, return to max value
+        arm.stepper1->forceStop();
+        arm.stepper2->forceStop();
+        delayMicroseconds(25);
+        arm.stepper2->moveTo(position_at_max_speed, true);
+        arm.is_homed[1] = true;
+        is_hall_sensor_detected = false;
+        is_homing = false;
+      }
+    }
+    // cout << "pos: " << pos[0] << endl;
+  }
+
+}
+
+bool home_arm() {
+  if(arm.isHomed()) {
+    reset();
+    return true;
+  }
+  home();
+  return false;
 }

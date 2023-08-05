@@ -11,7 +11,7 @@ MotorModel::MotorModel() {
   dt = 0.005;
 }
 
-void MotorModel::setPosition(double position) {
+void MotorModel::setCurrentPosition(double position) {
   current_position = position * 1000.0;
 }
 
@@ -41,13 +41,13 @@ void MotorModel::move() {
   current_position += round(current_speed * dt);
 }
 
-void MotorModel::resetToPositionInSteps(double pos) {
+void MotorModel::reset(double pos) {
   current_position = pos;
   current_speed = 0.0;
   current_acceleration = 0.0;
 }
 
-void MotorModel::moveToPositionInSteps(double pos) {
+void MotorModel::moveTo(double pos) {
   current_position = pos;
   current_speed = 0.0;
   current_acceleration = 0.0;

@@ -1,14 +1,17 @@
 #ifndef Arm_Model_h
 #define Arm_Model_h
 
+#include "FastAccelStepper.h"
+#include <cmath>
+
 class ArmModel{
   private:
     /* data */
   public:
-    ArmModel(MotorModel* stepper1, MotorModel* stepper2, double ARM, double steps_per_radian);
+    ArmModel(FastAccelStepper* stepper1, FastAccelStepper* stepper2, double ARM, double steps_per_radian);
     void setRandomPosition();
-    MotorModel* stepper1;
-    MotorModel* stepper2;
+    FastAccelStepper* stepper1;
+    FastAccelStepper* stepper2;
 
     double ARM;
     double steps_per_radian;
@@ -24,7 +27,7 @@ class ArmModel{
     void getJointAccelerationInSteps(double *acceleration);
     void getJointAccelerationInRadians(double *acceleration);
 
-    void move();
+    // void move();
 
     bool is_homed[2];
 

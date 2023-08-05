@@ -7,15 +7,15 @@ class MotorModel {
   public:
     // constructors:
     MotorModel();
-    void setPosition(double position);
+    void setCurrentPosition(double position);
     void setSpeedInHz(double speed);
     void moveByAcceleration(double acceleration);
     double getCurrentPosition();
     double getCurrentSpeedInMilliHz();
     double getCurrentAcceleration();
 
-    void resetToPositionInSteps(double pos);
-    void moveToPositionInSteps(double pos);
+    void reset(double pos);
+    void moveTo(double pos);
 
     void move();
 

@@ -374,8 +374,11 @@ void loop() {
   // }
   if(should_perform_homing) {
     // Perform homing
-    Serial.println("Homing start");
-    home_arm();
+    bool is_arm_homed = home_arm();
+    if(!is_arm_homed) {
+      Serial.println("Homing in progress...");
+      return;
+    }
     target_q1 = 0.0;
     target_q2 = 0.0;
     should_perform_homing = false;

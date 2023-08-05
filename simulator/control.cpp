@@ -345,6 +345,7 @@ double max_hall_value = 0.0;
 double homing_started_at_angle = 0.0;
 bool is_homing = false;
 bool has_started_in_hall_region = false;
+
 void home() {
   if(!arm.is_homed[0]) {
     double pos[2] = {0, 0};
@@ -463,3 +464,4 @@ void home() {
   }
 
 }
+
