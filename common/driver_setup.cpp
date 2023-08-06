@@ -2,7 +2,7 @@
 
 
 void setup_driver(TMC2209Stepper &driver, int EN_PIN) {
-  Serial.println("Setting up driver");
+  Serial.println("Setting up driver.common");
   pinMode(EN_PIN, OUTPUT);
 
   digitalWrite(EN_PIN, LOW);      // Enable driver in hardware

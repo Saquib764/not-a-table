@@ -10,8 +10,6 @@ using namespace std;
 #include "../common/driver_setup.cpp"
 #include "arm_model.h"
 
-const int dummy = 0;
-
 #define SERIAL_PORT Serial2 // TMC2208/TMC2224 HardwareSerial port
 #define DRIVER_ADDRESS 0b00 // TMC2209 Driver address according to MS1 and MS2
 
@@ -32,13 +30,6 @@ uint8_t motor1HomingPin = 32;
 uint8_t motor2DirPin = 14;
 uint8_t motor2StepPin = 13;
 uint8_t motor2HomingPin = 33;
-
-double target_q1 = 0.0;
-double target_q2 = 0.0;
-
-
-float ARM1 = 0.25;
-float ARM2 = 0.25;
 
 double K = STEPS_PER_REV * MICROSTEPS/ (2.0*PI);
 double R = 0.63/2;
@@ -61,9 +52,9 @@ void setup() {
 
   arm.setSpeedInHz(600, 600);
 
-  // setup_arm(EN_PIN, motor1DirPin, motor1StepPin, motor1HomingPin, motor2DirPin, motor2StepPin, motor2HomingPin);
+
   // arm.moveByAcceleration(0.0, 100.0);
-  arm.stepper1->moveTo(10000);
+  arm.stepper1->move(10000);
 
   delay(2000);
 }
@@ -77,6 +68,6 @@ void setup() {
 // };
 int current_index = 0;
 void loop() {
-  Serial.println("ok");
+  // Serial.println("ok");
   delay(1000);
 }

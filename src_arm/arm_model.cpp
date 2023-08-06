@@ -7,6 +7,8 @@ ArmModel::ArmModel(double ARM, double steps_per_radian) {
   this->steps_per_radian = steps_per_radian;
   this->is_homed[0] = false;
   this->is_homed[1] = false;
+  this->stepper1 = NULL;
+  this->stepper2 = NULL;
 }
 
 FastAccelStepper* ArmModel::setup_joint(FastAccelStepperEngine engine, uint8_t EN_PIN, uint8_t DIR, uint8_t STEPPER) {
@@ -27,7 +29,7 @@ void ArmModel::setup(uint8_t EN_PIN, uint8_t DIR_1, uint8_t STEPPER_1, uint8_t D
   stepper1 = setup_joint(engine, EN_PIN, DIR_1, STEPPER_1);
   stepper2 = setup_joint(engine, EN_PIN, DIR_2, STEPPER_2);
   
-  setSpeedInHz(20000, 20000);
+  // setSpeedInHz(20000, 20000);
 }
 
 
@@ -42,6 +44,11 @@ void ArmModel::setRandomPosition() {
 }
 
 void ArmModel::setSpeedInHz(double speed1, double speed2) {
+  Serial.println("Set speed " + String(speed1));
+
+  if(stepper1) {
+    Serial.println("Yes, steppes");
+  }
   stepper1->setSpeedInHz(abs(speed1));
   stepper2->setSpeedInHz(abs(speed2 + speed1));
 }
