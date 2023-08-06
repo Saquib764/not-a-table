@@ -8,7 +8,7 @@
 using namespace std;
 
 #include "../common/driver_setup.cpp"
-#include "arm_model.h"
+#include "../common/arm_model.cpp"
 
 #define SERIAL_PORT Serial2 // TMC2208/TMC2224 HardwareSerial port
 #define DRIVER_ADDRESS 0b00 // TMC2209 Driver address according to MS1 and MS2
@@ -16,6 +16,8 @@ using namespace std;
 #define R_SENSE 0.11f
 #define VERSION "1.0.0"
 
+// int mode = 1;  // Simple arm move test
+int mode = 2;  // Homing code
 
 
 // TMC2209Stepper driver(&SERIAL_PORT, R_SENSE);
@@ -47,15 +49,18 @@ void setup() {
 
   sleep(1);
 
+
   setup_driver(driver, EN_PIN);
-  arm.setup(EN_PIN, motor1DirPin, motor1StepPin, motor2DirPin, motor2StepPin);
-
-  arm.setSpeedInHz(600, 600);
+  arm.setup(EN_PIN, motor1DirPin, motor1StepPin, motor1HomingPin, motor2DirPin, motor2StepPin, motor2HomingPin);
 
 
-  arm.moveByAcceleration(100.0, 100.0);
-  // arm.stepper1->move(10000);
 
+
+  if(mode == 1) {
+    arm.setSpeedInHz(600, 600);
+    arm.moveByAcceleration(100.0, 100.0);
+  }
+  
   delay(2000);
 }
 
@@ -67,7 +72,17 @@ void setup() {
 //   {0., 0.4*PI, 0*PI},
 // };
 int current_index = 0;
+
 void loop() {
   // Serial.println("ok");
+  if(mode == 2) {
+    // Homing code
+
+    if(arm.isHomed()) {
+      Serial.println("Arm is homed");
+      return;
+    }
+    arm.home();
+  }
   delay(1000);
 }
