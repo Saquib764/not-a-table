@@ -1,6 +1,7 @@
 #ifndef Arm_Model_h
 #define Arm_Model_h
 
+#include <Arduino.h>
 #include "FastAccelStepper.h"
 #include <cmath>
 

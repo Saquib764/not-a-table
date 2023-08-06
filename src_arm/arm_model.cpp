@@ -1,12 +1,12 @@
 #include "arm_model.h"
 
+FastAccelStepperEngine engine = FastAccelStepperEngine();
+
 ArmModel::ArmModel(double ARM, double steps_per_radian) {
-  this->ARM = 0.0;
+  this->ARM = ARM;
   this->steps_per_radian = steps_per_radian;
   this->is_homed[0] = false;
   this->is_homed[1] = false;
-
-  setSpeedInHz(20000, 20000);
 }
 
 FastAccelStepper* ArmModel::setup_joint(FastAccelStepperEngine engine, uint8_t EN_PIN, uint8_t DIR, uint8_t STEPPER) {
@@ -23,10 +23,11 @@ FastAccelStepper* ArmModel::setup_joint(FastAccelStepperEngine engine, uint8_t E
 }
 
 void ArmModel::setup(uint8_t EN_PIN, uint8_t DIR_1, uint8_t STEPPER_1, uint8_t DIR_2, uint8_t STEPPER_2) {
-  FastAccelStepperEngine engine = FastAccelStepperEngine();
   engine.init();
   stepper1 = setup_joint(engine, EN_PIN, DIR_1, STEPPER_1);
   stepper2 = setup_joint(engine, EN_PIN, DIR_2, STEPPER_2);
+  
+  setSpeedInHz(20000, 20000);
 }
 
 
@@ -46,6 +47,7 @@ void ArmModel::setSpeedInHz(double speed1, double speed2) {
 }
 
 void ArmModel::moveByAcceleration(double acceleration1, double acceleration2) {
+  Serial.println(12);
   stepper1->moveByAcceleration(acceleration1, true);
   stepper2->moveByAcceleration(acceleration2 + acceleration1, true);
 }

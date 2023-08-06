@@ -59,8 +59,13 @@ void setup() {
   setup_driver(driver, EN_PIN);
   arm.setup(EN_PIN, motor1DirPin, motor1StepPin, motor2DirPin, motor2StepPin);
 
+  arm.setSpeedInHz(600, 600);
+
   // setup_arm(EN_PIN, motor1DirPin, motor1StepPin, motor1HomingPin, motor2DirPin, motor2StepPin, motor2HomingPin);
-  arm.moveByAcceleration(0.0, 20.0);
+  // arm.moveByAcceleration(0.0, 100.0);
+  arm.stepper1->moveTo(10000);
+
+  delay(2000);
 }
 
 // double points[5][3] = {
@@ -72,5 +77,6 @@ void setup() {
 // };
 int current_index = 0;
 void loop() {
-  
+  Serial.println("ok");
+  delay(1000);
 }
