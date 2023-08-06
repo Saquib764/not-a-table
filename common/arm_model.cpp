@@ -161,6 +161,11 @@ void ArmModel::home() {
         max_hall_value = value;
         homing_started_at_angle = pos[0];
       }
+      if(is_hall_sensor_detected && value > max_hall_value) {
+        // update max hall value
+        max_hall_value = value;
+        position_at_max_speed = pos_steps[0];
+      }
       if(is_hall_sensor_detected && abs(pos[0] - homing_started_at_angle) > 10.0 * 3.14 / 180.0) {
         // arm out of hall sensor, return to max value
         stepper1->stopMove();
@@ -228,6 +233,11 @@ void ArmModel::home() {
         position_at_max_speed = pos_steps[1];
         max_hall_value = value;
         homing_started_at_angle = pos[1];
+      }
+      if(is_hall_sensor_detected && value > max_hall_value) {
+        // update max hall value
+        max_hall_value = value;
+        position_at_max_speed = pos_steps[1];
       }
       if(is_hall_sensor_detected && abs(pos[1] - homing_started_at_angle) > 10.0 * 3.14 / 180.0) {
         // arm out of hall sensor, return to max value
