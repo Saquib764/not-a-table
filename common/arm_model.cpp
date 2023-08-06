@@ -121,7 +121,7 @@ void ArmModel::home() {
     getJointPositionInSteps(pos_steps);
 
     double value = analogRead(homing_pin) - 2000.0;
-    for(int i = 1; i<5; i++) {
+    for(int i = 1; i<2; i++) {
       value += analogRead(homing_pin) - 2000.0;
     }
     value /= 5.0;
@@ -161,14 +161,14 @@ void ArmModel::home() {
         max_hall_value = value;
         homing_started_at_angle = pos[0];
       }
-      if(is_hall_sensor_detected && abs(pos[0] - homing_started_at_angle) > 15.0 * 3.14 / 180.0) {
+      if(is_hall_sensor_detected && abs(pos[0] - homing_started_at_angle) > 10.0 * 3.14 / 180.0) {
         // arm out of hall sensor, return to max value
-        stepper1->forceStop();
-        // stepper2->forceStop();
+        stepper1->stopMove();
+        stepper2->stopMove();
         
         setSpeedInHz(100.0, -100.0);
 
-        delayMicroseconds(25);
+        delayMicroseconds(1000);
         stepper1->moveTo(position_at_max_speed, true);
         is_homed[0] = true;
         
@@ -189,7 +189,7 @@ void ArmModel::home() {
     getJointPositionInSteps(pos_steps);
 
     double value = analogRead(homing_pin) - 2000.0;
-    for(int i = 1; i<5; i++) {
+    for(int i = 1; i<2; i++) {
       value += analogRead(homing_pin) - 2000.0;
     }
     value /= 5.0;
@@ -229,13 +229,13 @@ void ArmModel::home() {
         max_hall_value = value;
         homing_started_at_angle = pos[1];
       }
-      if(is_hall_sensor_detected && abs(pos[1] - homing_started_at_angle) > 45.0 * 3.14 / 180.0) {
+      if(is_hall_sensor_detected && abs(pos[1] - homing_started_at_angle) > 10.0 * 3.14 / 180.0) {
         // arm out of hall sensor, return to max value
-        stepper1->forceStop();
-        stepper2->forceStop();
+        stepper1->stopMove();
+        stepper2->stopMove();
         
         setSpeedInHz(0.0, 300.0);
-        delayMicroseconds(25);
+        delayMicroseconds(1000);
         stepper2->moveTo(position_at_max_speed, true);
         is_homed[1] = true;
         
