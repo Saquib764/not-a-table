@@ -11,23 +11,25 @@ ArmModel::ArmModel(double ARM, double steps_per_radian) {
   this->stepper2 = NULL;
 }
 
-FastAccelStepper* ArmModel::setup_joint(FastAccelStepperEngine engine, uint8_t EN_PIN, uint8_t DIR, uint8_t STEPPER) {
-  FastAccelStepper *stepper = NULL;
-  stepper = engine.stepperConnectToPin(STEPPER);
-  if (stepper) {
-    stepper->setDirectionPin(DIR);
-    stepper->setEnablePin(EN_PIN);
-    stepper->setAutoEnable(true);
+void ArmModel::setup_joint(FastAccelStepper *stepper, uint8_t EN_PIN, uint8_t DIR, uint8_t STEPPER) {
+  stepper->setDirectionPin(DIR);
+  stepper->setEnablePin(EN_PIN);
+  stepper->setAutoEnable(true);
 
-    // stepper1->keepRunning();
-  }
-  return stepper;
+  // stepper->setSpeedInUs(1000);
+  // stepper->setAcceleration(100);
+
+  // stepper->move(1000);
+
+  // stepper1->keepRunning();
 }
 
 void ArmModel::setup(uint8_t EN_PIN, uint8_t DIR_1, uint8_t STEPPER_1, uint8_t DIR_2, uint8_t STEPPER_2) {
   engine.init();
-  stepper1 = setup_joint(engine, EN_PIN, DIR_1, STEPPER_1);
-  stepper2 = setup_joint(engine, EN_PIN, DIR_2, STEPPER_2);
+  stepper1 = engine.stepperConnectToPin(STEPPER_1);
+  stepper2 = engine.stepperConnectToPin(STEPPER_2);
+  setup_joint(stepper1, EN_PIN, DIR_1, STEPPER_1);
+  setup_joint(stepper2, EN_PIN, DIR_2, STEPPER_2);
   
   // setSpeedInHz(20000, 20000);
 }

@@ -53,8 +53,8 @@ void setup() {
   arm.setSpeedInHz(600, 600);
 
 
-  // arm.moveByAcceleration(0.0, 100.0);
-  arm.stepper1->move(10000);
+  arm.moveByAcceleration(100.0, 100.0);
+  // arm.stepper1->move(10000);
 
   delay(2000);
 }

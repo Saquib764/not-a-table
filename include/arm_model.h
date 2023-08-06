@@ -10,7 +10,7 @@ class ArmModel{
     /* data */
   public:
     ArmModel(double ARM, double steps_per_radian);
-    FastAccelStepper* setup_joint(FastAccelStepperEngine engine, uint8_t EN_PIN, uint8_t DIR, uint8_t STEPPER);
+    void setup_joint(FastAccelStepper *stepper, uint8_t EN_PIN, uint8_t DIR, uint8_t STEPPER);
     void setup(uint8_t EN_PIN, uint8_t DIR_1, uint8_t STEPPER_1, uint8_t DIR_2, uint8_t STEPPER_2);
     void setRandomPosition();
     FastAccelStepper* stepper1;
