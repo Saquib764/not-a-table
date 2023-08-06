@@ -48,11 +48,6 @@ void ArmModel::setRandomPosition() {
 }
 
 void ArmModel::setSpeedInHz(double speed1, double speed2) {
-  Serial.println("Set speed " + String(speed1));
-
-  if(stepper1) {
-    Serial.println("Yes, steppes");
-  }
   stepper1->setSpeedInHz(abs(speed1));
   stepper2->setSpeedInHz(abs(speed2 + speed1));
 }
@@ -130,6 +125,7 @@ void ArmModel::home() {
       value += analogRead(homing_pin) - 2000.0;
     }
     value /= 5.0;
+    Serial.println( "Value: " + String(value) );
 
     if(!is_homing) {
       // start homing
@@ -165,15 +161,23 @@ void ArmModel::home() {
         max_hall_value = value;
         homing_started_at_angle = pos[0];
       }
-      if(is_hall_sensor_detected && abs(pos[0] - homing_started_at_angle) > 45.0 * 3.14 / 180.0) {
+      if(is_hall_sensor_detected && abs(pos[0] - homing_started_at_angle) > 15.0 * 3.14 / 180.0) {
         // arm out of hall sensor, return to max value
         stepper1->forceStop();
-        stepper2->forceStop();
+        // stepper2->forceStop();
+        
+        setSpeedInHz(100.0, -100.0);
+
         delayMicroseconds(25);
         stepper1->moveTo(position_at_max_speed, true);
         is_homed[0] = true;
+        
         is_hall_sensor_detected = false;
+        position_at_max_speed = 0.0;
+        max_hall_value = 0.0;
+        homing_started_at_angle = 0.0;
         is_homing = false;
+        has_started_in_hall_region = false;
       }
     }
     // cout << "pos: " << pos[0] << endl;
@@ -189,6 +193,7 @@ void ArmModel::home() {
       value += analogRead(homing_pin) - 2000.0;
     }
     value /= 5.0;
+    Serial.println( "Value2: " + String(is_homing) + ", " + String(value) );
 
     if(!is_homing) {
       // start homing
@@ -198,11 +203,11 @@ void ArmModel::home() {
       max_hall_value = 0.0;
       if( value > 100.0 ) {
         // get out of hall region
-        setSpeedInHz(0.0, -100.0);
+        setSpeedInHz(0.0, 300.0);
         moveByAcceleration(0.0, -500.0);
         has_started_in_hall_region = true;
       }else{
-        setSpeedInHz(0.0, 200.0);
+        setSpeedInHz(0.0, 600.0);
         moveByAcceleration(0.0, 500.0);
       }
     }else if(value < 20 && has_started_in_hall_region) {
@@ -213,7 +218,7 @@ void ArmModel::home() {
       is_hall_sensor_detected = false;
       position_at_max_speed = 0.0;
       max_hall_value = 0.0;
-      setSpeedInHz(0.0, 200.0);
+      setSpeedInHz(0.0, 600.0);
       moveByAcceleration(0.0, 500.0);
     } else {
       if( value > 100.0 && !is_hall_sensor_detected ) {
@@ -228,11 +233,18 @@ void ArmModel::home() {
         // arm out of hall sensor, return to max value
         stepper1->forceStop();
         stepper2->forceStop();
+        
+        setSpeedInHz(0.0, 300.0);
         delayMicroseconds(25);
         stepper2->moveTo(position_at_max_speed, true);
         is_homed[1] = true;
+        
         is_hall_sensor_detected = false;
+        position_at_max_speed = 0.0;
+        max_hall_value = 0.0;
+        homing_started_at_angle = 0.0;
         is_homing = false;
+        has_started_in_hall_region = false;
       }
     }
     // cout << "pos: " << pos[0] << endl;

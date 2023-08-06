@@ -84,5 +84,5 @@ void loop() {
     }
     arm.home();
   }
-  delay(1000);
+  delay(1);
 }
