@@ -58,8 +58,16 @@ void ArmModel::moveByAcceleration(double acceleration1, double acceleration2) {
 }
 
 void ArmModel::getJointPositionInSteps(double* pos) {
+  // Serial.println("get 1 : " + String( stepper2->getCurrentPosition() ));
+  
+  // Serial.println("get : " + String(pos[0]));
+
   pos[0] = stepper1->getCurrentPosition();
   pos[1] = stepper2->getCurrentPosition() - pos[0];
+  
+  // delay(1000);
+  // Serial.println("get 2: " + String(pos[0]));
+
 }
 
 void ArmModel::getJointPositionInRadians(double* pos) {

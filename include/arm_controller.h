@@ -33,8 +33,8 @@ class ArmController{
     void add_point_to_trajectory(double a1, double a2);
 
     // Define constants
-    const int MAX_SPEED = 200;
-    const int MAX_ACCELERATION = 3 * MAX_SPEED;
+    int MAX_SPEED = 200;
+    int MAX_ACCELERATION = 3 * MAX_SPEED;
 
     // Define global variables
     int current_target_indexes[2];

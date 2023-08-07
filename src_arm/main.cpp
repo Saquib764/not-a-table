@@ -45,7 +45,7 @@ double target_q2 = 0.0;
 
 ArmModel arm = ArmModel(R, K);
 
-ArmController controller = ArmController(arm);
+ArmController *controller = NULL;
 
 
 void setup() {
@@ -62,14 +62,16 @@ void setup() {
   setup_driver(driver, EN_PIN);
   arm.setup(EN_PIN, motor1DirPin, motor1StepPin, motor1HomingPin, motor2DirPin, motor2StepPin, motor2HomingPin);
 
+  ArmController c = ArmController(arm);
 
+  controller = &c;
 
 
   if(mode == 1) {
     arm.setSpeedInHz(600, 600);
     arm.moveByAcceleration(100.0, 100.0);
   }
-  
+
   delay(2000);
 }
 
@@ -95,7 +97,7 @@ void loop() {
   }
   if(mode == 3) {
     // controller code
-    int should_read_next = controller.follow_trajectory();
+    int should_read_next = controller->follow_trajectory();
     // long int delta[2] = {0, 0};
     // bool should_read_next = move_arm(delta, target_q1, target_q2);
     if(should_read_next == 1) {
@@ -105,7 +107,7 @@ void loop() {
         target_q1 = point[1];
         target_q2 = point[2];
       }
-      controller.add_point_to_trajectory(target_q1, target_q2);
+      controller->add_point_to_trajectory(target_q1, target_q2);
       // target_q1 = points[current_index][1];
       // target_q2 = points[current_index][2];
       // current_index = (current_index + 1) % 5;

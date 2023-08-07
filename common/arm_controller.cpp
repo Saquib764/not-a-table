@@ -4,6 +4,10 @@
 ArmController::ArmController(ArmModel arm){
   this->arm = &arm;
 
+  // Define constants
+  MAX_SPEED = 200;
+  MAX_ACCELERATION = 3 * MAX_SPEED;
+  
   // Define global variables
   current_target_indexes[0] = 2;
   current_target_indexes[1] = 2;
@@ -282,4 +286,8 @@ void ArmController::add_point_to_trajectory(double a1, double a2){
   double current_position[2] = {0, 0};
   arm->getJointPositionInSteps( current_position );
   // print stuff for debugging
+
+  for(int i=0; i<5; i++) {
+    Serial.println("Position: " + String(current_position[0]) + ", " + String(current_position[1]));
+  }
 }
