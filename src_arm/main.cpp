@@ -67,6 +67,9 @@ void setup() {
     arm->setSpeedInHz(600, 600);
     arm->moveByAcceleration(100.0, 100.0);
   }
+  if(mode == 3) {
+    arm->setSpeedInHz(1200, 1200);
+  }
 
   delay(2000);
 }
