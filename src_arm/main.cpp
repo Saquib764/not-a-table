@@ -19,7 +19,7 @@ using namespace std;
 
 // int mode = 1;  // Simple arm move test
 // int mode = 2;  // Homing code
-int mode = 2;  // Controller code
+int mode = 3;  // Controller code
 
 
 // TMC2209Stepper driver(&SERIAL_PORT, R_SENSE);

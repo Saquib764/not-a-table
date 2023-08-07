@@ -210,6 +210,10 @@ int ArmController::follow_trajectory() {
   Serial.println("Target Speed: "+ String(target_speeds[0]) + ", " + String(target_speeds[1]));
 
   Serial.println("Current Speed: "  + String(current_speed[0]) + ", " + String(current_speed[1]));
+
+  double s1 = arm->stepper1->getCurrentSpeedInMilliHz() / 1000.0;
+  double s2 = arm->stepper2->getCurrentSpeedInMilliHz() / 1000.0;
+  Serial.println("Current Speed2: "  + String(s1) + ", " + String(s2));
   return 0;
 }
 
