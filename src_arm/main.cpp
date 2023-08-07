@@ -9,6 +9,7 @@ using namespace std;
 
 #include "../common/driver_setup.cpp"
 #include "../common/arm_model.cpp"
+#include "../common/arm_controller.cpp"
 
 #define SERIAL_PORT Serial2 // TMC2208/TMC2224 HardwareSerial port
 #define DRIVER_ADDRESS 0b00 // TMC2209 Driver address according to MS1 and MS2
@@ -17,7 +18,8 @@ using namespace std;
 #define VERSION "1.0.0"
 
 // int mode = 1;  // Simple arm move test
-int mode = 2;  // Homing code
+// int mode = 2;  // Homing code
+int mode = 3;  // Controller code
 
 
 // TMC2209Stepper driver(&SERIAL_PORT, R_SENSE);
@@ -33,10 +35,17 @@ uint8_t motor2DirPin = 14;
 uint8_t motor2StepPin = 13;
 uint8_t motor2HomingPin = 33;
 
-double K = STEPS_PER_REV * MICROSTEPS/ (2.0*PI);
-double R = 0.63/2;
+#define K     STEPS_PER_REV * MICROSTEPS/ (2.0*PI)
+#define R     0.63/2
+
+
+double target_q1 = 0.0;
+double target_q2 = 0.0;
+
 
 ArmModel arm = ArmModel(R, K);
+
+ArmController controller = ArmController(arm);
 
 
 void setup() {
@@ -64,13 +73,13 @@ void setup() {
   delay(2000);
 }
 
-// double points[5][3] = {
-//   {0., 0.0, 0.0},
-//   {0., 0.1*PI, 0*PI},
-//   {0., 0.2*PI, 0*PI},
-//   {0., 0.3*PI, 0*PI},
-//   {0., 0.4*PI, 0*PI},
-// };
+double points[5][3] = {
+  {0.0, 0.0},
+  {0.0, 0.0},
+  {0.0, 0.0},
+  {0.0, 0.0},
+  {0.0, 0.0}
+};
 int current_index = 0;
 
 void loop() {
@@ -83,6 +92,29 @@ void loop() {
       return;
     }
     arm.home();
+  }
+  if(mode == 3) {
+    // controller code
+    int should_read_next = controller.follow_trajectory();
+    // long int delta[2] = {0, 0};
+    // bool should_read_next = move_arm(delta, target_q1, target_q2);
+    if(should_read_next == 1) {
+      if(current_index < 5) {
+        double* point = points[current_index];
+        current_index = current_index + 1;
+        target_q1 = point[1];
+        target_q2 = point[2];
+      }
+      controller.add_point_to_trajectory(target_q1, target_q2);
+      // target_q1 = points[current_index][1];
+      // target_q2 = points[current_index][2];
+      // current_index = (current_index + 1) % 5;
+    }
+    if(should_read_next == 2) {
+      // should_play_next = true;
+      target_q1 = 0.0;
+      target_q2 = 0.0;
+    }
   }
   delay(1);
 }

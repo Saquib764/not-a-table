@@ -173,6 +173,9 @@ void ArmModel::home() {
 
         delayMicroseconds(1000);
         stepper1->moveTo(position_at_max_speed, true);
+        resetToPositionInSteps(0.0, 0.0);
+
+        delayMicroseconds(1000);
         is_homed[0] = true;
         
         is_hall_sensor_detected = false;
@@ -240,10 +243,13 @@ void ArmModel::home() {
         // arm out of hall sensor, return to max value
         stepper1->stopMove();
         stepper2->stopMove();
-        
+
         setSpeedInHz(0.0, 300.0);
         delayMicroseconds(1000);
         stepper2->moveTo(position_at_max_speed, true);
+        resetToPositionInSteps(0.0, 0.0);
+
+        delayMicroseconds(1000);
         is_homed[1] = true;
         
         is_hall_sensor_detected = false;
@@ -257,4 +263,10 @@ void ArmModel::home() {
     // cout << "pos: " << pos[0] << endl;
   }
 
+}
+
+
+void ArmModel::to_xy(double a1, double a2, double& x, double& y) {
+  x = ARM * cos(a1) + ARM * cos(a1 + a2);
+  y = ARM * sin(a1) + ARM * sin(a1 + a2);
 }
