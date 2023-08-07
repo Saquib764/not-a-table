@@ -23,7 +23,6 @@ class ArmController{
     ArmController(ArmModel arm);
     ArmModel* arm;
 
-
     double mod(double x, double y);
 
     void force_stop();
