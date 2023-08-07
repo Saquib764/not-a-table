@@ -207,6 +207,9 @@ int ArmController::follow_trajectory() {
   arm->moveByAcceleration( current_acceleration[0], current_acceleration[1] );
 
   // do nothing, chasing target
+  Serial.println("Target Speed: "+ String(target_speeds[0]) + ", " + String(target_speeds[1]));
+
+  Serial.println("Current Speed: "  + String(current_speed[0]) + ", " + String(current_speed[1]));
   return 0;
 }
 
@@ -287,7 +290,16 @@ void ArmController::add_point_to_trajectory(double a1, double a2){
   arm->getJointPositionInSteps( current_position );
   // print stuff for debugging
 
+
+  Serial.print("Targets: ");
   for(int i=0; i<5; i++) {
-    Serial.println("Position: " + String(current_position[0]) + ", " + String(current_position[1]));
+    Serial.print("| " + String(targets[i][0]) + ", " + String(targets[i][1]));
   }
+  Serial.println(" ");
+  
+  Serial.print("Target Speed: ");
+  for(int i=0; i<4; i++) {
+    Serial.print("| " + String(max_speeds[i][0]) + ", " + String(max_speeds[i][1]));
+  }
+  Serial.println(" ");
 }

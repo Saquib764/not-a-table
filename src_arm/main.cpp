@@ -19,7 +19,7 @@ using namespace std;
 
 // int mode = 1;  // Simple arm move test
 // int mode = 2;  // Homing code
-int mode = 3;  // Controller code
+int mode = 2;  // Controller code
 
 
 // TMC2209Stepper driver(&SERIAL_PORT, R_SENSE);
@@ -87,6 +87,7 @@ void loop() {
 
     if(arm->isHomed()) {
       Serial.println("Arm is homed");
+      mode=3;
       return;
     }
     arm->home();
@@ -100,8 +101,8 @@ void loop() {
       if(current_index < 5) {
         double* point = points[current_index];
         current_index = current_index + 1;
-        target_q1 = point[1];
-        target_q2 = point[2];
+        target_q1 = point[0];
+        target_q2 = point[1];
       }
       controller->add_point_to_trajectory(target_q1, target_q2);
       // target_q1 = points[current_index][1];
