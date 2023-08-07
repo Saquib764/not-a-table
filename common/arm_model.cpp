@@ -141,11 +141,11 @@ void ArmModel::home() {
       max_hall_value = 0.0;
       if( value > 100.0 ) {
         // get out of hall region
-        setSpeedInHz(100.0, 100.0);
+        setSpeedInHz(400.0, 400.0);
         moveByAcceleration(-500.0, 500.0);
         has_started_in_hall_region = true;
       }else{
-        setSpeedInHz(200.0, -200.0);
+        setSpeedInHz(400.0, -400.0);
         moveByAcceleration(500.0, -500.0);
       }
     }else if(value < 20 && has_started_in_hall_region) {
@@ -156,7 +156,7 @@ void ArmModel::home() {
       is_hall_sensor_detected = false;
       position_at_max_speed = 0.0;
       max_hall_value = 0.0;
-      setSpeedInHz(200.0, -200.0);
+      setSpeedInHz(50.0, -50.0);
       moveByAcceleration(500.0, -500.0);
     } else {
       if( value > 100.0 && !is_hall_sensor_detected ) {
@@ -216,11 +216,11 @@ void ArmModel::home() {
       max_hall_value = 0.0;
       if( value > 100.0 ) {
         // get out of hall region
-        setSpeedInHz(0.0, 600.0);
+        setSpeedInHz(0.0, 1000.0);
         moveByAcceleration(0.0, -500.0);
         has_started_in_hall_region = true;
       }else{
-        setSpeedInHz(0.0, 600.0);
+        setSpeedInHz(0.0, 1000.0);
         moveByAcceleration(0.0, 500.0);
       }
     }else if(value < 20 && has_started_in_hall_region) {
@@ -231,7 +231,7 @@ void ArmModel::home() {
       is_hall_sensor_detected = false;
       position_at_max_speed = 0.0;
       max_hall_value = 0.0;
-      setSpeedInHz(0.0, 600.0);
+      setSpeedInHz(0.0, 50.0);
       moveByAcceleration(0.0, 500.0);
     } else {
       if( value > 100.0 && !is_hall_sensor_detected ) {

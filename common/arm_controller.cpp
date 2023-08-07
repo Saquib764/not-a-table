@@ -5,7 +5,7 @@ ArmController::ArmController(ArmModel *arm){
   this->arm = arm;
 
   // Define constants
-  MAX_SPEED = 200;
+  MAX_SPEED = 400;
   MAX_ACCELERATION = 3 * MAX_SPEED;
   
   // Define global variables
@@ -196,10 +196,21 @@ int ArmController::follow_trajectory() {
   
   // Last steps push
   double LD = 40.0;
-  if (distance_to_go[0] < LD  && !has_reached[0] && abs(current_speed[0]) < 0.1) {
+  if (distance_to_go[0] < LD  && !has_reached[0]) {
     current_acceleration[0] = displacement_to_target[0] * 2.0;
   }
 
+  if (distance_to_go[1] < LD  && !has_reached[1]) {
+    current_acceleration[1] = displacement_to_target[1] * 2.0;
+  }
+
+  // if( has_reached[0] ) {
+  //   current_acceleration[0] = 0.0;
+  //   speed_adjust[0] = 0.0;
+  // }
+  // if( has_reached[1] ) {
+  //   current_acceleration[1] = 0.0;
+  // }
   // current_acceleration[0] = max(current_acceleration[0], 0.1);
 
   // setSpeedInHz( target_speeds[0], target_speeds[1] );
@@ -211,9 +222,8 @@ int ArmController::follow_trajectory() {
 
   Serial.println("Current Speed: "  + String(current_speed[0]) + ", " + String(current_speed[1]));
 
-  double s1 = arm->stepper1->getCurrentSpeedInMilliHz() / 1000.0;
-  double s2 = arm->stepper2->getCurrentSpeedInMilliHz() / 1000.0;
-  Serial.println("Current Speed2: "  + String(s1) + ", " + String(s2));
+  Serial.println("Dist to go: "  + String(distance_to_go[0]) + ", " + String(distance_to_go[1]));
+  Serial.println("Acceleration: "  + String(current_acceleration[0]) + ", " + String(current_acceleration[1]));
   return 0;
 }
 
