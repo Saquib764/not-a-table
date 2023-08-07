@@ -19,7 +19,7 @@ using namespace std;
 
 // int mode = 1;  // Simple arm move test
 // int mode = 2;  // Homing code
-int mode = 3;  // Controller code
+int mode = 2;  // Controller code
 
 
 // TMC2209Stepper driver(&SERIAL_PORT, R_SENSE);
@@ -36,14 +36,14 @@ uint8_t motor2StepPin = 13;
 uint8_t motor2HomingPin = 33;
 
 #define K     STEPS_PER_REV * MICROSTEPS/ (2.0*PI)
-#define R     0.63/2
+#define ARM     0.63/2
 
 
 double target_q1 = 0.0;
 double target_q2 = 0.0;
 
 
-ArmModel *arm = new ArmModel(R, K);
+ArmModel *arm = new ArmModel(ARM, K);
 
 ArmController *controller = new ArmController(arm);
 
@@ -90,6 +90,7 @@ void loop() {
 
     if(arm->isHomed()) {
       Serial.println("Arm is homed");
+      controller->reset();
       mode=3;
       return;
     }

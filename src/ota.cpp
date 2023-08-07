@@ -3,7 +3,6 @@
 
 
 bool update_firmware(String url) {
-  force_stop();
   bool is_success = false;
   Serial.println("Starting update...");
   HTTPClient http;

@@ -14,13 +14,12 @@ using namespace std;
 
 #include "../common/driver_setup.cpp"
 #include "../common/arm_model.cpp"
+#include "../common/arm_controller.cpp"
 #include "file_functions.h"
 #include "Player.h"
 #include "wifi_functions.h"
 #include "ota.h"
 #include <Preferences.h>
-
-#include "motor_control_functions.h"
 
 const int dummy = 0;
 
@@ -34,10 +33,11 @@ const int dummy = 0;
 TMC2209Stepper driver(&SERIAL_PORT, R_SENSE, DRIVER_ADDRESS);
 
 #define K     STEPS_PER_REV * MICROSTEPS/ (2.0*PI)
-#define R     0.63/2
+#define ARM     0.63/2
 
-ArmModel arm = ArmModel(R, K);
+ArmModel *arm = new ArmModel(ARM, K);
 
+ArmController *controller = new ArmController(arm);
 
 Player player;
 
@@ -340,9 +340,7 @@ void setup() {
 
   setup_driver(driver, EN_PIN);
 
-  arm.setup(EN_PIN, motor1DirPin, motor1StepPin, motor1HomingPin, motor2DirPin, motor2StepPin, motor2HomingPin);
-
-  set_arm(arm);
+  arm->setup(EN_PIN, motor1DirPin, motor1StepPin, motor1HomingPin, motor2DirPin, motor2StepPin, motor2HomingPin);
 
   setup_routing(server);
   // bool has_resumed = player.read(SD);
@@ -388,15 +386,16 @@ void loop() {
   if(should_perform_homing) {
     // Perform homing
 
-    if(arm.isHomed()) {
+    if(arm->isHomed()) {
       target_q1 = 0.0;
       target_q2 = 0.0;
       should_perform_homing = false;
-      reset();
+      controller->reset();
+      arm->setSpeedInHz(1200, 1200);
       Serial.println("Arm is homed");
       return;
     }
-    arm.home();
+    arm->home();
     return;
   }
   // if(should_play_next) {
@@ -414,7 +413,7 @@ void loop() {
   }
   EVERY_N_MILLISECONDS(4) {
     if(is_printing_design) {
-      int should_read_next = follow_trajectory();
+      int should_read_next = controller->follow_trajectory();
       // long int delta[2] = {0, 0};
       // bool should_read_next = move_arm(delta, target_q1, target_q2);
       if(should_read_next == 1) {
@@ -423,7 +422,7 @@ void loop() {
           target_q1 = points[1];
           target_q2 = points[2];
         }
-        add_point_to_trajectory(target_q1, target_q2);
+        controller->add_point_to_trajectory(target_q1, target_q2);
         // target_q1 = points[current_index][1];
         // target_q2 = points[current_index][2];
         // current_index = (current_index + 1) % 5;

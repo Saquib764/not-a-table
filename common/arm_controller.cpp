@@ -252,8 +252,8 @@ void ArmController::add_point_to_trajectory(double a1, double a2){
   keypoints[4][0] = a1;
   keypoints[4][1] = a2;
 
-  targets[4][0] = int(3 * a1 * K);
-  targets[4][1] = int(9 * a2 * K);
+  targets[4][0] = int(3 * a1 * arm->steps_per_radian);
+  targets[4][1] = int(9 * a2 * arm->steps_per_radian);
   target_speeds_dir[3] = target_speed_to_new_point;
 
   if (keypoints[4][0] - keypoints[3][0] > 0) {

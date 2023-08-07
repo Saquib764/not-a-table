@@ -33,7 +33,7 @@ void ArmModel::setup(uint8_t EN_PIN, uint8_t DIR_1, uint8_t STEPPER_1, uint8_t H
   setup_joint(stepper1, EN_PIN, DIR_1);
   setup_joint(stepper2, EN_PIN, DIR_2);
   
-  setSpeedInHz(20000, 20000);
+  setSpeedInHz(1500, 1500);
 }
 
 
