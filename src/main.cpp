@@ -312,6 +312,8 @@ void setup() {
     std::array<String, 2> logins = get_wifi_login(preferences);
 
     Serial.println("Wifi logins:");
+    logins[0] = SAVED_SSID;
+    logins[1] = SAVED_PWD;
     Serial.println(logins[0]);
     Serial.println(logins[1]);
 

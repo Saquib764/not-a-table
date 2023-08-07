@@ -205,7 +205,7 @@ void ArmModel::home() {
       max_hall_value = 0.0;
       if( value > 100.0 ) {
         // get out of hall region
-        setSpeedInHz(0.0, 300.0);
+        setSpeedInHz(0.0, 600.0);
         moveByAcceleration(0.0, -500.0);
         has_started_in_hall_region = true;
       }else{
