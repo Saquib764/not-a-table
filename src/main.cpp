@@ -12,12 +12,15 @@
 
 using namespace std;
 
+#include "../common/driver_setup.cpp"
+#include "../common/arm_model.cpp"
 #include "file_functions.h"
 #include "Player.h"
-#include "motor_control_functions.h"
 #include "wifi_functions.h"
 #include "ota.h"
 #include <Preferences.h>
+
+#include "motor_control_functions.h"
 
 const int dummy = 0;
 
@@ -27,10 +30,14 @@ const int dummy = 0;
 #define R_SENSE 0.11f
 #define VERSION "1.0.0"
 
-
-
 // TMC2209Stepper driver(&SERIAL_PORT, R_SENSE);
 TMC2209Stepper driver(&SERIAL_PORT, R_SENSE, DRIVER_ADDRESS);
+
+#define K     STEPS_PER_REV * MICROSTEPS/ (2.0*PI)
+#define R     0.63/2
+
+ArmModel arm = ArmModel(R, K);
+
 
 Player player;
 
@@ -331,6 +338,10 @@ void setup() {
 
   setup_driver(driver, EN_PIN);
 
+  arm.setup(EN_PIN, motor1DirPin, motor1StepPin, motor1HomingPin, motor2DirPin, motor2StepPin, motor2HomingPin);
+
+  set_arm(arm);
+
   setup_routing(server);
   // bool has_resumed = player.read(SD);
   // if(has_resumed) {
@@ -344,7 +355,7 @@ void setup() {
   player.read(SD, "/test_designs/square.thr.txt");
   is_printing_design = true;
 
-  setup_arm(EN_PIN, motor1DirPin, motor1StepPin, motor1HomingPin, motor2DirPin, motor2StepPin, motor2HomingPin);
+
 }
 
 // double points[5][3] = {
@@ -374,15 +385,16 @@ void loop() {
   // }
   if(should_perform_homing) {
     // Perform homing
-    bool is_arm_homed = home_arm();
-    if(!is_arm_homed) {
-      Serial.println("Homing in progress...");
+
+    if(arm.isHomed()) {
+      target_q1 = 0.0;
+      target_q2 = 0.0;
+      should_perform_homing = false;
+      reset();
+      Serial.println("Arm is homed");
       return;
     }
-    target_q1 = 0.0;
-    target_q2 = 0.0;
-    should_perform_homing = false;
-    Serial.println("Homing DONE!");
+    arm.home();
     return;
   }
   // if(should_play_next) {

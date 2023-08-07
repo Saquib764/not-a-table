@@ -7,21 +7,20 @@
 #define MAX_TARGET_DISTANCE       50
 #define ACCELERATION_TIME         1.0  // s
 
+#define K     STEPS_PER_REV * MICROSTEPS/ (2.0*PI)
+#define R     0.63/2
 
 // Total steps per revolution = 200 * 16 = 3200
 
 #define SERIAL_PORT Serial2 // TMC2208/TMC2224 HardwareSerial port
 
-FastAccelStepperEngine engine = FastAccelStepperEngine();
-FastAccelStepper *stepper1 = NULL;
-FastAccelStepper *stepper2 = NULL;
-uint8_t homing_pin1;
-uint8_t homing_pin2;
-double K = STEPS_PER_REV * MICROSTEPS/ (2.0*PI);
-double R = 0.63/2;
+ArmModel *_arm ;
+// double K = STEPS_PER_REV * MICROSTEPS/ (2.0*PI);
+// double R = 0.63/2;
 
-ArmModel arm = ArmModel(stepper1, stepper2, R, K);
-
+void set_arm(ArmModel arm) {
+  _arm = &arm;
+}
 double mod(double x, double y) {
   double r = x - y * floor(x/y);
   if(r < 0) {
@@ -31,65 +30,11 @@ double mod(double x, double y) {
   return r;
 }
 
-void setup_driver(TMC2209Stepper &driver, int EN_PIN) {
-  Serial.println("Setting up driver");
-  pinMode(EN_PIN, OUTPUT);
-
-  digitalWrite(EN_PIN, LOW);      // Enable driver in hardware
-                                  // Enable one according to your setup
-//SPI.begin();                    // SPI drivers
-  // NEVER increase the baud rate, its adds 10ms delay. probably related to buffer overflow and flush cycle
-  SERIAL_PORT.begin(9600);      // HW UART drivers
-// driver.beginSerial(115200);     // SW UART drivers
-
-  driver.begin();                 //  SPI: Init CS pins and possible SW SPI pins
-                                  // UART: Init SW UART (if selected) with default 115200 baudrate
-  driver.toff(3);                 // Enables driver in software
-  // driver.pdn_disable(true);
-  driver.rms_current(700);        // Set motor RMS current
-  driver.microsteps( MICROSTEPS );          // Set microsteps to 1/16th
-  // driver.irun(31);
-
-  driver.intpol(true);               // Interpolate to 256 steps, smooth stepping even with 0 microsteps.
-
-//driver.en_pwm_mode(true);       // Toggle stealthChop on TMC2130/2160/5130/5160
-  driver.en_spreadCycle(false);   // Toggle spreadCycle on TMC2208/2209/2224
-  driver.pwm_autoscale(true);     // Needed for stealthChop
-  Serial.println("Done setting up driver");
-}
-
-void setup_arm(uint8_t EN_PIN, uint8_t DIR_1, uint8_t STEPPER_1, uint8_t HOMING_1, uint8_t DIR_2, uint8_t STEPPER_2, uint8_t HOMING_2) {
-  engine.init();
-  stepper1 = engine.stepperConnectToPin(STEPPER_1);
-  if (stepper1) {
-    stepper1->setDirectionPin(DIR_1);
-    stepper1->setEnablePin(EN_PIN);
-    stepper1->setAutoEnable(true);
-
-    // stepper1->keepRunning();
-  }
-  stepper2 = engine.stepperConnectToPin(STEPPER_2);
-  if (stepper2) {
-    stepper2->setDirectionPin(DIR_2);
-    stepper2->setEnablePin(EN_PIN);
-    stepper2->setAutoEnable(true);
-
-    // stepper2->keepRunning();
-  }
-  homing_pin1 = HOMING_1;
-  homing_pin2 = HOMING_2;
-  // Set pins to output
-  pinMode(homing_pin1, OUTPUT);
-  pinMode(homing_pin2, OUTPUT);
-}
-
-
-
 // double MAX_ACCELERATION = 1000.0;
 
 void force_stop() {
-  stepper1->forceStop();
-  stepper2->forceStop();
+  _arm->stepper1->forceStop();
+  _arm->stepper2->forceStop();
 }
 
 // Define constants
@@ -120,26 +65,26 @@ void to_xy(double a1, double a2, double& x, double& y) {
 }
 
 void getJointPositions(double* pt) {
-  pt[0] = stepper1->getCurrentPosition();
-  pt[1] = stepper2->getCurrentPosition() - pt[0];
+  pt[0] = _arm->stepper1->getCurrentPosition();
+  pt[1] = _arm->stepper2->getCurrentPosition() - pt[0];
 }
 void getJointAngles(double* pt) {
-  pt[0] = 1.0 * stepper1->getCurrentPosition() / (3*K);
-  pt[1] = 1.0 * (stepper2->getCurrentPosition() - stepper1->getCurrentPosition()) / (9*K);
+  pt[0] = 1.0 * _arm->stepper1->getCurrentPosition() / (3*K);
+  pt[1] = 1.0 * (_arm->stepper2->getCurrentPosition() - _arm->stepper1->getCurrentPosition()) / (9*K);
 }
 
 void getJointSpeeds(double* v) {
-  v[0] = stepper1->getCurrentSpeedInMilliHz() / 1000.0;
-  v[1] = stepper2->getCurrentSpeedInMilliHz() / 1000.0 - v[0];
+  v[0] = _arm->stepper1->getCurrentSpeedInMilliHz() / 1000.0;
+  v[1] = _arm->stepper2->getCurrentSpeedInMilliHz() / 1000.0 - v[0];
 }
 void getJointSpeedsAngle(double* v) {
-  v[0] = stepper1->getCurrentSpeedInMilliHz() / 1000.0 / (3*K);
-  v[1] = (stepper2->getCurrentSpeedInMilliHz() / 1000.0 - stepper1->getCurrentSpeedInMilliHz() / 1000.0 ) / (9*K);
+  v[0] = _arm->stepper1->getCurrentSpeedInMilliHz() / 1000.0 / (3*K);
+  v[1] = (_arm->stepper2->getCurrentSpeedInMilliHz() / 1000.0 - _arm->stepper1->getCurrentSpeedInMilliHz() / 1000.0 ) / (9*K);
 }
 
 void getJointAccelerations(double* a) {
-  a[0] = stepper1->getCurrentAcceleration();
-  a[1] = stepper2->getCurrentAcceleration() - a[0];
+  a[0] = _arm->stepper1->getCurrentAcceleration();
+  a[1] = _arm->stepper2->getCurrentAcceleration() - a[0];
 }
 
 // Function to follow the trajectory
@@ -291,8 +236,8 @@ int follow_trajectory() {
   // setSpeedInHz( target_speeds[0], target_speeds[1] );
   // setSpeedInHz( abs(_max_speeds[0]), abs(_max_speeds[1]) );
 
-  stepper1->moveByAcceleration(current_acceleration[0]);
-  stepper2->moveByAcceleration( current_acceleration[1] + current_acceleration[0] );
+  _arm->stepper1->moveByAcceleration(current_acceleration[0]);
+  _arm->stepper2->moveByAcceleration( current_acceleration[1] + current_acceleration[0] );
 
   // do nothing, chasing target
   return 0;
@@ -381,144 +326,16 @@ void reset() {
   for(int i = 0; i < 5; i++) {
     targets[i][0] = 0;
     targets[i][1] = 0;
+    keypoints[i][0] = 0;
+    keypoints[i][1] = 0;
   }
-}
-
-bool is_hall_sensor_detected = false;
-double position_at_max_speed = 0.0;
-double max_hall_value = 0.0;
-double homing_started_at_angle = 0.0;
-bool is_homing = false;
-bool has_started_in_hall_region = false;
-
-void home() {
-  if(!arm.is_homed[0]) {
-    int homing_pin = homing_pin1;
-    double pos[2] = {0, 0};
-    double pos_steps[2] = {0, 0};
-    arm.getJointPositionInRadians(pos);
-    arm.getJointPositionInSteps(pos_steps);
-
-    double value = analogRead(homing_pin) - 2000.0;
-    for(int i = 1; i<5; i++) {
-      value += analogRead(homing_pin) - 2000.0;
-    }
-    value /= 5.0;
-
-    if(!is_homing) {
-      // start homing
-      is_homing = true;
-      is_hall_sensor_detected = false;
-      position_at_max_speed = 0.0;
-      max_hall_value = 0.0;
-      if( value > 100.0 ) {
-        // get out of hall region
-        arm.setSpeedInHz(100.0, 100.0);
-        arm.moveByAcceleration(-500.0, 500.0);
-        has_started_in_hall_region = true;
-      }else{
-        arm.setSpeedInHz(200.0, -200.0);
-        arm.moveByAcceleration(500.0, -500.0);
-      }
-    }else if(value < 20 && has_started_in_hall_region) {
-      // got out of hall region
-      // reverse and restart homing
-      has_started_in_hall_region = false;
-      is_homing = true;
-      is_hall_sensor_detected = false;
-      position_at_max_speed = 0.0;
-      max_hall_value = 0.0;
-      arm.setSpeedInHz(200.0, -200.0);
-      arm.moveByAcceleration(500.0, -500.0);
-    } else {
-      if( value > 100.0 && !is_hall_sensor_detected ) {
-        // slow down when hall sensor is detected
-        arm.setSpeedInHz(50.0, -50.0);
-        is_hall_sensor_detected = true;
-        position_at_max_speed = pos_steps[0];
-        max_hall_value = value;
-        homing_started_at_angle = pos[0];
-      }
-      if(is_hall_sensor_detected && abs(pos[0] - homing_started_at_angle) > 45.0 * 3.14 / 180.0) {
-        // arm out of hall sensor, return to max value
-        arm.stepper1->forceStop();
-        arm.stepper2->forceStop();
-        delayMicroseconds(25);
-        arm.stepper1->moveTo(position_at_max_speed, true);
-        arm.is_homed[0] = true;
-        is_hall_sensor_detected = false;
-        is_homing = false;
-      }
-    }
-    // cout << "pos: " << pos[0] << endl;
-  } else if(!arm.is_homed[1]) {
-    int homing_pin = homing_pin2;
-    double pos[2] = {0, 0};
-    double pos_steps[2] = {0, 0};
-    arm.getJointPositionInRadians(pos);
-    arm.getJointPositionInSteps(pos_steps);
-
-    double value = analogRead(homing_pin) - 2000.0;
-    for(int i = 1; i<5; i++) {
-      value += analogRead(homing_pin) - 2000.0;
-    }
-    value /= 5.0;
-
-    if(!is_homing) {
-      // start homing
-      is_homing = true;
-      is_hall_sensor_detected = false;
-      position_at_max_speed = 0.0;
-      max_hall_value = 0.0;
-      if( value > 100.0 ) {
-        // get out of hall region
-        arm.setSpeedInHz(0.0, -100.0);
-        arm.moveByAcceleration(0.0, -500.0);
-        has_started_in_hall_region = true;
-      }else{
-        arm.setSpeedInHz(0.0, 200.0);
-        arm.moveByAcceleration(0.0, 500.0);
-      }
-    }else if(value < 20 && has_started_in_hall_region) {
-      // got out of hall region
-      // reverse and restart homing
-      has_started_in_hall_region = false;
-      is_homing = true;
-      is_hall_sensor_detected = false;
-      position_at_max_speed = 0.0;
-      max_hall_value = 0.0;
-      arm.setSpeedInHz(0.0, 200.0);
-      arm.moveByAcceleration(0.0, 500.0);
-    } else {
-      if( value > 100.0 && !is_hall_sensor_detected ) {
-        // slow down when hall sensor is detected
-        arm.setSpeedInHz(0.0, 50.0);
-        is_hall_sensor_detected = true;
-        position_at_max_speed = pos_steps[1];
-        max_hall_value = value;
-        homing_started_at_angle = pos[1];
-      }
-      if(is_hall_sensor_detected && abs(pos[1] - homing_started_at_angle) > 45.0 * 3.14 / 180.0) {
-        // arm out of hall sensor, return to max value
-        arm.stepper1->forceStop();
-        arm.stepper2->forceStop();
-        delayMicroseconds(25);
-        arm.stepper2->moveTo(position_at_max_speed, true);
-        arm.is_homed[1] = true;
-        is_hall_sensor_detected = false;
-        is_homing = false;
-      }
-    }
-    // cout << "pos: " << pos[0] << endl;
+  for(int i = 0; i < 4; i++) {
+    target_directions[i][0] = 0;
+    target_directions[i][1] = 0;
+    max_speeds[i][0] = 0;
+    max_speeds[i][1] = 0;
+    angles_at_keypoints[i] = 0;
+    target_speeds_dir[i] = 0;
+    should_stop[i] = false;
   }
-
-}
-
-bool home_arm() {
-  if(arm.isHomed()) {
-    reset();
-    return true;
-  }
-  home();
-  return false;
 }

@@ -53,7 +53,6 @@ void ArmModel::setSpeedInHz(double speed1, double speed2) {
 }
 
 void ArmModel::moveByAcceleration(double acceleration1, double acceleration2) {
-  Serial.println(12);
   stepper1->moveByAcceleration(acceleration1, true);
   stepper2->moveByAcceleration(acceleration2 + acceleration1, true);
 }
@@ -121,11 +120,10 @@ void ArmModel::home() {
     getJointPositionInSteps(pos_steps);
 
     double value = analogRead(homing_pin) - 2000.0;
-    for(int i = 1; i<2; i++) {
+    for(int i = 1; i<5; i++) {
       value += analogRead(homing_pin) - 2000.0;
     }
     value /= 5.0;
-    Serial.println( "Value: " + String(value) );
 
     if(!is_homing) {
       // start homing
@@ -194,11 +192,10 @@ void ArmModel::home() {
     getJointPositionInSteps(pos_steps);
 
     double value = analogRead(homing_pin) - 2000.0;
-    for(int i = 1; i<2; i++) {
+    for(int i = 1; i<5; i++) {
       value += analogRead(homing_pin) - 2000.0;
     }
     value /= 5.0;
-    Serial.println( "Value2: " + String(is_homing) + ", " + String(value) );
 
     if(!is_homing) {
       // start homing
