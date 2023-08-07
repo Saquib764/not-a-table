@@ -1,8 +1,8 @@
 #include "arm_controller.h"
 
 
-ArmController::ArmController(ArmModel arm){
-  this->arm = &arm;
+ArmController::ArmController(ArmModel *arm){
+  this->arm = arm;
 
   // Define constants
   MAX_SPEED = 200;

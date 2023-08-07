@@ -20,7 +20,7 @@ class ArmController{
   private:
     /* data */
   public:
-    ArmController(ArmModel arm);
+    ArmController(ArmModel *arm);
     ArmModel* arm;
 
     double mod(double x, double y);

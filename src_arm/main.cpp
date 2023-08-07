@@ -43,9 +43,9 @@ double target_q1 = 0.0;
 double target_q2 = 0.0;
 
 
-ArmModel arm = ArmModel(R, K);
+ArmModel *arm = new ArmModel(R, K);
 
-ArmController *controller = NULL;
+ArmController *controller = new ArmController(arm);
 
 
 void setup() {
@@ -60,16 +60,12 @@ void setup() {
 
 
   setup_driver(driver, EN_PIN);
-  arm.setup(EN_PIN, motor1DirPin, motor1StepPin, motor1HomingPin, motor2DirPin, motor2StepPin, motor2HomingPin);
-
-  ArmController c = ArmController(arm);
-
-  controller = &c;
+  arm->setup(EN_PIN, motor1DirPin, motor1StepPin, motor1HomingPin, motor2DirPin, motor2StepPin, motor2HomingPin);
 
 
   if(mode == 1) {
-    arm.setSpeedInHz(600, 600);
-    arm.moveByAcceleration(100.0, 100.0);
+    arm->setSpeedInHz(600, 600);
+    arm->moveByAcceleration(100.0, 100.0);
   }
 
   delay(2000);
@@ -89,11 +85,11 @@ void loop() {
   if(mode == 2) {
     // Homing code
 
-    if(arm.isHomed()) {
+    if(arm->isHomed()) {
       Serial.println("Arm is homed");
       return;
     }
-    arm.home();
+    arm->home();
   }
   if(mode == 3) {
     // controller code
