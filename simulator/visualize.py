@@ -47,8 +47,8 @@ values = np.array(values)
 p = np.array(values[:, 0:2]) # / K
 v = np.array(values[:, 2:4]) 
 a = np.array(values[:, 4:6])
-tv = np.array(values[:, 6:8]) 
-mv = np.array(values[:, 8:10]) 
+# tv = np.array(values[:, 6:8]) 
+# mv = np.array(values[:, 8:10]) 
 
 e = np.array( values[:, 10:11] ) 
 

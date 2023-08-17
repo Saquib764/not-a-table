@@ -9,3 +9,9 @@
 8. Wait for both motors at corners.
 
 
+# Simulation
+
+```
+g++ test_trajectory.cpp && ./a.out && python visualize.py
+```
+

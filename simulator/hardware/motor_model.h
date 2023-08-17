@@ -9,7 +9,7 @@ class MotorModel {
     MotorModel();
     void setCurrentPosition(double position);
     void setSpeedInHz(double speed);
-    void moveByAcceleration(double acceleration);
+    void moveByAcceleration(double acceleration, bool reverse);
     double getCurrentPosition();
     double getCurrentSpeedInMilliHz();
     double getCurrentAcceleration();

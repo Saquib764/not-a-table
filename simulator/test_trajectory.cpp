@@ -6,18 +6,17 @@
 using namespace std;
 
 #include "hardware/motor_model.cpp"
+#include "../common/sim_arm_model.cpp"
+#include "../common/sim_arm_controller.cpp"
+
+#define PI    3.14159265358979323846
+#define K     STEPS_PER_REV * MICROSTEPS/ (2.0*PI)
+#define ARM     0.63/2
 
 
-MotorModel motor1 = MotorModel();
-MotorModel motor2 = MotorModel();
+SimArmModel *arm = new SimArmModel(ARM, K);
 
-
-MotorModel *stepper1 = &motor1;
-MotorModel *stepper2 = &motor2;
-
-
-#include "control.cpp"
-
+SimArmController *controller = new SimArmController(arm);
 
 bool read_line(ifstream& file, double* value) {
     string line;
@@ -51,6 +50,7 @@ bool read_line(ifstream& file, double* value) {
 }
 
 int main() {
+    arm->setup(2, 3);
     string filename = "../test_designs/square.thr.txt"; // Replace "example.txt" with the desired file name
 
     ofstream fileout( "output.txt" );
@@ -62,7 +62,7 @@ int main() {
     }
 
     double pt[2];
-    int T = 1000000;
+    int T = 100000;
 
     double ps[2];
     double v[2];
@@ -70,23 +70,25 @@ int main() {
 
     for(int i = 0; i < T; i++) {
       // cout<< "i: " << i << endl;
-      move();
-      arm.getJointPositionInRadians(ps);
-      arm.getJointSpeedInSteps(v);
-      arm.getJointAccelerationInSteps(a);
+      arm->stepper1->move();
+      arm->stepper2->move();
+      arm->getJointPositionInRadians(ps);
+      arm->getJointSpeedInSteps(v);
+      arm->getJointAccelerationInSteps(a);
       // cout << "p: " << ps[0] << " " << ps[1] << " v " << v[0] << " " << v[1] << " a: " << a[0] << " " << a[1] << endl;
-      fileout << ps[0] << " " << ps[1] << " " << v[0] << " " << v[1] << " " << a[0] << " " << a[1] << " " << target_speeds[0] << " " << target_speeds[1] << " " << max_speeds[2][0] << " " << max_speeds[2][1] << " " << error << endl;
+      fileout << ps[0] << " " << ps[1] << " " << v[0] << " " << v[1] << " " << a[0] << " " << a[1] << endl;
+      // fileout << ps[0] << " " << ps[1] << " " << v[0] << " " << v[1] << " " << a[0] << " " << a[1] << " " << target_speeds[0] << " " << target_speeds[1] << " " << max_speeds[2][0] << " " << max_speeds[2][1] << " " << error << endl;
       if(i%10 !=0) {
         continue;
       }
-      int should_read_next = follow_trajectory();
+      int should_read_next = controller->follow_trajectory();
       if(should_read_next == 1) {
         bool has_value = read_line(file, pt);
         if(!has_value) {
             continue;
         }
 
-        add_point_to_trajectory(pt[0], pt[1]);
+        controller->add_point_to_trajectory(pt[0], pt[1]);
       }
       if(should_read_next == 2) {
         // design complete
