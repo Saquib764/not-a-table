@@ -5,6 +5,7 @@
 
 using namespace std;
 
+#include "hardware/timer.cpp"
 #include "hardware/motor_model.cpp"
 #include "../common/sim_arm_model.cpp"
 #include "../common/sim_arm_controller.cpp"
@@ -50,8 +51,9 @@ bool read_line(ifstream& file, double* value) {
 }
 
 int main() {
+    update_time(0.01);
     arm->setup(2, 3);
-    string filename = "../test_designs/square.thr.txt"; // Replace "example.txt" with the desired file name
+    string filename = "../test_designs/yume.thr.txt"; // Replace "example.txt" with the desired file name
 
     ofstream fileout( "output.txt" );
     ifstream file(filename);
@@ -70,22 +72,25 @@ int main() {
 
     for(int i = 0; i < T; i++) {
       // cout<< "i: " << i << endl;
+      update_time(0.005);
       arm->stepper1->move();
       arm->stepper2->move();
       arm->getJointPositionInRadians(ps);
+      // arm->getJointPositionInSteps(ps);
       arm->getJointSpeedInSteps(v);
       arm->getJointAccelerationInSteps(a);
       // cout << "p: " << ps[0] << " " << ps[1] << " v " << v[0] << " " << v[1] << " a: " << a[0] << " " << a[1] << endl;
-      fileout << ps[0] << " " << ps[1] << " " << v[0] << " " << v[1] << " " << a[0] << " " << a[1] << endl;
+      fileout << ps[0] << " " << ps[1] << " " << v[0] << " " << v[1] << " " << a[0] << " " << a[1] << " " << controller->error[0] << " " << controller->error[1] << endl;
       // fileout << ps[0] << " " << ps[1] << " " << v[0] << " " << v[1] << " " << a[0] << " " << a[1] << " " << target_speeds[0] << " " << target_speeds[1] << " " << max_speeds[2][0] << " " << max_speeds[2][1] << " " << error << endl;
-      if(i%10 !=0) {
+      if(i%5 !=0) {
         continue;
       }
       int should_read_next = controller->follow_trajectory();
       if(should_read_next == 1) {
         bool has_value = read_line(file, pt);
         if(!has_value) {
-            continue;
+          controller->has_all_targets = true;
+          continue;
         }
 
         controller->add_point_to_trajectory(pt[0], pt[1]);
