@@ -56,8 +56,6 @@ class SimArmController{
     double start_time;
 
     double error[2];
-    double last_error;
-    double speed_integral[2];
 };
 
 #endif

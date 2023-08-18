@@ -8,6 +8,10 @@ ArmController::ArmController(ArmModel *arm){
   MAX_SPEED = 400;
   MAX_ACCELERATION = 3 * MAX_SPEED;
   
+  has_started = false;
+  has_finished = false;
+  has_all_targets = false;
+  
   // Define global variables
   current_target_indexes[0] = 2;
   current_target_indexes[1] = 2;
@@ -18,10 +22,8 @@ ArmController::ArmController(ArmModel *arm){
   target_speeds[0] = 0.0;
   target_speeds[1] = 0.0;
 
-  error = 0;
-  last_error = 0;
-  speed_integral[0] = 0.0;
-  speed_integral[1] = 0.0;
+  error[0] = 0.0;
+  error[1] = 0.0;
 }
 
 double ArmController::mod(double x, double y){
@@ -45,6 +47,7 @@ void ArmController::reset(){
     targets[i][1] = 0;
     keypoints[i][0] = 0;
     keypoints[i][1] = 0;
+    time_at_keypoints[i] = 0;
   }
   for(int i = 0; i < 4; i++) {
     target_speeds_dir[i] = 0;
@@ -57,8 +60,73 @@ void ArmController::reset(){
   }
 }
 
+int ArmController::get_current_target_index(double t){
+  // Get time index
+  int time_index = -1;
+  for(int i = 0; i < 4; i++) {
+    if(time_at_keypoints[i] <= t && t < time_at_keypoints[i + 1]) {
+      time_index = i;
+      break;
+    }
+  }
+  if(time_index == -1) {
+    time_index = 4;
+  }
+  return time_index;
+}
+
+void ArmController::get_target_speed(double t, double *target_speed){
+  // Get time index
+  int time_index = -1;
+  for(int i = 0; i < 4; i++) {
+    if(time_at_keypoints[i] <= t && t < time_at_keypoints[i + 1]) {
+      time_index = i;
+      break;
+    }
+  }
+  if(time_index == -1) {
+    time_index = 4;
+    target_speed[0] = max_speeds[time_index][0];
+    target_speed[1] = max_speeds[time_index][1];
+    return;
+  }
+
+  // Smoothen speed
+  double T = 0.1;
+  double delta_t = 0.0;
+  if(time_at_keypoints[time_index + 1] - t < T) {
+    delta_t = (time_at_keypoints[time_index + 1] - t) / T;
+  }
+  // Get target speed
+  target_speed[0] = max_speeds[time_index][0] * (1 - delta_t) + max_speeds[time_index + 1][0] * delta_t;
+  target_speed[1] = max_speeds[time_index][1] * (1 - delta_t) + max_speeds[time_index + 1][1] * delta_t;
+}
+
+void ArmController::get_target_position(double t, double *target_position){
+  // Get time index
+  int time_index = -1;
+  for(int i = 0; i < 4; i++) {
+    if(time_at_keypoints[i] <= t && t < time_at_keypoints[i + 1]) {
+      time_index = i;
+      break;
+    }
+  }
+  if(time_index == -1) {
+    target_position[0] = targets[4][0] ;
+    target_position[1] = targets[4][1] ;
+    return;
+  }
+  double delta_t = (t - time_at_keypoints[time_index]) / (time_at_keypoints[time_index + 1] - time_at_keypoints[time_index]);
+
+  // Get target position
+  target_position[0] = targets[time_index][0] * (1 - delta_t) + targets[time_index + 1][0] * delta_t;
+  target_position[1] = targets[time_index][1] * (1 - delta_t) + targets[time_index + 1][1] * delta_t;
+}
+
 int ArmController::follow_trajectory() {
+  double t = (micros() - start_time) / 1000000.0;
   if (current_target_indexes[0] >= 5 && current_target_indexes[1] >= 5) {
+    has_finished = true;
     return 2;
   }
   // wait for other index to catch up
@@ -69,9 +137,10 @@ int ArmController::follow_trajectory() {
     current_target_indexes[1] = 4;
   }
 
-  int current_target_index = max(current_target_indexes[0], current_target_indexes[1]);
-
-  error = 0;
+  int current_target_index = get_current_target_index(t) + 1;
+  if(current_target_index > 2 && !has_all_targets) {
+    return 1;
+  }
   double current_acceleration[2] = {0, 0};
   double current_position[2] = {0, 0};
   arm->getJointPositionInSteps( current_position );
@@ -80,154 +149,41 @@ int ArmController::follow_trajectory() {
   arm->getJointSpeedInSteps( current_speed );
 
 
-  double displacement_to_target[2] = {
-    targets[current_target_index][0] - current_position[0],
-    targets[current_target_index][1] - current_position[1]
-  };
-  double distance_to_go[2] = {
-    displacement_to_target[0] * target_directions[current_target_index - 1][0],
-    displacement_to_target[1] * target_directions[current_target_index - 1][1]
-  };
+  get_target_speed(t, target_speeds);
+
+  double expected_position[2];
+  get_target_position(t, expected_position);
+
+  error[0] = expected_position[0] - current_position[0];
+  error[1] = expected_position[1] - current_position[1];
+
+  double speed_adjust[2];
+  speed_adjust[0] = 5 * error[0];
+  speed_adjust[1] = 5 * error[1];
 
 
-  target_speeds[0] = MAX_SPEED * (1.0 * displacement_to_target[0]) / (abs(displacement_to_target[0]) + 0.001);
-  target_speeds[1] = MAX_SPEED * (1.0 * displacement_to_target[1]) / (abs(displacement_to_target[0]) + 0.001);
-
-  if (abs(target_speeds[1]) > MAX_SPEED) {
-    target_speeds[0] = MAX_SPEED * (1.0 * displacement_to_target[0]) / (abs(displacement_to_target[1]) + 0.001);
-    target_speeds[1] = MAX_SPEED * (1.0 * displacement_to_target[1]) / (abs(displacement_to_target[1]) + 0.001);
-  }
-
-  target_speeds[0] = max_speeds[current_target_indexes[0] - 1][0];
-  target_speeds[1] = max_speeds[current_target_indexes[1] - 1][1];
-
-
-  bool has_reached[2] = {false, false};
-  if (distance_to_go[0] < 2.0 ) {
-    has_reached[0] = true;
-  }
-  if (distance_to_go[1] < 2.0) {
-    has_reached[1] = true;
-  }
-
-  if (has_reached[0] && has_reached[1]) {
-    current_target_indexes[0]++;
-    current_target_indexes[1]++;
-    return 1;
-  }
-
-  double original_displacement[2] = {
-    targets[current_target_indexes[0]][0] - targets[current_target_indexes[0] - 1][0],
-    targets[current_target_indexes[0]][1] - targets[current_target_indexes[0] - 1][1]
-  };
-
-  double speed_adjust[2] = {0., 0.};
-  // if(current_target_indexes[0] > current_target_indexes[1]) {
-  //   speed_adjust[0] = - 0.3 * current_speed[0];
-  //   speed_adjust[1] =   0.3 * current_speed[1];
-  // }
-  // if(current_target_indexes[0] < current_target_indexes[1]) {
-  //   speed_adjust[0] =   0.3 * current_speed[0];
-  //   speed_adjust[1] =  -0.3 * current_speed[1];
-  // }
-
-  if (abs(original_displacement[0]) > 5) {
-    // Correct the motor with the smaller distance
-    double r1 = abs((current_position[0] - targets[current_target_indexes[0] - 1][0]) / original_displacement[0]);
-    
-    double expected_position = targets[current_target_indexes[0] - 1][1] + r1 * original_displacement[1];
-    error = expected_position - current_position[1];
-
-    // error = max((double)-10.0, min((double)10., error));
-
-    if( error > 1) {
-      speed_adjust[1] = max((double)-10.0, min((double)10., error)) * 0.8;
-      last_error = error;
-      // speed_adjust[0] = -error * 0.1 ;
-      // current_acceleration[1] += speed_adjust[1];
-    }else if(error < -1) {
-      speed_adjust[0] = -max((double)-10.0, min((double)10., error)) * 0.8 ;
-      last_error = error;
-    }
-  }
-
-  double next_speed[2] = {0.0, 0.0};
-  if(current_target_indexes[0] < 4 && current_target_indexes[1] < 4) {
-    next_speed[0] = max_speeds[current_target_indexes[0]][0];
-    next_speed[1] = max_speeds[current_target_indexes[1]][1];
-  }
-
-  double D = 10.0;
-  if (distance_to_go[0] < D  && distance_to_go[0] > 0) {
-    double t = max(0.0, min(distance_to_go[0] / D, 1.0));
-    // target_speeds[0] = target_speeds[0] + (next_speed[0] - target_speeds[0]) * (1 - t) * 0.5  ;
-  }
-
-  if ( distance_to_go[1] < D && distance_to_go[1] >0) {
-    double t = max(0.0, min(distance_to_go[1] / D, 1.0));
-    // target_speeds[1] = target_speeds[1] + (next_speed[1] - target_speeds[1]) * (1 - t)  * 0.5 ;
-  }
-
-  if( has_reached[0] ) {
-    target_speeds[0] = 0.0;
-    speed_adjust[0] = 0.0;
-  }
-  if( has_reached[1] ) {
-    target_speeds[1] = 0.0;
-    speed_adjust[1] = 0.0;
-  }
-  
-  speed_integral[0] += target_speeds[0] - current_speed[0];
-  speed_integral[1] += target_speeds[1] - current_speed[1];
-  speed_integral[0] = max(-10.0, min(10.0, speed_integral[0]));
-  speed_integral[1] = max(-10.0, min(10.0, speed_integral[1]));
-
-  // if(abs(target_speeds[0] - current_speed[0]) < 5) {
-  //   speed_integral[0] = 0.0;
-  // }
-  // if(abs(target_speeds[1] - current_speed[1]) < 5) {
-  //   speed_integral[1] = 0.0;
-  // }
-  
   // speed_adjust[0] = 0.0;
   // speed_adjust[1] = 0.0;
   current_acceleration[0] = (target_speeds[0] + speed_adjust[0] - current_speed[0]) * 5.0;
   current_acceleration[1] = (target_speeds[1] + speed_adjust[1] - current_speed[1]) * 5.0;
   
-  // Last steps push
-  double LD = 40.0;
-  if (distance_to_go[0] < LD  && !has_reached[0]) {
-    current_acceleration[0] = displacement_to_target[0] * 2.0;
-  }
-
-  if (distance_to_go[1] < LD  && !has_reached[1]) {
-    current_acceleration[1] = displacement_to_target[1] * 2.0;
-  }
-
-  // if( has_reached[0] ) {
-  //   current_acceleration[0] = 0.0;
-  //   speed_adjust[0] = 0.0;
-  // }
-  // if( has_reached[1] ) {
-  //   current_acceleration[1] = 0.0;
-  // }
-  // current_acceleration[0] = max(current_acceleration[0], 0.1);
-
   // setSpeedInHz( target_speeds[0], target_speeds[1] );
   // setSpeedInHz( abs(_max_speeds[0]), abs(_max_speeds[1]) );
   arm->moveByAcceleration( current_acceleration[0], current_acceleration[1] );
-
   // do nothing, chasing target
   Serial.println("Target Speed: "+ String(target_speeds[0]) + ", " + String(target_speeds[1]));
 
   Serial.println("Current Speed: "  + String(current_speed[0]) + ", " + String(current_speed[1]));
 
-  Serial.println("Dist to go: "  + String(distance_to_go[0]) + ", " + String(distance_to_go[1]));
   Serial.println("Acceleration: "  + String(current_acceleration[0]) + ", " + String(current_acceleration[1]));
   return 0;
 }
 
 void ArmController::add_point_to_trajectory(double a1, double a2){
+  if(!has_started) {
+    has_started = true;
+    start_time = micros();
+  }
   double _pt[2];
   arm->to_xy(a1, a2, _pt[0], _pt[1]);
   double _lpt[2];
@@ -245,6 +201,7 @@ void ArmController::add_point_to_trajectory(double a1, double a2){
     for (int j = 0; j < 2; j++) {
       keypoints[i][j] = keypoints[i + 1][j];
       targets[i][j] = targets[i + 1][j];
+      time_at_keypoints[i] = time_at_keypoints[i + 1];
     }
   }
 
@@ -300,10 +257,18 @@ void ArmController::add_point_to_trajectory(double a1, double a2){
     max_speeds[3][0] = MAX_SPEED * (1.0 * displacement_to_target[0]) / (abs(displacement_to_target[1]) + 0.001);
     max_speeds[3][1] = MAX_SPEED * (1.0 * displacement_to_target[1]) / (abs(displacement_to_target[1]) + 0.001);
   }
+  int bigger_distance_index = 0;
+  if (abs(displacement_to_target[0]) < abs(displacement_to_target[1])) {
+    bigger_distance_index = 1;
+  }
+  double delta_t = abs(displacement_to_target[bigger_distance_index] / max_speeds[3][bigger_distance_index]);
+  time_at_keypoints[4] = time_at_keypoints[3] + delta_t;
+  max_speeds[3][0] += 3 * target_directions[3][0];
+  max_speeds[3][1] += 3 * target_directions[3][1];
+
   double current_position[2] = {0, 0};
   arm->getJointPositionInSteps( current_position );
   // print stuff for debugging
-
 
   Serial.print("Targets: ");
   for(int i=0; i<5; i++) {
@@ -317,3 +282,4 @@ void ArmController::add_point_to_trajectory(double a1, double a2){
   }
   Serial.println(" ");
 }
+

@@ -421,6 +421,8 @@ void loop() {
         if(points[0] != 0.0) {
           target_q1 = points[1];
           target_q2 = points[2];
+        }else{
+          controller->has_all_targets = true;
         }
         controller->add_point_to_trajectory(target_q1, target_q2);
         // target_q1 = points[current_index][1];

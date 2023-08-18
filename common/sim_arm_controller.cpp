@@ -24,9 +24,6 @@ SimArmController::SimArmController(SimArmModel *arm){
 
   error[0] = 0.0;
   error[1] = 0.0;
-  last_error = 0;
-  speed_integral[0] = 0.0;
-  speed_integral[1] = 0.0;
 }
 
 double SimArmController::mod(double x, double y){
@@ -49,6 +46,7 @@ void SimArmController::reset(){
     targets[i][1] = 0;
     keypoints[i][0] = 0;
     keypoints[i][1] = 0;
+    time_at_keypoints[i] = 0;
   }
   for(int i = 0; i < 4; i++) {
     target_speeds_dir[i] = 0;
@@ -60,7 +58,6 @@ void SimArmController::reset(){
     should_stop[i] = false;
   }
 }
-
 
 int SimArmController::get_current_target_index(double t){
   // Get time index
@@ -299,3 +296,4 @@ void SimArmController::add_point_to_trajectory(double a1, double a2){
   // cout << "Current pos:   " << current_position[0] << ", " << current_position[1] << endl;
   // cout << endl<<endl;
 }
+
