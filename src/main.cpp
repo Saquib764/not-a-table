@@ -365,6 +365,7 @@ void setup() {
 //   {0., 0.4*PI, 0*PI},
 // };
 int current_index = 0;
+int last_time = 0;
 void loop() {
   long current_time = micros();
   // if(has_error) {
@@ -412,6 +413,7 @@ void loop() {
   }
   EVERY_N_MILLISECONDS(4) {
     if(is_printing_design) {
+      Serial.println("Time: " + String( (micros() - last_time)/1000.0 ));
       int should_read_next = controller->follow_trajectory();
       // long int delta[2] = {0, 0};
       // bool should_read_next = move_arm(delta, target_q1, target_q2);
@@ -434,6 +436,7 @@ void loop() {
         target_q1 = 0.0;
         target_q2 = 0.0;
       }
+      last_time = micros();
     }
   }
   // delay(300);
