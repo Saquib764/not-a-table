@@ -285,16 +285,16 @@ void ArmController::add_point_to_trajectory(double a1, double a2){
   arm->getJointPositionInSteps( current_position );
   // print stuff for debugging
 
-  Serial.print("Targets: ");
-  for(int i=0; i<5; i++) {
-    Serial.print("| " + String(targets[i][0]) + ", " + String(targets[i][1]));
-  }
-  Serial.println(" ");
+  // Serial.print("Targets: ");
+  // for(int i=0; i<5; i++) {
+  //   Serial.print("| " + String(targets[i][0]) + ", " + String(targets[i][1]));
+  // }
+  // Serial.println(" ");
   
-  Serial.print("Target Speed: ");
-  for(int i=0; i<4; i++) {
-    Serial.print("| " + String(max_speeds[i][0]) + ", " + String(max_speeds[i][1]));
-  }
-  Serial.println(" ");
+  // Serial.print("Target Speed: ");
+  // for(int i=0; i<4; i++) {
+  //   Serial.print("| " + String(max_speeds[i][0]) + ", " + String(max_speeds[i][1]));
+  // }
+  // Serial.println(" ");
 }
 
