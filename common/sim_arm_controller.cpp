@@ -94,7 +94,7 @@ void SimArmController::get_target_speed(double t, double *target_speed){
   double T = 0.1;
   double delta_t = 0.0;
   if(time_at_keypoints[time_index + 1] - t < T) {
-    delta_t = (time_at_keypoints[time_index + 1] - t) / T;
+    // delta_t = (time_at_keypoints[time_index + 1] - t) / T;
   }
   // Get target speed
   target_speed[0] = max_speeds[time_index][0] * (1 - delta_t) + max_speeds[time_index + 1][0] * delta_t;
@@ -124,19 +124,14 @@ void SimArmController::get_target_position(double t, double *target_position){
 
 int SimArmController::follow_trajectory() {
   double t = (micros() - start_time) / 1000000.0;
-  if (current_target_indexes[0] >= 5 && current_target_indexes[1] >= 5) {
+  int current_target_index = get_current_target_index(t) + 1;
+  if (current_target_index >= 5 && has_all_targets) {
     has_finished = true;
+    target_speeds[0] = 0.0;
+    target_speeds[1] = 0.0;
     return 2;
   }
-  // wait for other index to catch up
-  if(current_target_indexes[0] >= 5) {
-    current_target_indexes[0] = 4;
-  }
-  if(current_target_indexes[1] >= 5) {
-    current_target_indexes[1] = 4;
-  }
 
-  int current_target_index = get_current_target_index(t) + 1;
   if(current_target_index > 2 && !has_all_targets) {
     return 1;
   }
@@ -168,6 +163,18 @@ int SimArmController::follow_trajectory() {
   
   // setSpeedInHz( target_speeds[0], target_speeds[1] );
   // setSpeedInHz( abs(_max_speeds[0]), abs(_max_speeds[1]) );
+  if(current_acceleration[0] > 1000.0) {
+    current_acceleration[0] = 1000.0;
+  }
+  if(current_acceleration[0] < -1000.0) {
+    current_acceleration[0] = -1000.0;
+  }
+  if(current_acceleration[1] > 1000.0) {
+    current_acceleration[1] = 1000.0;
+  }
+  if(current_acceleration[1] < -1000.0) {
+    current_acceleration[1] = -1000.0;
+  }
   arm->moveByAcceleration( current_acceleration[0], current_acceleration[1] );
 
   // do nothing, chasing target

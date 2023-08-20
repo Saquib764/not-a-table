@@ -37,13 +37,13 @@ double MotorModel::getCurrentAcceleration() {
 
 void MotorModel::move() {
   current_speed += current_acceleration * dt * 1000.0;
-  current_speed = round(current_speed);
   if(current_speed > max_speed) {
     current_speed = max_speed;
   }
   if(current_speed < -max_speed) {
     current_speed = -max_speed;
   }
+  current_speed = round(current_speed);
   current_position += round(current_speed * dt);
 }
 

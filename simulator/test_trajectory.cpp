@@ -53,7 +53,7 @@ bool read_line(ifstream& file, double* value) {
 int main() {
     update_time(0.01);
     arm->setup(2, 3);
-    string filename = "../test_designs/yume.thr.txt"; // Replace "example.txt" with the desired file name
+    string filename = "../test_designs/spiral.thr.txt"; // Replace "example.txt" with the desired file name
 
     ofstream fileout( "output.txt" );
     ifstream file(filename);
@@ -80,9 +80,9 @@ int main() {
       arm->getJointSpeedInSteps(v);
       arm->getJointAccelerationInSteps(a);
       // cout << "p: " << ps[0] << " " << ps[1] << " v " << v[0] << " " << v[1] << " a: " << a[0] << " " << a[1] << endl;
-      fileout << ps[0] << " " << ps[1] << " " << v[0] << " " << v[1] << " " << a[0] << " " << a[1] << " " << controller->error[0] << " " << controller->error[1] << endl;
+      fileout << ps[0] << " " << ps[1] << " " << v[0] << " " << v[1] << " " << a[0] << " " << a[1] << " " << controller->error[0] << " " << controller->error[1] << " " <<controller->target_speeds[0] << " " << controller->target_speeds[1] << endl;
       // fileout << ps[0] << " " << ps[1] << " " << v[0] << " " << v[1] << " " << a[0] << " " << a[1] << " " << target_speeds[0] << " " << target_speeds[1] << " " << max_speeds[2][0] << " " << max_speeds[2][1] << " " << error << endl;
-      if(i%5 !=0) {
+      if(i%10 !=0) {
         continue;
       }
       int should_read_next = controller->follow_trajectory();
@@ -97,7 +97,8 @@ int main() {
       }
       if(should_read_next == 2) {
         // design complete
-        cout << "Design complete" << endl;
+        double tt = micros() / 1000000.0;
+        cout << "Design complete. Time: " << tt/60.0 << endl;
         break;
       }
     }
