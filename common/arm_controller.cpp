@@ -5,7 +5,7 @@ ArmController::ArmController(ArmModel *arm){
   this->arm = arm;
 
   // Define constants
-  MAX_SPEED = 600;
+  MAX_SPEED = 400;
   MAX_ACCELERATION = 3 * MAX_SPEED;
   
   has_started = false;
@@ -268,9 +268,9 @@ void ArmController::add_point_to_trajectory(double a1, double a2){
   max_speeds[3][0] = MAX_SPEED * (1.0 * displacement_to_target[0]) / (abs(displacement_to_target[0]) + 0.001);
   max_speeds[3][1] = MAX_SPEED * (1.0 * displacement_to_target[1]) / (abs(displacement_to_target[0]) + 0.001);
 
-  if (abs(max_speeds[3][1]) > MAX_SPEED) {
-    max_speeds[3][0] = MAX_SPEED * (1.0 * displacement_to_target[0]) / (abs(displacement_to_target[1]) + 0.001);
-    max_speeds[3][1] = MAX_SPEED * (1.0 * displacement_to_target[1]) / (abs(displacement_to_target[1]) + 0.001);
+  if (abs(max_speeds[3][1]) > 3 * MAX_SPEED) {
+    max_speeds[3][0] = 3 * MAX_SPEED * (1.0 * displacement_to_target[0]) / (abs(displacement_to_target[1]) + 0.001);
+    max_speeds[3][1] = 3 * MAX_SPEED * (1.0 * displacement_to_target[1]) / (abs(displacement_to_target[1]) + 0.001);
   }
   int bigger_distance_index = 0;
   if (abs(displacement_to_target[0]) < abs(displacement_to_target[1])) {
