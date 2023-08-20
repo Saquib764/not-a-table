@@ -16,6 +16,7 @@ class MotorModel {
 
     void reset(double pos);
     void moveTo(double pos);
+    void stopMove();
 
     void move();
 

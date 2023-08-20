@@ -20,6 +20,7 @@ class ArmModel{
     double steps_per_radian;
     void setSpeedInHz(double speed1, double speed2);
     void moveByAcceleration(double acceleration1, double acceleration2);
+    void stopMove();
 
     void getJointPositionInSteps(double* pos);
     void getJointPositionInRadians(double* pos);

@@ -57,6 +57,11 @@ void ArmModel::moveByAcceleration(double acceleration1, double acceleration2) {
   stepper2->moveByAcceleration(acceleration2 + acceleration1, true);
 }
 
+void ArmModel::stopMove() {
+  stepper1->stopMove();
+  stepper2->stopMove();
+}
+
 void ArmModel::getJointPositionInSteps(double* pos) {
   // Serial.println("get 1 : " + String( stepper2->getCurrentPosition() ));
   

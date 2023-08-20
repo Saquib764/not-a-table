@@ -1,5 +1,6 @@
 #include "arm_controller.h"
 
+double MAX_ACCELERATION = 600.0;
 
 ArmController::ArmController(ArmModel *arm){
   this->arm = arm;
@@ -92,10 +93,10 @@ void ArmController::get_target_speed(double t, double *target_speed){
   }
 
   // Smoothen speed
-  double T = 0.1;
+  double T = 0.05;
   double delta_t = 0.0;
-  if(time_at_keypoints[time_index + 1] - t < T) {
-    // delta_t = (time_at_keypoints[time_index + 1] - t) / T;
+  if(abs(time_at_keypoints[time_index + 1] - t) < T) {
+    delta_t = (time_at_keypoints[time_index + 1] - t) / T;
   }
   // Get target speed
   target_speed[0] = max_speeds[time_index][0] * (1 - delta_t) + max_speeds[time_index + 1][0] * delta_t;
@@ -130,7 +131,7 @@ int ArmController::follow_trajectory() {
     has_finished = true;
     target_speeds[0] = 0.0;
     target_speeds[1] = 0.0;
-    arm->setSpeedInHz( 0.0, 0.0 );
+    arm->stopMove();
     return 2;
   }
   // wait for other index to catch up
@@ -161,27 +162,26 @@ int ArmController::follow_trajectory() {
   error[1] = expected_position[1] - current_position[1];
 
   double speed_adjust[2];
-  speed_adjust[0] = 5 * error[0];
-  speed_adjust[1] = 5 * error[1];
+  speed_adjust[0] = 1 * error[0];
+  speed_adjust[1] = 1 * error[1];
 
 
   // speed_adjust[0] = 0.0;
   // speed_adjust[1] = 0.0;
-  current_acceleration[0] = (target_speeds[0] + speed_adjust[0] - current_speed[0]) * 5.0;
-  current_acceleration[1] = (target_speeds[1] + speed_adjust[1] - current_speed[1]) * 5.0;
+  current_acceleration[0] = (target_speeds[0] + speed_adjust[0] - current_speed[0]) * 7.0;
+  current_acceleration[1] = (target_speeds[1] + speed_adjust[1] - current_speed[1]) * 7.0;
   
-
-  if(current_acceleration[0] > 1000.0) {
-    current_acceleration[0] = 1000.0;
+  if(current_acceleration[0] > MAX_ACCELERATION) {
+    current_acceleration[0] = MAX_ACCELERATION;
   }
-  if(current_acceleration[0] < -1000.0) {
-    current_acceleration[0] = -1000.0;
+  if(current_acceleration[0] < -MAX_ACCELERATION) {
+    current_acceleration[0] = -MAX_ACCELERATION;
   }
-  if(current_acceleration[1] > 1000.0) {
-    current_acceleration[1] = 1000.0;
+  if(current_acceleration[1] > 3*MAX_ACCELERATION) {
+    current_acceleration[1] = 3*MAX_ACCELERATION;
   }
-  if(current_acceleration[1] < -1000.0) {
-    current_acceleration[1] = -1000.0;
+  if(current_acceleration[1] < -3*MAX_ACCELERATION) {
+    current_acceleration[1] = -3*MAX_ACCELERATION;
   }
   
   arm->moveByAcceleration( current_acceleration[0], current_acceleration[1] );

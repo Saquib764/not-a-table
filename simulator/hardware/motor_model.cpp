@@ -35,6 +35,11 @@ double MotorModel::getCurrentAcceleration() {
   return current_acceleration;
 }
 
+void MotorModel::stopMove() {
+  current_acceleration = 0.0;
+  current_speed = 0.0;
+}
+
 void MotorModel::move() {
   current_speed += current_acceleration * dt * 1000.0;
   if(current_speed > max_speed) {
