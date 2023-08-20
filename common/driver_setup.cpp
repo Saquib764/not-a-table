@@ -16,7 +16,7 @@ void setup_driver(TMC2209Stepper &driver, int EN_PIN) {
                                   // UART: Init SW UART (if selected) with default 115200 baudrate
   driver.toff(3);                 // Enables driver in software
   // driver.pdn_disable(true);
-  driver.rms_current(700);        // Set motor RMS current
+  driver.rms_current(2000);        // Set motor RMS current
   driver.microsteps( MICROSTEPS );          // Set microsteps to 1/16th
   // driver.irun(31);
 

@@ -352,7 +352,7 @@ void setup() {
   Serial.println("Server started. Listening on port 80");
 
   // Remove this
-  player.read(SD, "/designs/floral_16_petals.thr.txt");
+  player.read(SD, "/test_designs/square.thr.txt");
   is_printing_design = true;
 
 }

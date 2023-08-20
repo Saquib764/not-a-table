@@ -273,7 +273,6 @@ void ArmModel::home() {
 
 }
 
-
 void ArmModel::to_xy(double a1, double a2, double& x, double& y) {
   x = ARM * cos(a1) + ARM * cos(a1 + a2);
   y = ARM * sin(a1) + ARM * sin(a1 + a2);
