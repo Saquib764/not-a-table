@@ -186,11 +186,11 @@ int ArmController::follow_trajectory() {
   
   arm->moveByAcceleration( current_acceleration[0], current_acceleration[1] );
   // do nothing, chasing target
-  Serial.println("Target Speed: "+ String(target_speeds[0]) + ", " + String(target_speeds[1]));
+  // Serial.println("Target Speed: "+ String(target_speeds[0]) + ", " + String(target_speeds[1]));
 
-  Serial.println("Current Speed: "  + String(current_speed[0]) + ", " + String(current_speed[1]));
+  // Serial.println("Current Speed: "  + String(current_speed[0]) + ", " + String(current_speed[1]));
 
-  Serial.println("Acceleration: "  + String(current_acceleration[0]) + ", " + String(current_acceleration[1]));
+  // Serial.println("Acceleration: "  + String(current_acceleration[0]) + ", " + String(current_acceleration[1]));
   return 0;
 }
 
