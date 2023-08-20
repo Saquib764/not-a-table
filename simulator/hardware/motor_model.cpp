@@ -8,7 +8,7 @@ MotorModel::MotorModel() {
   current_position = 0.0;
   current_speed = 0.0;
   current_acceleration = 0.0;
-  dt = 0.005;
+  dt = 0.001;
 }
 
 void MotorModel::setCurrentPosition(double position) {

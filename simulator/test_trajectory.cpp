@@ -53,7 +53,7 @@ bool read_line(ifstream& file, double* value) {
 int main() {
     update_time(0.01);
     arm->setup(2, 3);
-    string filename = "../test_designs/spiral.thr.txt"; // Replace "example.txt" with the desired file name
+    string filename = "../test_designs/square.thr.txt"; // Replace "example.txt" with the desired file name
 
     ofstream fileout( "output.txt" );
     ifstream file(filename);
@@ -64,7 +64,7 @@ int main() {
     }
 
     double pt[2];
-    int T = 100000;
+    int T = 700000;
 
     double ps[2];
     double v[2];
@@ -72,7 +72,7 @@ int main() {
 
     for(int i = 0; i < T; i++) {
       // cout<< "i: " << i << endl;
-      update_time(0.005);
+      update_time(0.001);
       arm->stepper1->move();
       arm->stepper2->move();
       arm->getJointPositionInRadians(ps);
@@ -82,7 +82,7 @@ int main() {
       // cout << "p: " << ps[0] << " " << ps[1] << " v " << v[0] << " " << v[1] << " a: " << a[0] << " " << a[1] << endl;
       fileout << ps[0] << " " << ps[1] << " " << v[0] << " " << v[1] << " " << a[0] << " " << a[1] << " " << controller->error[0] << " " << controller->error[1] << " " <<controller->target_speeds[0] << " " << controller->target_speeds[1] << endl;
       // fileout << ps[0] << " " << ps[1] << " " << v[0] << " " << v[1] << " " << a[0] << " " << a[1] << " " << target_speeds[0] << " " << target_speeds[1] << " " << max_speeds[2][0] << " " << max_speeds[2][1] << " " << error << endl;
-      if(i%10 !=0) {
+      if(i%4 !=0) {
         continue;
       }
       int should_read_next = controller->follow_trajectory();

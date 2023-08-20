@@ -54,16 +54,16 @@ tv = np.array(values[:, 8:10])
 # e = np.array( values[:, 10:11] ) 
 
 # plt.plot(p[:,0], label="x")
-# plt.plot(v[:,0], label="vx")
+plt.plot(v[:,0], label="vx")
 # plt.plot(a[:,0], label="ax")
 plt.plot(e[:,0], label="ex")
-# plt.plot(tv[:,0], label="tvx")
+plt.plot(tv[:,0], label="tvx")
 
 # plt.plot(p[:,1], label="y")
-# plt.plot(v[:,1], label="vy")
+plt.plot(v[:,1], label="vy")
 # plt.plot(a[:,1], label="ay")
 plt.plot(e[:,1], label="ey")
-# plt.plot(tv[:,1], label="tvy")
+plt.plot(tv[:,1], label="tvy")
 
 # plt.plot(e, label="e")
 
