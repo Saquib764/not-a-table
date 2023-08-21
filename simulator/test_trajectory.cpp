@@ -80,8 +80,7 @@ int main() {
       arm->getJointSpeedInSteps(v);
       arm->getJointAccelerationInSteps(a);
       // cout << "p: " << ps[0] << " " << ps[1] << " v " << v[0] << " " << v[1] << " a: " << a[0] << " " << a[1] << endl;
-      fileout << ps[0] << " " << ps[1] << " " << v[0] << " " << v[1] << " " << a[0] << " " << a[1] << " " << controller->error[0] << " " << controller->error[1] << " " <<controller->target_speeds[0] << " " << controller->target_speeds[1] << endl;
-      // fileout << ps[0] << " " << ps[1] << " " << v[0] << " " << v[1] << " " << a[0] << " " << a[1] << " " << target_speeds[0] << " " << target_speeds[1] << " " << max_speeds[2][0] << " " << max_speeds[2][1] << " " << error << endl;
+      fileout << ps[0] << " " << ps[1] << " " << v[0] << " " << v[1] << " " << a[0] << " " << a[1] << " " << controller->error[0] << " " << controller->error[1] << " " << controller->target_speeds[0] << " " << controller->target_speeds[1] << " " << controller->tracing_error << endl;
       if(i%4 !=0) {
         continue;
       }

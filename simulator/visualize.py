@@ -26,7 +26,7 @@ def read(name):
 values = read("output.txt")
 
 
-if False:
+if True:
   for v in values:
     if np.random.rand(1)[0] > 0.01:
       continue
@@ -50,6 +50,7 @@ v = np.array(values[:, 2:4])
 a = np.array(values[:, 4:6])
 e = np.array(values[:, 6:8]) 
 tv = np.array(values[:, 8:10]) 
+te = np.array(values[:, 10])
 
 # e = np.array( values[:, 10:11] ) 
 
@@ -65,7 +66,7 @@ plt.plot(v[:,1], label="vy")
 plt.plot(e[:,1], label="ey")
 plt.plot(tv[:,1], label="tvy")
 
-# plt.plot(e, label="e")
+plt.plot(te, label="te")
 
 print(p.shape)
 # print(e.sum() / e.shape[0])
