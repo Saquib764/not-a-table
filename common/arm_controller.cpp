@@ -7,7 +7,7 @@ ArmController::ArmController(ArmModel *arm){
   this->arm = arm;
 
   // Define constants
-  MAX_SPEED = 400;
+  MAX_SPEED = 300;
   MAX_ACCELERATION = 3 * MAX_SPEED;
   
   has_started = false;

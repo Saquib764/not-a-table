@@ -393,6 +393,7 @@ void loop() {
       controller->reset();
       arm->setSpeedInHz(1200, 1200);
       Serial.println("Arm is homed");
+      delay(5000);
       return;
     }
     arm->home();
