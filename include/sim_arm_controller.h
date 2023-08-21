@@ -57,6 +57,7 @@ class SimArmController{
     double start_time;
 
     double error[2];
+    double tracing_error;
 };
 
 #endif
