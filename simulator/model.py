@@ -22,12 +22,12 @@ class Model:
 
     image = np.ones((2 * self.cx, 2 * self.cy, 3), np.uint8) * 255
 
-    joint_pos = (self.ARM1 * np.cos(theta1), self.ARM1 * np.sin(theta1))
+    joint_pos = (-self.ARM1 * np.cos(theta1), self.ARM1 * np.sin(theta1))
 
     joint_pos_pixel = (self.cx + self.scale * joint_pos[0], self.cy - self.scale * joint_pos[1])
     cv2.line(image, (int(self.cx), int(self.cy)), (int(joint_pos_pixel[0]), int(joint_pos_pixel[1])), self.arm1_color, 12)
 
-    end_effector = (rho * np.cos(theta), rho * np.sin( theta))
+    end_effector = (-rho * np.cos(theta), rho * np.sin( theta))
     end_effector_pixel = (self.cx + self.scale * end_effector[0], self.cy - self.scale * end_effector[1])
     cv2.line(image, (int(joint_pos_pixel[0]), int(joint_pos_pixel[1])), (int(end_effector_pixel[0]), int(end_effector_pixel[1])), self.arm2_color, 12)
 

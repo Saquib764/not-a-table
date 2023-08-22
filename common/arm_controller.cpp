@@ -5,11 +5,13 @@ double T = 1.2;
 int target_index = 4;
 double last_target_time = 0.0;
 
+double trace_error_sum = 0.0;
+double max_trace_error = 0.0;
 ArmController::ArmController(ArmModel *arm){
   this->arm = arm;
 
   // Define constants
-  MAX_SPEED = 400;
+  MAX_SPEED = 600;
   MAX_ACCELERATION = 2 * MAX_SPEED;
   
   has_started = false;
@@ -94,18 +96,19 @@ void ArmController::get_target_position(double t, double *target_position){
     return;
   }
 
-  double s[2] = {
-    max_speeds[time_index][0] * (t - time_at_keypoints[time_index]),
-    max_speeds[time_index][1] * (t - time_at_keypoints[time_index])
-  };
+  // double s[2] = {
+  //   max_speeds[time_index][0] * (t - time_at_keypoints[time_index]),
+  //   max_speeds[time_index][1] * (t - time_at_keypoints[time_index])
+  // };
 
+  double delta_t = (t - time_at_keypoints[time_index]) / (time_at_keypoints[time_index+1] - time_at_keypoints[time_index]);
   // double s[2] = {
   //   max_speeds[time_index][0] * t,
   //   max_speeds[time_index][1] * t
   // };
   // Get target position
-  target_position[0] = targets[time_index][0] + s[0];
-  target_position[1] = targets[time_index][1] + s[1];
+  target_position[0] = targets[time_index][0] * (1- delta_t)  + targets[time_index + 1][0] * delta_t;
+  target_position[1] = targets[time_index][1] * (1- delta_t)  + targets[time_index + 1][1] * delta_t;
 
   // double s[2] = {0, 0};
   // double delta_t = t - time_at_keypoints[time_index];
@@ -190,7 +193,14 @@ int ArmController::follow_trajectory() {
     target_speeds[0] = 0.0;
     target_speeds[1] = 0.0;
     arm->stopMove();
+    Serial.println("--Done. Trace error: " + String(trace_error_sum));
+    Serial.println("--Max trace error: " + String(max_trace_error));
     return 2;
+  }
+  
+  EVERY_N_MILLISECONDS(20000){
+    Serial.println("Trace error: " + String(trace_error_sum));
+    Serial.println("Max trace error: " + String(max_trace_error));
   }
   double current_position[2] = {0, 0};
   arm->getJointPositionInSteps( current_position );
@@ -256,6 +266,10 @@ int ArmController::follow_trajectory() {
     }
   }
 
+  trace_error_sum += abs(tracing_error * 0.1);
+  if(abs(tracing_error) < 400) {
+    max_trace_error = max(max_trace_error, abs(tracing_error));
+  }
   double speed_adjust[2];
   speed_adjust[0] = 1. * error[0];
   speed_adjust[1] = 1. * error[1];

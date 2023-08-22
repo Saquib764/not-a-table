@@ -26,11 +26,17 @@ def read(name):
 values = read("output.txt")
 
 
-if True:
+l = 0.0
+h = 0.0
+if False:
+  t1 = 0.0
+  t2 = 0.0
   for v in values:
     if np.random.rand(1)[0] > 0.002:
       continue
-    image = m.plot(v[0] + 0. * np.pi / 180, v[1] + 0.0 * np.pi / 180)
+    t1 = v[0] * (1-l) + t1 * l
+    t2 = v[1] * (1-l) + t2 * l
+    image = m.plot(t1 - 0. * np.pi / 180, t2 + h * np.pi / 180)
 
     # if np.random.rand(1)[0] > 0.1:
     #   continue

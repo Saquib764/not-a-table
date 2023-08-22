@@ -3,11 +3,14 @@
 double T = 1.2;
 int target_index = 4;
 double last_target_time = 0.0;
+
+double trace_error_sum = 0.0;
+double max_trace_error = 0.0;
 SimArmController::SimArmController(SimArmModel *arm){
   this->arm = arm;
 
   // Define constants
-  MAX_SPEED = 300;
+  MAX_SPEED = 600;
   MAX_ACCELERATION = 2 * MAX_SPEED;
 
   has_started = false;
@@ -87,18 +90,19 @@ void SimArmController::get_target_position(double t, double *target_position){
     return;
   }
 
-  double s[2] = {
-    max_speeds[time_index][0] * (t - time_at_keypoints[time_index]),
-    max_speeds[time_index][1] * (t - time_at_keypoints[time_index])
-  };
+  // double s[2] = {
+  //   max_speeds[time_index][0] * (t - time_at_keypoints[time_index]),
+  //   max_speeds[time_index][1] * (t - time_at_keypoints[time_index])
+  // };
 
+  double delta_t = (t - time_at_keypoints[time_index]) / (time_at_keypoints[time_index+1] - time_at_keypoints[time_index]);
   // double s[2] = {
   //   max_speeds[time_index][0] * t,
   //   max_speeds[time_index][1] * t
   // };
   // Get target position
-  target_position[0] = targets[time_index][0] + s[0];
-  target_position[1] = targets[time_index][1] + s[1];
+  target_position[0] = targets[time_index][0] * (1- delta_t)  + targets[time_index + 1][0] * delta_t;
+  target_position[1] = targets[time_index][1] * (1- delta_t)  + targets[time_index + 1][1] * delta_t;
 
   // double s[2] = {0, 0};
   // double delta_t = t - time_at_keypoints[time_index];
@@ -183,6 +187,8 @@ int SimArmController::follow_trajectory() {
     target_speeds[0] = 0.0;
     target_speeds[1] = 0.0;
     arm->stopMove();
+    cout<<"Trace error: " << trace_error_sum << endl;
+    cout<<"Max trace error: " << max_trace_error << endl;
     return 2;
   }
 
@@ -234,7 +240,7 @@ int SimArmController::follow_trajectory() {
 
   tracing_error = 0.0;
   double _trace_error = 0.0;
-  if(abs(completed_distance[bigger_distance_index]) > 2) {
+  if(abs(completed_distance[bigger_distance_index]) > 2 && total_displacement[bigger_distance_index]) {
     // compute tracing error
     double ratio = abs(completed_distance[shorter_distance_index] / completed_distance[bigger_distance_index]);
     double expected_ratio = abs(total_displacement[shorter_distance_index] / total_displacement[bigger_distance_index]);
@@ -248,6 +254,11 @@ int SimArmController::follow_trajectory() {
     if(_trace_error < -M) {
       _trace_error = -M;
     }
+  }
+
+  trace_error_sum += abs(tracing_error * 0.1);
+  if(abs(tracing_error) < 400) {
+    max_trace_error = max(max_trace_error, abs(tracing_error));
   }
 
   double speed_adjust[2];
@@ -408,7 +419,6 @@ void SimArmController::add_point_to_trajectory(double a1, double a2){
     max_speeds[MAX_POINTS-2][0] *= delta_t / (T);
     max_speeds[MAX_POINTS-2][1] *= delta_t / (T);
     delta_t = T;
-    cout << "delta_t: " << delta_t << " " << T << " " << S_max << " " << s1 << " " << u << " " << v << endl;
   }
 
   time_at_keypoints[MAX_POINTS-1] = time_at_keypoints[MAX_POINTS-2] + delta_t;
