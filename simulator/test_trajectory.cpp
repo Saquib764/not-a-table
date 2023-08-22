@@ -64,7 +64,7 @@ int main() {
     }
 
     double pt[2];
-    int T = 700000;
+    int T = 10000000;
 
     double ps[2];
     double v[2];

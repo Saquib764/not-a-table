@@ -37,12 +37,12 @@ void SimArmModel::setRandomPosition() {
 
 void SimArmModel::setSpeedInHz(double speed1, double speed2) {
   stepper1->setSpeedInHz(abs(speed1));
-  stepper2->setSpeedInHz(abs(speed2 + speed1));
+  stepper2->setSpeedInHz(abs(3 * speed2 + speed1));
 }
 
 void SimArmModel::moveByAcceleration(double acceleration1, double acceleration2) {
   stepper1->moveByAcceleration(acceleration1, true);
-  stepper2->moveByAcceleration(acceleration2 + acceleration1, true);
+  stepper2->moveByAcceleration(3 * acceleration2 + acceleration1, true);
 }
 
 void SimArmModel::stopMove() {
@@ -51,44 +51,36 @@ void SimArmModel::stopMove() {
 }
 
 void SimArmModel::getJointPositionInSteps(double* pos) {
-  // Serial.println("get 1 : " + String( stepper2->getCurrentPosition() ));
-  
-  // Serial.println("get : " + String(pos[0]));
-
   pos[0] = stepper1->getCurrentPosition();
-  pos[1] = stepper2->getCurrentPosition() - pos[0];
-  
-  // delay(1000);
-  // Serial.println("get 2: " + String(pos[0]));
-
+  pos[1] = (stepper2->getCurrentPosition() - pos[0]) / 3.0;
 }
 
 void SimArmModel::getJointPositionInRadians(double* pos) {
   getJointPositionInSteps(pos);
   pos[0] = pos[0] / (3 * steps_per_radian);
-  pos[1] = pos[1] / (9 * steps_per_radian);
+  pos[1] = pos[1] / (3 * steps_per_radian);
 }
 
 void SimArmModel::getJointSpeedInSteps(double* speed) {
   speed[0] = stepper1->getCurrentSpeedInMilliHz() / 1000.0;
-  speed[1] = stepper2->getCurrentSpeedInMilliHz()/1000.0 - speed[0];
+  speed[1] = (stepper2->getCurrentSpeedInMilliHz()/1000.0 - speed[0]) / 3.0;
 }
 
 void SimArmModel::getJointSpeedInRadians(double *speed) {
   getJointSpeedInSteps(speed);
   speed[0] = speed[0] / (3 * steps_per_radian);
-  speed[1] = speed[1] / (9 * steps_per_radian);
+  speed[1] = speed[1] / (3 * steps_per_radian);
 }
 
 void SimArmModel::getJointAccelerationInSteps(double *acceleration) {
   acceleration[0] = stepper1->getCurrentAcceleration();
-  acceleration[1] = stepper2->getCurrentAcceleration() - acceleration[0];
+  acceleration[1] = (stepper2->getCurrentAcceleration() - acceleration[0]) / 3.0;
 }
 
 void SimArmModel::getJointAccelerationInRadians(double *acceleration) {
   getJointAccelerationInSteps(acceleration);
   acceleration[0] = acceleration[0] / (3 * steps_per_radian);
-  acceleration[1] = acceleration[1] / (9 * steps_per_radian);
+  acceleration[1] = acceleration[1] / (3 * steps_per_radian);
 }
 
 // void SimArmModel::move() {
@@ -102,12 +94,12 @@ bool SimArmModel::isHomed() {
 
 void SimArmModel::moveToPositionInSteps(double pos1, double pos2) {
   stepper1->moveTo(pos1);
-  stepper2->moveTo(pos2 + pos1);
+  stepper2->moveTo( 3 * pos2 + pos1);
 }
 
 void SimArmModel::resetToPositionInSteps(double pos1, double pos2) {
   stepper1->setCurrentPosition(pos1);
-  stepper2->setCurrentPosition(pos2 + pos1);
+  stepper2->setCurrentPosition( 3 * pos2 + pos1);
   setSpeedInHz(0, 0);
 }
 

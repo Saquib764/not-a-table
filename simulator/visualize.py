@@ -28,9 +28,9 @@ values = read("output.txt")
 
 if True:
   for v in values:
-    if np.random.rand(1)[0] > 0.01:
+    if np.random.rand(1)[0] > 0.002:
       continue
-    image = m.plot(v[0], v[1])
+    image = m.plot(v[0] + 0. * np.pi / 180, v[1] + 0.0 * np.pi / 180)
 
     # if np.random.rand(1)[0] > 0.1:
     #   continue
@@ -57,13 +57,13 @@ te = np.array(values[:, 10])
 # plt.plot(p[:,0], label="x")
 plt.plot(v[:,0], label="vx")
 # plt.plot(a[:,0], label="ax")
-plt.plot(e[:,0], label="ex")
+# plt.plot(e[:,0], label="ex")
 plt.plot(tv[:,0], label="tvx")
 
 # plt.plot(p[:,1], label="y")
 plt.plot(v[:,1], label="vy")
 # plt.plot(a[:,1], label="ay")
-plt.plot(e[:,1], label="ey")
+# plt.plot(e[:,1], label="ey")
 plt.plot(tv[:,1], label="tvy")
 
 plt.plot(te, label="te")
