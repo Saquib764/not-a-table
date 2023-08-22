@@ -3,6 +3,7 @@
 #include <cmath> 
 
 void enforce_guards(double *value, double limit);
+double enforce_guards(double value, double limit);
 
 #endif
 

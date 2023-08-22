@@ -254,19 +254,12 @@ int ArmController::follow_trajectory() {
     // compute tracing error
     double ratio = abs(completed_distance[shorter_distance_index] / completed_distance[bigger_distance_index]);
     double expected_ratio = abs(total_displacement[shorter_distance_index] / total_displacement[bigger_distance_index]);
-    tracing_error = (ratio - expected_ratio) * abs(completed_distance[bigger_distance_index]);
+    tracing_error = (ratio - expected_ratio) * 100.0;
 
-    _trace_error = tracing_error;
-    double M = 5;
-    if(_trace_error > M) {
-      _trace_error = M;
-    }
-    if(_trace_error < -M) {
-      _trace_error = -M;
-    }
+    _trace_error = enforce_guards(tracing_error, 80.0);
   }
 
-  trace_error_sum += abs(tracing_error * 0.1);
+  trace_error_sum += abs(tracing_error);
   if(abs(tracing_error) < 400) {
     max_trace_error = max(max_trace_error, abs(tracing_error));
   }
@@ -274,12 +267,16 @@ int ArmController::follow_trajectory() {
   speed_adjust[0] = 1. * error[0];
   speed_adjust[1] = 1. * error[1];
 
-  enforce_guards(speed_adjust, 100.0);
+  trace_error_sum = enforce_guards(trace_error_sum, 50.0);
+
+  _trace_error = _trace_error + 0.1 * trace_error_sum;
+
+  enforce_guards(speed_adjust, 600.0);
 
   // if tracing error < 0, shorter is moving faster than expected
   // cout << tracing_error << endl;
-  speed_adjust[shorter_distance_index] += - 2 * _trace_error * target_directions[current_target_index][shorter_distance_index];
-  speed_adjust[bigger_distance_index] += 2 * _trace_error * target_directions[current_target_index][bigger_distance_index];
+  speed_adjust[shorter_distance_index] += - 0.5 * _trace_error * target_directions[current_target_index][shorter_distance_index];
+  speed_adjust[bigger_distance_index] += 0.5 * _trace_error * target_directions[current_target_index][bigger_distance_index];
 
 
   // speed_adjust[0] = 0.0;
