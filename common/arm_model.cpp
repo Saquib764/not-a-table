@@ -221,11 +221,11 @@ void ArmModel::home() {
       max_hall_value = 0.0;
       if( value > 100.0 ) {
         // get out of hall region
-        setSpeedInHz(0.0, 1000.0);
+        setSpeedInHz(0.0, 400.0);
         moveByAcceleration(0.0, -500.0);
         has_started_in_hall_region = true;
       }else{
-        setSpeedInHz(0.0, 1000.0);
+        setSpeedInHz(0.0, 400.0);
         moveByAcceleration(0.0, 500.0);
       }
     }else if(value < 20 && has_started_in_hall_region) {
@@ -257,7 +257,7 @@ void ArmModel::home() {
         stepper1->stopMove();
         stepper2->stopMove();
 
-        setSpeedInHz(0.0, 300.0);
+        setSpeedInHz(0.0, 100.0);
         delayMicroseconds(1000);
         stepper2->moveTo(position_at_max_speed, true);
         resetToPositionInSteps(0.0, 0.0);
