@@ -146,12 +146,12 @@ void ArmModel::home() {
       max_hall_value = 0.0;
       if( value > 100.0 ) {
         // get out of hall region
-        setSpeedInHz(400.0, 400.0);
-        moveByAcceleration(-500.0, 500.0);
+        setSpeedInHz(400.0, 0.0);
+        moveByAcceleration(-500.0, 0.0);
         has_started_in_hall_region = true;
       }else{
-        setSpeedInHz(400.0, -400.0);
-        moveByAcceleration(500.0, -500.0);
+        setSpeedInHz(400.0, 0.0);
+        moveByAcceleration(500.0, 0.0);
       }
     }else if(value < 20 && has_started_in_hall_region) {
       // got out of hall region
@@ -161,12 +161,12 @@ void ArmModel::home() {
       is_hall_sensor_detected = false;
       position_at_max_speed = 0.0;
       max_hall_value = 0.0;
-      setSpeedInHz(50.0, -50.0);
-      moveByAcceleration(500.0, -500.0);
+      setSpeedInHz(50.0, 0.0);
+      moveByAcceleration(500.0, 0.0);
     } else {
       if( value > 100.0 && !is_hall_sensor_detected ) {
         // slow down when hall sensor is detected
-        setSpeedInHz(50.0, -50.0);
+        setSpeedInHz(50.0, 0.0);
         is_hall_sensor_detected = true;
         position_at_max_speed = pos_steps[0];
         max_hall_value = value;
@@ -182,7 +182,7 @@ void ArmModel::home() {
         stepper1->stopMove();
         stepper2->stopMove();
         
-        setSpeedInHz(100.0, -100.0);
+        setSpeedInHz(100.0, 0.0);
 
         delayMicroseconds(1000);
         stepper1->moveTo(position_at_max_speed, true);
@@ -259,7 +259,7 @@ void ArmModel::home() {
 
         setSpeedInHz(0.0, 100.0);
         delayMicroseconds(1000);
-        stepper2->moveTo(position_at_max_speed, true);
+        stepper2->moveTo(3 * position_at_max_speed, true);
         resetToPositionInSteps(0.0, 0.0);
 
         delayMicroseconds(1000);
