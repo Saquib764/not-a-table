@@ -53,7 +53,7 @@ bool read_line(ifstream& file, double* value) {
 int main() {
     update_time(0.01);
     arm->setup(2, 3);
-    string filename = "../test_designs/square.thr.txt"; // Replace "example.txt" with the desired file name
+    string filename = "../designs/web_spin_reverse.thr.txt"; // Replace "example.txt" with the desired file name
 
     ofstream fileout( "output.txt" );
     ifstream file(filename);
@@ -64,7 +64,7 @@ int main() {
     }
 
     double pt[2];
-    int T = 10000000;
+    int T = 100000;
 
     double ps[2];
     double v[2];

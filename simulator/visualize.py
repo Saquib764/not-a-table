@@ -28,7 +28,7 @@ values = read("output.txt")
 
 l = 0.0
 h = 0.0
-if False:
+if True:
   t1 = 0.0
   t2 = 0.0
   for v in values:
