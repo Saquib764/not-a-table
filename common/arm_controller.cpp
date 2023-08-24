@@ -291,6 +291,11 @@ void ArmController::add_point_to_trajectory(double a1, double a2){
     has_started = true;
     start_time = micros();
   }
+  double dt1 = abs(targets[MAX_POINTS-1][0]-int(3 * a1 * arm->steps_per_radian));
+  double dt2 = abs(targets[MAX_POINTS-1][1]-int(3 * a2 * arm->steps_per_radian));
+  if(dt1 < 50 && dt2 < 50) {
+    return;
+  }
   // target_index--;
   // double t = (micros() - start_time) / 1000000.0;
   // int current_target_index = get_current_target_index(t) + 1;

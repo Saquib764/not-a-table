@@ -166,7 +166,8 @@ void SimArmController::get_target_acceleration(double *positions, double *speeds
   accelerations[1] = (next_speeds[1] - speeds[1]) / dt;
 
   enforce_guards(accelerations, MAX_ACCELERATION);
-  cout << "acc: " << accelerations[0] << ", " << accelerations[1] << endl;
+  // cout << "acc: " << accelerations[0] << ", " << accelerations[1] << endl;
+  // cout << "speed: " << speeds[0] << ", " << speeds[1] << endl;
 }
 
 int SimArmController::follow_trajectory() {
@@ -274,17 +275,18 @@ int SimArmController::follow_trajectory() {
 
   // do nothing, chasing target
   // cout << "error: " << error[0] << ", " << error[1] << " " << t << " " << time_to_target[current_target_index-1] << endl;
-  cout << "Current pos:   " << current_position[0] << ", " << current_position[1] << endl;
-  // cout << "Time: " << t << endl;
-  cout <<"Target Speed: " << target_speeds[0] << ", " <<target_speeds[1] << endl;
+  // cout << "Current pos:   " << current_position[0] << ", " << current_position[1] << endl;
+  // // cout << "Time: " << t << endl;
+  // cout <<"Target Speed: " << target_speeds[0] << ", " <<target_speeds[1] << endl;
+  // cout <<"keypoint: " << keypoints[current_target_index][0] << ", " << keypoints[current_target_index][1] << endl;
 
-  cout << "Targets: " << targets[current_target_index][0] << ", " << targets[current_target_index][1] << endl;
+  // cout << "Targets: " << targets[current_target_index][0] << ", " << targets[current_target_index][1] << endl;
 
-  cout <<"Current Speed: " << current_speed[0] << ", " << current_speed[1] << endl;
+  // cout <<"Current Speed: " << current_speed[0] << ", " << current_speed[1] << endl;
 
-  cout <<"Dist to go: " << distance_to_go[0] << ", " << distance_to_go[1] << endl;
-  // cout << "Target index: " << target_index << endl;
-  cout <<"Acceleration: " << current_acceleration[0] << ", " << current_acceleration[1] << endl << endl;
+  // cout <<"Dist to go: " << distance_to_go[0] << ", " << distance_to_go[1] << endl;
+  // // cout << "Target index: " << target_index << endl;
+  // cout <<"Acceleration: " << current_acceleration[0] << ", " << current_acceleration[1] << endl << endl;
   return 0;
 }
 
@@ -292,6 +294,11 @@ void SimArmController::add_point_to_trajectory(double a1, double a2){
   if(!has_started) {
     has_started = true;
     start_time = micros();
+  }
+  double dt1 = abs(targets[MAX_POINTS-1][0]-int(3 * a1 * arm->steps_per_radian));
+  double dt2 = abs(targets[MAX_POINTS-1][1]-int(3 * a2 * arm->steps_per_radian));
+  if(dt1 < 50 && dt2 < 50) {
+    return;
   }
   target_index--;
   // double t = (micros() - start_time) / 1000000.0;
@@ -421,6 +428,12 @@ void SimArmController::add_point_to_trajectory(double a1, double a2){
   double current_position[2] = {0, 0};
   arm->getJointPositionInSteps( current_position );
   // print stuff for debugging
+
+  cout <<"Keypoint: ";
+  for(int i=0; i<MAX_POINTS; i++) {
+    cout << " |" << i <<"| " << keypoints[i][0] << ", " << keypoints[i][1];
+  }
+  cout << endl;
 
   cout << "Targets: ";
   for(int i=0; i<MAX_POINTS; i++) {
