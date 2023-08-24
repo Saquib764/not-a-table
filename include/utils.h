@@ -5,5 +5,7 @@
 void enforce_guards(double *value, double limit);
 double enforce_guards(double value, double limit);
 
+int sign(double value);
+
 #endif
 
