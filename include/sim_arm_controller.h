@@ -41,6 +41,7 @@ class SimArmController{
     // Define constants
     int MAX_SPEED;
     int MAX_ACCELERATION;
+    double SPEED_LIMIT_RATIO;
 
     bool has_started;
     bool has_finished;

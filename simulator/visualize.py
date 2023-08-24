@@ -72,7 +72,7 @@ plt.plot(v[:,1], label="vy")
 # plt.plot(e[:,1], label="ey")
 plt.plot(tv[:,1], label="tvy")
 
-plt.plot(te, label="te")
+# plt.plot(te, label="te")
 
 print(p.shape)
 # print(e.sum() / e.shape[0])
