@@ -71,20 +71,46 @@ void ArmController::reset(){
   }
 }
 
+void ArmController::get_goal(double *goal){
+  double D = MAX_SPEED;
+  double current_position[2] = {0, 0};
+  arm->getJointPositionInSteps( current_position );
+  int current_target_index = get_current_target_index(0) + 1;
+
+  goal[0] = targets[target_index][0] - current_position[0];
+  goal[1] = targets[target_index][1] - current_position[1];
+
+  if(abs(goal[0]) < D * 0.2 && abs(goal[1]) < D * 0.2) {
+    // find goal in the next segment
+    target_index = target_index + 1;
+    goal[0] = targets[target_index][0] - current_position[0];
+    goal[1] = targets[target_index][1] - current_position[1];
+  }
+}
+
 int ArmController::get_current_target_index(double t){
-  // return target_index;
-  // Get time index
-  int time_index = -1;
-  for(int i = 0; i < MAX_POINTS-1; i++) {
-    if(time_at_keypoints[i] <= t && t < time_at_keypoints[i + 1]) {
-      time_index = i;
-      break;
+  double current_position[2] = {0, 0};
+  arm->getJointPositionInSteps( current_position );
+
+  int cur_pos = 9;
+  int closest_distance = 1000000;
+  for(int i = MAX_POINTS - 3; i > 0; i--) {
+    double distance = abs(targets[i][0] - current_position[0]) + abs(targets[i][1] - current_position[1]);
+    if( distance < closest_distance) {
+      cur_pos = i;
+      closest_distance = distance;
     }
   }
-  if(time_index == -1) {
-    time_index = MAX_POINTS-1;
+  int d11 = sign(targets[cur_pos][0] - current_position[0]);
+  int d12 = sign(targets[cur_pos][1] - current_position[1]);
+  int d21 = sign(targets[cur_pos+1][0] - current_position[0]);
+  int d22 = sign(targets[cur_pos+1][1] - current_position[1]);
+
+  if(d11 * d21 <= 0 || d12 * d22 <= 0) {
+    cur_pos = cur_pos + 1;
   }
-  return time_index;
+
+  return cur_pos - 1;
 }
 
 void ArmController::get_target_position(double t, double *target_position){
@@ -95,60 +121,29 @@ void ArmController::get_target_position(double t, double *target_position){
     target_position[1] = targets[time_index][1] ;
     return;
   }
-
-  // double s[2] = {
-  //   max_speeds[time_index][0] * (t - time_at_keypoints[time_index]),
-  //   max_speeds[time_index][1] * (t - time_at_keypoints[time_index])
-  // };
-
-  double delta_t = (t - time_at_keypoints[time_index]) / (time_at_keypoints[time_index+1] - time_at_keypoints[time_index]);
-  // double s[2] = {
-  //   max_speeds[time_index][0] * t,
-  //   max_speeds[time_index][1] * t
-  // };
-  // Get target position
-  target_position[0] = targets[time_index][0] * (1- delta_t)  + targets[time_index + 1][0] * delta_t;
-  target_position[1] = targets[time_index][1] * (1- delta_t)  + targets[time_index + 1][1] * delta_t;
-
-  // double s[2] = {0, 0};
-  // double delta_t = t - time_at_keypoints[time_index];
-
-  // double t1 = max(T, delta_t);
-  // double t2 = max(0.0, delta_t - t);
-
-  // target_position[0] = targets[time_index][0] + (max_speeds[time_index-1][0] * t1 - 0.5 * MAX_ACCELERATION * t1 * t1) + max_speeds[time_index][0] * t2;
-  // target_position[1] = targets[time_index][1] + (max_speeds[time_index-1][1] * t1 - 0.5 * MAX_ACCELERATION * t1 * t1) + max_speeds[time_index][1] * t2;
 }
 
 void ArmController::get_target_speed(double t, double *speeds){
   // Get time index
-  int time_index = get_current_target_index(t);
-  speeds[0] = max_speeds[time_index][0];
-  speeds[1] = max_speeds[time_index][1];
-  if(time_index == MAX_POINTS - 1) {
-    return;
-  }
+  int current_target_index = get_current_target_index(0) + 1;
+  double D = MAX_SPEED;
+  double goal[2] = {0, 0};
+  get_goal(goal);
 
-  // Smoothen speed
-  double delta_t = t - time_at_keypoints[time_index];
-  if(time_at_keypoints[time_index + 1] - t < T/2) {
-    delta_t = 0.5 - (time_at_keypoints[time_index + 1] - t) / T;
-    speeds[0] = max_speeds[time_index][0] * (1 - delta_t) + max_speeds[time_index + 1][0] * delta_t;
-    speeds[1] = max_speeds[time_index][1] * (1 - delta_t) + max_speeds[time_index + 1][1] * delta_t;
-  }
-  if(t - time_at_keypoints[time_index] < T/2) {
-    delta_t = (t - time_at_keypoints[time_index] + T/2) / T;
-    speeds[0] = max_speeds[time_index][0] *  delta_t + max_speeds[time_index - 1][0] * (1 - delta_t);
-    speeds[1] = max_speeds[time_index][1] * delta_t + max_speeds[time_index - 1][1] * (1 - delta_t);
-  }
+  double r[2] = {
+    goal[0]/D, goal[1]/D
+  };
 
-  // go to target speed at start
-  // if( delta_t < T) {
-  //   double acceleration[2] = {0, 0};
-  //   get_target_acceleration(t, acceleration);
-  //   speeds[0] = max_speeds[time_index - 1][0] + acceleration[0] * delta_t;
-  //   speeds[1] = max_speeds[time_index - 1][1] + acceleration[1] * delta_t;
-  // }
+  double r1 =  r[0] * r[0] + r[1] * r[1];
+  r1 = min(r1, 1.0);
+
+  double UPDATED_MAX_SPEED = MAX_SPEED * r1;
+  speeds[0] = UPDATED_MAX_SPEED * goal[0] / (abs(goal[0]) + 0.001);
+  speeds[1] = UPDATED_MAX_SPEED * goal[1] / (abs(goal[0]) + 0.001);
+  if(abs(speeds[1]) > UPDATED_MAX_SPEED) {
+    speeds[0] = UPDATED_MAX_SPEED * goal[0] / (abs(goal[1]) + 0.001);
+    speeds[1] = UPDATED_MAX_SPEED * goal[1] / (abs(goal[1]) + 0.001);
+  }
 }
 
 void ArmController::get_target_acceleration(double t, double *accelerations) {
@@ -167,22 +162,6 @@ void ArmController::get_target_acceleration(double t, double *accelerations) {
     accelerations[0] = (max_speeds[time_index][0] - max_speeds[time_index - 1][0]) / T ;
     accelerations[1] = (max_speeds[time_index][1] - max_speeds[time_index - 1][1]) / T ;
   }
-  // go to target speed at start
-  // if(t - time_at_keypoints[time_index] < T) {
-  //   accelerations[0] = (max_speeds[time_index][0] - max_speeds[time_index - 1][0]) / T ;
-  //   accelerations[1] = (max_speeds[time_index][1] - max_speeds[time_index - 1][1]) / T ;
-  // }
-
-  // double T = 0.2;
-  // // if(time_to_target[time_index] - t < T/2) {
-  // //   accelerations[0] = (max_speeds[time_index +1][0] - max_speeds[time_index][0]) / T ;
-  // //   accelerations[1] = (max_speeds[time_index +1][1] - max_speeds[time_index][1]) / T ;
-  // // }
-  // if(t< T) {
-  //   accelerations[0] = (max_speeds[time_index][0] - max_speeds[time_index - 1][0]) / T ;
-  //   accelerations[1] = (max_speeds[time_index][1] - max_speeds[time_index - 1][1]) / T ;
-  // }
-  // enforce_guards(accelerations, MAX_ACCELERATION);
 }
 
 int ArmController::follow_trajectory() {
@@ -264,8 +243,8 @@ int ArmController::follow_trajectory() {
     max_trace_error = max(max_trace_error, abs(tracing_error));
   }
   double speed_adjust[2];
-  speed_adjust[0] = 1. * error[0];
-  speed_adjust[1] = 1. * error[1];
+  speed_adjust[0] = 0. * error[0];
+  speed_adjust[1] = 0. * error[1];
 
   trace_error_sum = enforce_guards(trace_error_sum, 50.0);
 
@@ -279,10 +258,10 @@ int ArmController::follow_trajectory() {
   speed_adjust[bigger_distance_index] += 0.5 * _trace_error * target_directions[current_target_index][bigger_distance_index];
 
 
-  // speed_adjust[0] = 0.0;
-  // speed_adjust[1] = 0.0;
-  current_acceleration[0] = (target_speeds[0] - current_speed[0]) * 1.0 + speed_adjust[0] + expected_acceleration[0];
-  current_acceleration[1] = (target_speeds[1] - current_speed[1]) * 1.0 + speed_adjust[1] + expected_acceleration[1];
+  speed_adjust[0] = 0.0;
+  speed_adjust[1] = 0.0;
+  current_acceleration[0] = (target_speeds[0] - current_speed[0]) * 1.0 + speed_adjust[0] + 0.0 * expected_acceleration[0];
+  current_acceleration[1] = (target_speeds[1] - current_speed[1]) * 1.0 + speed_adjust[1] + 0.0 * expected_acceleration[1];
   
   enforce_guards(current_acceleration, MAX_ACCELERATION);
 

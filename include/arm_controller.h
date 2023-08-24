@@ -34,6 +34,7 @@ class ArmController{
     int follow_trajectory();
     void add_point_to_trajectory(double a1, double a2);
 
+    void get_goal(double *goal);
     int get_current_target_index(double t);
     void get_target_speed(double t, double *speeds);
     void get_target_position(double t, double *target_positions);
