@@ -81,13 +81,13 @@ void ArmController::get_goal(double *goal) {
   goal[0] = targets[current_target_index][0] - current_position[0];
   goal[1] = targets[current_target_index][1] - current_position[1];
 
-  double goal_switching_ratio = 0.6;
+  double d = D * 0.6;
 
   if(should_stop[current_target_index + 1]) {
-    goal_switching_ratio = 0.4;
+    d = 20;
   }
-
-  if(abs(goal[0]) < D * goal_switching_ratio && abs(goal[1]) < D * goal_switching_ratio) {
+  
+  if(abs(goal[0]) < d && abs(goal[1]) < d) {
     // find goal in the next segment
     current_target_index = current_target_index + 1;
     goal[0] = targets[current_target_index][0] - current_position[0];
@@ -146,7 +146,8 @@ void ArmController::get_target_speed(double t, double *speeds){
   double r1 =  r[0] * r[0] + r[1] * r[1];
   r1 = min(r1, 1.0);
 
-  SPEED_LIMIT_RATIO = SPEED_LIMIT_RATIO * 0.5  + r1 * (1-0.5);
+  SPEED_LIMIT_RATIO = SPEED_LIMIT_RATIO * 0.2  + r1 * (1-0.8);
+  SPEED_LIMIT_RATIO = 0.2  + SPEED_LIMIT_RATIO * 0.8;
 
   double UPDATED_MAX_SPEED = MAX_SPEED * SPEED_LIMIT_RATIO;
   speeds[0] = UPDATED_MAX_SPEED * goal[0] / (abs(goal[0]) + 0.001);
