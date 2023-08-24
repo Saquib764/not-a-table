@@ -28,7 +28,7 @@ values = read("output.txt")
 
 l = 0.0
 h = 0.0
-if False:
+if True:
   t1 = 0.0
   t2 = 0.0
   for v in values:
@@ -72,7 +72,7 @@ plt.plot(v[:,1], label="vy")
 # plt.plot(e[:,1], label="ey")
 plt.plot(tv[:,1], label="tvy")
 
-plt.plot(te, label="te")
+# plt.plot(te, label="te")
 
 print(p.shape)
 # print(e.sum() / e.shape[0])
