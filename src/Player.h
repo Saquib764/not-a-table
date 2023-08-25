@@ -17,7 +17,7 @@ class Player {
     String get_next_design(fs::FS &fs);
     bool read(fs::FS &fs);
     void read(fs::FS &fs, String path);
-    double * next_line(fs::FS &fs);
+    void next_line(fs::FS &fs, double *thetas);
     String path;
     File file;
     File tracker;

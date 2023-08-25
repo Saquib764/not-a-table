@@ -11,7 +11,7 @@ m = Model(ARM, ARM)
 
 
 def read(name, save=False):
-  with open(f'../test_thr/{name}', 'r') as f:
+  with open(f'../designs_thr/{name}', 'r') as f:
     gcode = f.readlines()
 
   theta_rho = []
@@ -99,11 +99,11 @@ def plot(theta12):
 
 
 # Get file names that has .thr from folder ../designs
-files = [f for f in os.listdir('../test_thr') if f.endswith('.thr')]
-files = ['spiral_finer_rotated.thr']
+files = [f for f in os.listdir('../designs_thr') if f.endswith('.thr')]
+files = ['web_spin_reverse.thr']
 for file in files:
   print(file)
-  theta12 = read(file, True)
+  theta12 = read(file, False)
   plot(theta12)
 
 

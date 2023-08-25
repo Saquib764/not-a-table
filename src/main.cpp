@@ -262,6 +262,7 @@ void setup_routing(WebServer& server) {
   server.on("/add_to_playlist", HTTP_OPTIONS, handle_status_check);
 }
 
+double points[3] = {0.0, 0.0, 0.0};
 void setup() {
   preferences.begin("yume", false); 
   setup_led();
@@ -419,7 +420,7 @@ void loop() {
       // long int delta[2] = {0, 0};
       // bool should_read_next = move_arm(delta, target_q1, target_q2);
       if(should_read_next == 1) {
-        double* points = player.next_line(SD);
+        player.next_line(SD, points);
         if(points[0] != 0.0) {
           target_q1 = points[1];
           target_q2 = points[2];

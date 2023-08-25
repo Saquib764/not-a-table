@@ -106,8 +106,7 @@ bool Player::read(fs::FS &fs) {
   return false;
 }
 
-double * Player::next_line(fs::FS &fs) {
-  double* thetas = new double[3];
+void Player::next_line(fs::FS &fs, double *thetas) {
   while(this->file.available()){
     this->line_number++;
     String line = file.readStringUntil('\n');
@@ -131,11 +130,10 @@ double * Player::next_line(fs::FS &fs) {
     // Point to previous line and replace it with the current line
     this->tracker.seek(this->tracker.position() - 1);
     this->tracker.println(this->line_number);
-    return thetas;
+    return;
   }
   Serial.println("End of design file.");
   thetas[0] = 0.0;
   this->tracker.close();
   this->file.close();
-  return thetas;
 }
