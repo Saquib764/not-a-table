@@ -12,7 +12,7 @@ ArmController::ArmController(ArmModel *arm){
   this->arm = arm;
 
   // Define constants
-  MAX_SPEED = 200;
+  MAX_SPEED = 400;
   MAX_ACCELERATION = 2000;
   
   has_started = false;
@@ -182,14 +182,12 @@ int ArmController::follow_trajectory() {
     target_speeds[0] = 0.0;
     target_speeds[1] = 0.0;
     arm->stopMove();
-    Serial.println("--Done. Trace error: " + String(trace_error_sum));
-    Serial.println("--Max trace error: " + String(max_trace_error));
     return 2;
   }
   
   EVERY_N_MILLISECONDS(20000){
-    Serial.println("Trace error: " + String(trace_error_sum));
-    Serial.println("Max trace error: " + String(max_trace_error));
+    // Serial.println("Trace error: " + String(trace_error_sum));
+    // Serial.println("Max trace error: " + String(max_trace_error));
   }
 
   double total_displacement[2] = {
@@ -200,10 +198,6 @@ int ArmController::follow_trajectory() {
     (targets[current_target_index][0] - current_position[0]) * target_directions[current_target_index][0],
     (targets[current_target_index][1] - current_position[1]) * target_directions[current_target_index][1]
   };
-  // if(distance_to_go[0] < 2 && distance_to_go[1] < 2 ) {
-  //   last_target_time = t;
-  //   target_index ++;
-  // }
 
   if(current_target_index > 2 && !has_all_targets) {
     return 1;
@@ -224,54 +218,15 @@ int ArmController::follow_trajectory() {
   error[0] = expected_position[0] - current_position[0];
   error[1] = expected_position[1] - current_position[1];
 
-  int bigger_distance_index = 0;
-  int shorter_distance_index = 1;
-  if(abs(target_speeds[0]) < abs(target_speeds[1])) {
-    bigger_distance_index = 1;
-    shorter_distance_index = 0;
-  }
   double completed_distance[2] = {
     current_position[0] - targets[current_target_index - 1][0],
     current_position[1] - targets[current_target_index - 1][1]
   };
 
-  tracing_error = 0.0;
-  double _trace_error = 0.0;
-  if(abs(completed_distance[bigger_distance_index]) > 2) {
-    // compute tracing error
-    double ratio = abs(completed_distance[shorter_distance_index] / completed_distance[bigger_distance_index]);
-    double expected_ratio = abs(total_displacement[shorter_distance_index] / total_displacement[bigger_distance_index]);
-    tracing_error = (ratio - expected_ratio) * 100.0;
-
-    _trace_error = enforce_guards(tracing_error, 80.0);
-  }
-
-  trace_error_sum += abs(tracing_error);
-  if(abs(tracing_error) < 400) {
-    max_trace_error = max(max_trace_error, abs(tracing_error));
-  }
-  double speed_adjust[2];
-  speed_adjust[0] = 0. * error[0];
-  speed_adjust[1] = 0. * error[1];
-
-  trace_error_sum = enforce_guards(trace_error_sum, 50.0);
-
-  _trace_error = _trace_error + 0.1 * trace_error_sum;
-
-  enforce_guards(speed_adjust, 600.0);
-
-  // if tracing error < 0, shorter is moving faster than expected
-  // cout << tracing_error << endl;
-  speed_adjust[shorter_distance_index] += - 6 * _trace_error * target_directions[current_target_index][shorter_distance_index];
-  speed_adjust[bigger_distance_index] += 6 * _trace_error * target_directions[current_target_index][bigger_distance_index];
-
-
-  speed_adjust[0] = 0.0;
-  speed_adjust[1] = 0.0;
   // expected_acceleration[0] = 0.0;
   // expected_acceleration[1] = 0.0;
-  current_acceleration[0] = (target_speeds[0] - current_speed[0]) * .0 + speed_adjust[0] + expected_acceleration[0];
-  current_acceleration[1] = (target_speeds[1] - current_speed[1]) * .0 + speed_adjust[1] + expected_acceleration[1];
+  current_acceleration[0] = (target_speeds[0] - current_speed[0]) * .0 + expected_acceleration[0];
+  current_acceleration[1] = (target_speeds[1] - current_speed[1]) * .0 + expected_acceleration[1];
 
   enforce_guards(current_acceleration, MAX_ACCELERATION);
 
@@ -381,41 +336,39 @@ void ArmController::add_point_to_trajectory(double a1, double a2){
     max_speeds[MAX_POINTS-2][1] = MAX_SPEED * (1.0 * displacement_to_target[1]) / (abs(displacement_to_target[1]) + 0.001);
   }
 
-  if(should_stop[MAX_POINTS-2]) {
-    // change speed of previous point by half
-    if((max_speeds[MAX_POINTS-3][0] * max_speeds[MAX_POINTS-2][0] < 0 && abs(max_speeds[MAX_POINTS-3][0]) > 100)
-      || (max_speeds[MAX_POINTS-3][1] * max_speeds[MAX_POINTS-2][1] < 0 && abs(max_speeds[MAX_POINTS-3][1]) > 100)) {
-      max_speeds[MAX_POINTS-3][0] = max_speeds[MAX_POINTS-3][0] * 0.5;
-      max_speeds[MAX_POINTS-3][1] = max_speeds[MAX_POINTS-3][1] * 0.5;
-      time_at_keypoints[MAX_POINTS-2] =  time_at_keypoints[MAX_POINTS-3] + 2 * (time_at_keypoints[MAX_POINTS-2] - time_at_keypoints[MAX_POINTS-3]);
-    }
-  }
+  // if(should_stop[MAX_POINTS-2]) {
+  //   // change speed of previous point by half
+  //   if((max_speeds[MAX_POINTS-3][0] * max_speeds[MAX_POINTS-2][0] < 0 && abs(max_speeds[MAX_POINTS-3][0]) > 100)
+  //     || (max_speeds[MAX_POINTS-3][1] * max_speeds[MAX_POINTS-2][1] < 0 && abs(max_speeds[MAX_POINTS-3][1]) > 100)) {
+  //     max_speeds[MAX_POINTS-3][0] = max_speeds[MAX_POINTS-3][0] * 0.5;
+  //     max_speeds[MAX_POINTS-3][1] = max_speeds[MAX_POINTS-3][1] * 0.5;
+  //     time_at_keypoints[MAX_POINTS-2] =  time_at_keypoints[MAX_POINTS-3] + 2 * (time_at_keypoints[MAX_POINTS-2] - time_at_keypoints[MAX_POINTS-3]);
+  //   }
+  // }
 
-  if(should_stop[MAX_POINTS-2]) {
-    if((max_speeds[MAX_POINTS-3][0] * max_speeds[MAX_POINTS-2][0] < 0 && abs(max_speeds[MAX_POINTS-2][0]) > 100)
-      || (max_speeds[MAX_POINTS-3][1] * max_speeds[MAX_POINTS-2][1] < 0 && abs(max_speeds[MAX_POINTS-2][1]) > 100)) {
-      max_speeds[MAX_POINTS-2][0] = max_speeds[MAX_POINTS-2][0] * 0.5;
-      max_speeds[MAX_POINTS-2][1] = max_speeds[MAX_POINTS-2][1] * 0.5;
-    }
-  }
+  // if(should_stop[MAX_POINTS-2]) {
+  //   if((max_speeds[MAX_POINTS-3][0] * max_speeds[MAX_POINTS-2][0] < 0 && abs(max_speeds[MAX_POINTS-2][0]) > 100)
+  //     || (max_speeds[MAX_POINTS-3][1] * max_speeds[MAX_POINTS-2][1] < 0 && abs(max_speeds[MAX_POINTS-2][1]) > 100)) {
+  //     max_speeds[MAX_POINTS-2][0] = max_speeds[MAX_POINTS-2][0] * 0.5;
+  //     max_speeds[MAX_POINTS-2][1] = max_speeds[MAX_POINTS-2][1] * 0.5;
+  //   }
+  // }
 
-  double v = max_speeds[MAX_POINTS-2][bigger_distance_index];
-  double a = (v - u) / T;
+  // double v = max_speeds[MAX_POINTS-2][bigger_distance_index];
+  // double a = (v - u) / T;
 
-  double s1 = u * T + 0.5 * a * T * T;
+  // double s1 = u * T + 0.5 * a * T * T;
 
-  double S_max = displacement_to_target[bigger_distance_index];
+  // double S_max = displacement_to_target[bigger_distance_index];
 
-  double delta_t = abs( (S_max) / v);  if(delta_t < T) {
-    max_speeds[MAX_POINTS-2][0] *= delta_t / (T);
-    max_speeds[MAX_POINTS-2][1] *= delta_t / (T);
-    delta_t = T;
-    cout << "delta_t: " << delta_t << " " << T << " " << S_max << " " << s1 << " " << u << " " << v << endl;
-  }
+  // double delta_t = abs( (S_max) / v);  if(delta_t < T) {
+  //   max_speeds[MAX_POINTS-2][0] *= delta_t / (T);
+  //   max_speeds[MAX_POINTS-2][1] *= delta_t / (T);
+  //   delta_t = T;
+  // }
 
-
-  time_at_keypoints[MAX_POINTS-1] = time_at_keypoints[MAX_POINTS-2] + delta_t;
-  time_to_target[MAX_POINTS-2] = delta_t;
+  // time_at_keypoints[MAX_POINTS-1] = time_at_keypoints[MAX_POINTS-2] + delta_t;
+  // time_to_target[MAX_POINTS-2] = delta_t;
 
   // max_speeds[MAX_POINTS-2][0] += 3 * target_directions[MAX_POINTS-2][0];
   // max_speeds[MAX_POINTS-2][1] += 3 * target_directions[MAX_POINTS-2][1];

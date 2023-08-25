@@ -100,7 +100,7 @@ def plot(theta12):
 
 # Get file names that has .thr from folder ../designs
 files = [f for f in os.listdir('../test_thr') if f.endswith('.thr')]
-files = ['spiral_fine.thr']
+files = ['spiral_finer_rotated.thr']
 for file in files:
   print(file)
   theta12 = read(file, True)

@@ -352,7 +352,7 @@ void setup() {
   Serial.println("Server started. Listening on port 80");
 
   // Remove this
-  player.read(SD, "/test_designs/square.thr.txt");
+  player.read(SD, "/test_designs/spiral_finer.thr.txt");
   is_printing_design = true;
 
 }
@@ -443,7 +443,7 @@ void loop() {
   // delay(300);
   // Serial.print("Time for servo run: ");
   EVERY_N_MILLISECONDS(20070){
-    Serial.println("Time: " + String(micros() - current_time));
+    // Serial.println("Time: " + String(micros() - current_time));
   }
   // Serial.print("  ");
 }

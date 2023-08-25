@@ -51,59 +51,59 @@ bool read_line(ifstream& file, double* value) {
 }
 
 int main() {
-    update_time(0.01);
-    arm->setup(2, 3);
-    string filename = "../test_designs/spiral_fine.thr.txt"; // Replace "example.txt" with the desired file name
+  update_time(0.01);
+  arm->setup(2, 3);
+  string filename = "../test_designs/spiral_fine.thr.txt"; // Replace "example.txt" with the desired file name
 
-    ofstream fileout( "output.txt" );
-    ifstream file(filename);
+  ofstream fileout( "output.txt" );
+  ifstream file(filename);
 
-    if (!file.is_open()) {
-        cerr << "Error opening the file: " << filename << endl;
-        return 1;
+  if (!file.is_open()) {
+      cerr << "Error opening the file: " << filename << endl;
+      return 1;
+  }
+
+  double pt[2];
+  int T = 500000;
+
+  double ps[2];
+  double v[2];
+  double a[2];
+
+  for(int i = 0; i < T; i++) {
+    // cout<< "i: " << i << endl;
+    update_time(0.001);
+    arm->stepper1->move();
+    arm->stepper2->move();
+    arm->getJointPositionInRadians(ps);
+    // arm->getJointPositionInSteps(ps);
+    arm->getJointSpeedInSteps(v);
+    arm->getJointAccelerationInSteps(a);
+    // cout << "p: " << ps[0] << " " << ps[1] << " v " << v[0] << " " << v[1] << " a: " << a[0] << " " << a[1] << endl;
+    fileout << ps[0] << " " << ps[1] << " " << v[0] << " " << v[1] << " " << a[0] << " " << a[1] << " " << controller->error[0] << " " << controller->error[1] << " " << controller->target_speeds[0] << " " << controller->target_speeds[1] << " " << controller->tracing_error << endl;
+    if(i%10 !=0) {
+      continue;
     }
-
-    double pt[2];
-    int T = 1000000;
-
-    double ps[2];
-    double v[2];
-    double a[2];
-
-    for(int i = 0; i < T; i++) {
-      // cout<< "i: " << i << endl;
-      update_time(0.001);
-      arm->stepper1->move();
-      arm->stepper2->move();
-      arm->getJointPositionInRadians(ps);
-      // arm->getJointPositionInSteps(ps);
-      arm->getJointSpeedInSteps(v);
-      arm->getJointAccelerationInSteps(a);
-      // cout << "p: " << ps[0] << " " << ps[1] << " v " << v[0] << " " << v[1] << " a: " << a[0] << " " << a[1] << endl;
-      fileout << ps[0] << " " << ps[1] << " " << v[0] << " " << v[1] << " " << a[0] << " " << a[1] << " " << controller->error[0] << " " << controller->error[1] << " " << controller->target_speeds[0] << " " << controller->target_speeds[1] << " " << controller->tracing_error << endl;
-      if(i%10 !=0) {
+    int should_read_next = controller->follow_trajectory();
+    if(should_read_next == 1) {
+      bool has_value = read_line(file, pt);
+      if(!has_value) {
+        controller->has_all_targets = true;
         continue;
       }
-      int should_read_next = controller->follow_trajectory();
-      if(should_read_next == 1) {
-        bool has_value = read_line(file, pt);
-        if(!has_value) {
-          controller->has_all_targets = true;
-          continue;
-        }
 
-        controller->add_point_to_trajectory(pt[0], pt[1]);
-      }
-      if(should_read_next == 2) {
-        // design complete
-        double tt = micros() / 1000000.0;
-        cout << "Design complete. Time: " << tt/60.0 << endl;
-        break;
-      }
+      controller->add_point_to_trajectory(pt[0], pt[1]);
     }
+    if(should_read_next == 2) {
+      // design complete
+      break;
+    }
+  }
 
-    file.close();
-    fileout.close();
+  file.close();
+  fileout.close();
 
-    return 0;
+  double tt = micros() / 1000000.0;
+  cout << "Design complete. Time: " << tt/60.0 << endl;
+  return 0;
 }
