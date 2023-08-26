@@ -6,7 +6,7 @@ double last_target_time = 0.0;
 
 double trace_error_sum = 0.0;
 double max_trace_error = 0.0;
-double D = 200;
+double D = 50;
 SimArmController::SimArmController(SimArmModel *arm){
   this->arm = arm;
 
@@ -76,7 +76,7 @@ void SimArmController::get_goal(double *current_position, double *goal) {
   double d = D * 0.8;
 
   if(should_stop[current_target_index + 1]) {
-    d = 40;
+    d = 20;
   }
   
   if(abs(goal[0]) < d && abs(goal[1]) < d) {
@@ -127,10 +127,6 @@ void SimArmController::get_target_position(double t, double *target_position){
 
 void SimArmController::get_target_speed(double *current_position, double *speeds){
   // Get time index
-  int current_target_index = get_target_index(current_position) + 1;
-  speeds[0] = max_speeds[current_target_index -1][0];
-  speeds[1] = max_speeds[current_target_index -1][1];
-  return;
   double goal[2] = {0, 0};
   get_goal(current_position, goal);
 
@@ -216,8 +212,8 @@ int SimArmController::follow_trajectory() {
 
   // expected_acceleration[0] = 0.0;
   // expected_acceleration[1] = 0.0;
-  current_acceleration[0] = (target_speeds[0] - current_speed[0]) * .0 + expected_acceleration[0];
-  current_acceleration[1] = (target_speeds[1] - current_speed[1]) * .0 + expected_acceleration[1];
+  current_acceleration[0] = (target_speeds[0] - current_speed[0]) * .5 + expected_acceleration[0];
+  current_acceleration[1] = (target_speeds[1] - current_speed[1]) * .5 + expected_acceleration[1];
 
   enforce_guards(current_acceleration, MAX_ACCELERATION);
 
