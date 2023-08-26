@@ -165,7 +165,7 @@ void ArmController::get_target_acceleration(double *positions, double *speeds, d
   accelerations[1] = (next_speeds[1] - speeds[1]) / dt;
 
   enforce_guards(accelerations, MAX_ACCELERATION);
-  cout << "acc: " << accelerations[0] << ", " << accelerations[1] << endl;
+  // cout << "acc: " << accelerations[0] << ", " << accelerations[1] << endl;
 }
 
 int ArmController::follow_trajectory() {

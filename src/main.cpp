@@ -415,7 +415,7 @@ void loop() {
   }
   EVERY_N_MILLISECONDS(4) {
     if(is_printing_design) {
-      Serial.println("Time: " + String( (micros() - last_time)/1000.0 ));
+      // Serial.println("Time: " + String( (micros() - last_time)/1000.0 ));
       int should_read_next = controller->follow_trajectory();
       // long int delta[2] = {0, 0};
       // bool should_read_next = move_arm(delta, target_q1, target_q2);
