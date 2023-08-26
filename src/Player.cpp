@@ -75,24 +75,24 @@ void Player::read(fs::FS &fs, String path) {
   }
   this->path = path;
   this->line_number = 0;
-  File tracker = fs.open("/tracker.txt");
-  String tracker_file;
-  if(tracker.available()) {
-    tracker_file = tracker.readStringUntil('\n');
-  }
-  if(tracker_file == path) {
-    Serial.println("Continuing from previous position");
-    this->line_number = tracker.readStringUntil('\n').toInt();
-    for(int i = 0; i < this->line_number; i++) {
-      file.readStringUntil('\n');
-    }
-  }
+  // File tracker = fs.open("/tracker.txt");
+  // String tracker_file;
+  // if(tracker.available()) {
+  //   tracker_file = tracker.readStringUntil('\n');
+  // }
+  // if(tracker_file == path) {
+  //   Serial.println("Continuing from previous position");
+  //   this->line_number = tracker.readStringUntil('\n').toInt();
+  //   for(int i = 0; i < this->line_number; i++) {
+  //     file.readStringUntil('\n');
+  //   }
+  // }
   this->file = file;
-  tracker.close();
-  tracker = fs.open("/tracker.txt", FILE_WRITE);
-  tracker.println(path);
-  tracker.println(this->line_number);
-  this->tracker = tracker;
+  // tracker.close();
+  // tracker = fs.open("/tracker.txt", FILE_WRITE);
+  // tracker.println(path);
+  // tracker.println(this->line_number);
+  // this->tracker = tracker;
 }
 
 bool Player::read(fs::FS &fs) {
@@ -128,12 +128,12 @@ void Player::next_line(fs::FS &fs, double *thetas) {
     thetas[1] = x;
     thetas[2] = y;
     // Point to previous line and replace it with the current line
-    this->tracker.seek(this->tracker.position() - 1);
-    this->tracker.println(this->line_number);
+    // this->tracker.seek(this->tracker.position() - 1);
+    // this->tracker.println(this->line_number);
     return;
   }
   Serial.println("End of design file.");
   thetas[0] = 0.0;
-  this->tracker.close();
+  // this->tracker.close();
   this->file.close();
 }
