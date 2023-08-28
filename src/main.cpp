@@ -398,7 +398,6 @@ void loop() {
       return;
     }
     arm->home();
-    set_led_color();
     return;
   }
   // if(should_play_next) {
@@ -411,9 +410,10 @@ void loop() {
   //   should_play_next = false;
   //   return;
   // }
-  // EVERY_N_MILLISECONDS(25) {
-  //   move_led();
-  // }
+  EVERY_N_MILLISECONDS(25) {
+    set_led_color();
+    // move_led();
+  }
   EVERY_N_MILLISECONDS(4) {
     if(is_printing_design) {
       // Serial.println("Time: " + String( (micros() - last_time)/1000.0 ));
