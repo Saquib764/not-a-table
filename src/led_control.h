@@ -17,6 +17,7 @@ void test_led();
 void init_led();
 void set_led_status(int error_code=0);
 void move_led();
+void set_led_color();
 
 
 #endif

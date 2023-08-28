@@ -72,3 +72,10 @@ void move_led() {
 
   FastLED.show();
 }
+void set_led_color() {
+  for(int i = 0; i < NUM_LEDS; i++) {
+    leds[i] = CRGB(237, 175, 97);
+    leds[i].maximizeBrightness(20);
+  }
+  FastLED.show();
+}
