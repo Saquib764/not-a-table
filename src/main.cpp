@@ -182,26 +182,27 @@ void handle_led_color_update() {
   brightness.trim();
 
   // convert string to uint8_t
-  led_color[0] = r.toInt();
-  led_color[1] = g.toInt();
-  led_color[2] = b.toInt();
-  led_color[3] = brightness.toInt();
+  led_color[0] = static_cast<uint8_t>(r.toInt());
+  led_color[1] = static_cast<uint8_t>(g.toInt());
+  led_color[2] = static_cast<uint8_t>(b.toInt());
+  led_color[3] = static_cast<uint8_t>(brightness.toInt());
   
   jsonDocument.clear();  
   jsonDocument["success"] = true;
+  jsonDocument["r"] = led_color[0];
+  jsonDocument["g"] = led_color[1];
+  jsonDocument["b"] = led_color[2];
+  jsonDocument["brightness"] = led_color[3];
 
   serializeJson(jsonDocument, buffer);
 
   Serial.println("Pairing done. Connecting.");
   server.send(200, "application/json", buffer);
-  delay(2000);
-  ESP.restart();
 }
 
 void handle_update() {
   Serial.println("Updating..");
   String body = server.arg("plain");
-  Serial.println(body);
   jsonDocument.clear();
   deserializeJson(jsonDocument, body);
   String update_url = jsonDocument["update_url"];
@@ -212,6 +213,7 @@ void handle_update() {
 
   controller->reset();
   arm->stopMove();
+  delay(1000);
   bool is_success = update_firmware(update_url);
   jsonDocument["success"] = is_success;
 
@@ -236,6 +238,21 @@ void handle_home() {
   server.send(200, "application/json", buffer);
 }
 
+void handle_get_tracks() {
+  Serial.println("Get tracks");
+  // get list of files from designs folder
+  String files = "";
+  get_files_in_dir(SD, "/designs", &files, 0, 100);
+
+  jsonDocument.clear();  
+  jsonDocument["success"] = true;
+  jsonDocument["files"] = files;
+
+  serializeJson(jsonDocument, buffer);
+
+  server.send(200, "application/json", buffer);
+}
+
 void handle_play() {
   Serial.println("Play");
   String body = server.arg("plain");
@@ -246,10 +263,10 @@ void handle_play() {
   String filename = jsonDocument["filename"];
   filename.trim();
 
-  player.read(SPIFFS, "/" + filename);
+  player.read(SD, "/designs/" + filename);
   is_printing_design = true;
   should_clear = true;
-  // should_perform_homing = true;
+  should_perform_homing = true;
 
   jsonDocument.clear();  
   jsonDocument["success"] = true;
@@ -295,6 +312,8 @@ void setup_routing(WebServer& server) {
 
   server.on("/play", HTTP_POST, handle_play);
   server.on("/play", HTTP_OPTIONS, handle_status_check);
+  server.on("/tracks", HTTP_GET, handle_get_tracks);
+  server.on("/tracks", HTTP_OPTIONS, handle_status_check);
   server.on("/add_to_playlist", HTTP_POST, handle_add_to_playlist);
   server.on("/add_to_playlist", HTTP_OPTIONS, handle_status_check);
 

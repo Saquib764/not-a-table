@@ -99,3 +99,22 @@ void list_dir(fs::FS &fs, const char * dirname, uint8_t levels) {
     file = root.openNextFile();
   }
 }
+
+void get_files_in_dir(fs::FS &fs, const char * dirname, String *files, int start, int end) {
+  File root1 = fs.open("/");
+  File root = fs.open(dirname);
+  File file = root.openNextFile();
+  int i = 0;
+  while(file && i < 5){
+    if(file.isDirectory()){
+      file = root.openNextFile();
+      continue;
+    }
+    i++;
+    if(i>=start && i<end) {
+      *files += "," + String(file.name());
+    }
+    file = root.openNextFile();
+  }
+  return;
+}
