@@ -64,6 +64,8 @@ char buffer[250];
 double target_q1 = 0.0;
 double target_q2 = 0.0;
 
+uint8_t led_color[4] = {255, 255, 255, 255};
+
 
 float ARM1 = 0.25;
 float ARM2 = 0.25;
@@ -164,6 +166,38 @@ void handle_pairing() {
   ESP.restart();
 }
 
+void handle_led_color_update() {
+  Serial.println("Changing led color");
+  String body = server.arg("plain");
+  Serial.println(body);
+  jsonDocument.clear();
+  deserializeJson(jsonDocument, body);
+  String r = jsonDocument["r"];
+  String g = jsonDocument["g"];
+  String b = jsonDocument["b"];
+  String brightness = jsonDocument["brightness"];
+  r.trim();
+  g.trim();
+  b.trim();
+  brightness.trim();
+
+  // convert string to uint8_t
+  led_color[0] = r.toInt();
+  led_color[1] = g.toInt();
+  led_color[2] = b.toInt();
+  led_color[3] = brightness.toInt();
+  
+  jsonDocument.clear();  
+  jsonDocument["success"] = true;
+
+  serializeJson(jsonDocument, buffer);
+
+  Serial.println("Pairing done. Connecting.");
+  server.send(200, "application/json", buffer);
+  delay(2000);
+  ESP.restart();
+}
+
 void handle_update() {
   Serial.println("Updating..");
   String body = server.arg("plain");
@@ -176,6 +210,8 @@ void handle_update() {
   
   jsonDocument.clear();  
 
+  controller->reset();
+  arm->stopMove();
   bool is_success = update_firmware(update_url);
   jsonDocument["success"] = is_success;
 
@@ -222,6 +258,7 @@ void handle_play() {
 
   server.send(200, "application/json", buffer);
 }
+
 void handle_add_to_playlist() {
   Serial.println("Add to playlist");
   String body = server.arg("plain");
@@ -260,6 +297,9 @@ void setup_routing(WebServer& server) {
   server.on("/play", HTTP_OPTIONS, handle_status_check);
   server.on("/add_to_playlist", HTTP_POST, handle_add_to_playlist);
   server.on("/add_to_playlist", HTTP_OPTIONS, handle_status_check);
+
+  server.on("/led/color", HTTP_POST, handle_led_color_update);
+  server.on("/led/color", HTTP_OPTIONS, handle_status_check);
 }
 
 double points[3] = {0.0, 0.0, 0.0};
@@ -411,7 +451,7 @@ void loop() {
   //   return;
   // }
   EVERY_N_MILLISECONDS(25) {
-    set_led_color();
+    set_led_color(led_color[0], led_color[1], led_color[2], led_color[3]);
     // move_led();
   }
   EVERY_N_MILLISECONDS(4) {

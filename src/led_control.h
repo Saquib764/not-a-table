@@ -17,7 +17,7 @@ void test_led();
 void init_led();
 void set_led_status(int error_code=0);
 void move_led();
-void set_led_color();
+void set_led_color(uint8_t r=255, uint8_t g=255, uint8_t b=255, uint8_t brightness=255);
 
 
 #endif
