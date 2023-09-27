@@ -11,7 +11,7 @@ ArmModel::ArmModel(double ARM, double steps_per_radian) {
   this->stepper2 = NULL;
 
   is_hall_sensor_detected = false;
-  position_at_max_speed = 0.0;
+  position_at_max_value = 0.0;
   max_hall_value = 0.0;
   homing_started_at_angle = 0.0;
   is_homing = false;
@@ -132,9 +132,9 @@ void ArmModel::home() {
     getJointPositionInRadians(pos);
     getJointPositionInSteps(pos_steps);
 
-    double value = (analogRead(homing_pin) - 2000.0);
+    double value = (analogRead(homing_pin) - 1900.0);
     for(int i = 1; i<5; i++) {
-      value += (analogRead(homing_pin) - 2000.0);
+      value += (analogRead(homing_pin) - 1900.0);
     }
     value /= 5.0;
     value = -value;
@@ -143,7 +143,7 @@ void ArmModel::home() {
       // start homing
       is_homing = true;
       is_hall_sensor_detected = false;
-      position_at_max_speed = 0.0;
+      position_at_max_value = 0.0;
       max_hall_value = 0.0;
       if( value > 100.0 ) {
         // get out of hall region
@@ -160,7 +160,7 @@ void ArmModel::home() {
       has_started_in_hall_region = false;
       is_homing = true;
       is_hall_sensor_detected = false;
-      position_at_max_speed = 0.0;
+      position_at_max_value = 0.0;
       max_hall_value = 0.0;
       setSpeedInHz(50.0, 0.0);
       moveByAcceleration(500.0, 0.0);
@@ -169,16 +169,16 @@ void ArmModel::home() {
         // slow down when hall sensor is detected
         setSpeedInHz(50.0, 0.0);
         is_hall_sensor_detected = true;
-        position_at_max_speed = pos_steps[0];
+        position_at_max_value = pos_steps[0];
         max_hall_value = value;
         homing_started_at_angle = pos[0];
       }
       if(is_hall_sensor_detected && value > max_hall_value) {
         // update max hall value
         max_hall_value = value;
-        position_at_max_speed = pos_steps[0];
+        position_at_max_value = pos_steps[0];
       }
-      if(is_hall_sensor_detected && abs(pos[0] - homing_started_at_angle) > 10.0 * 3.14 / 180.0) {
+      if(is_hall_sensor_detected && abs(pos[0] - homing_started_at_angle) > 10.0 * PI / 180.0) {
         // arm out of hall sensor, return to max value
         stepper1->stopMove();
         stepper2->stopMove();
@@ -186,19 +186,20 @@ void ArmModel::home() {
         setSpeedInHz(100.0, 0.0);
 
         delayMicroseconds(1000);
-        stepper1->moveTo(position_at_max_speed, true);
+        stepper1->moveTo(position_at_max_value, true);
         resetToPositionInSteps(0.0, 0.0);
 
         // move to -90 degrees
         delayMicroseconds(1000);
-        stepper1->moveTo(-0.5 * 3.14 * 3 * steps_per_radian, true);
-        resetToPositionInSteps(-0.5 * 3.14 * 3 * steps_per_radian, 0.0);
+        setSpeedInHz(400.0, 0.0);
+        stepper1->moveTo(-0.5 * PI * 3 * steps_per_radian, true);
+        resetToPositionInSteps(-0.5 * PI * 3 * steps_per_radian, 0.0);
 
         delayMicroseconds(1000);
         is_homed[0] = true;
         
         is_hall_sensor_detected = false;
-        position_at_max_speed = 0.0;
+        position_at_max_value = 0.0;
         max_hall_value = 0.0;
         homing_started_at_angle = 0.0;
         is_homing = false;
@@ -223,7 +224,7 @@ void ArmModel::home() {
       // start homing
       is_homing = true;
       is_hall_sensor_detected = false;
-      position_at_max_speed = 0.0;
+      position_at_max_value = 0.0;
       max_hall_value = 0.0;
       if( value > 100.0 ) {
         // get out of hall region
@@ -240,7 +241,7 @@ void ArmModel::home() {
       has_started_in_hall_region = false;
       is_homing = true;
       is_hall_sensor_detected = false;
-      position_at_max_speed = 0.0;
+      position_at_max_value = 0.0;
       max_hall_value = 0.0;
       setSpeedInHz(0.0, 50.0);
       moveByAcceleration(0.0, 500.0);
@@ -249,37 +250,36 @@ void ArmModel::home() {
         // slow down when hall sensor is detected
         setSpeedInHz(0.0, 50.0);
         is_hall_sensor_detected = true;
-        position_at_max_speed = pos_steps[1];
+        position_at_max_value = pos_steps[1];
         max_hall_value = value;
         homing_started_at_angle = pos[1];
       }
       if(is_hall_sensor_detected && value > max_hall_value) {
         // update max hall value
         max_hall_value = value;
-        position_at_max_speed = pos_steps[1];
+        position_at_max_value = pos_steps[1];
       }
-      if(is_hall_sensor_detected && abs(pos[1] - homing_started_at_angle) > 10.0 * 3.14 / 180.0) {
+      if(is_hall_sensor_detected && abs(pos[1] - homing_started_at_angle) > 10.0 * PI / 180.0) {
         // arm out of hall sensor, return to max value
         stepper1->stopMove();
         stepper2->stopMove();
 
         setSpeedInHz(0.0, 100.0);
         delayMicroseconds(1000);
-        stepper2->moveTo(3 * position_at_max_speed, true);
-        resetToPositionInSteps(-90.0 * 3.14 / 180.0 * steps_per_radian, 180.0 * 3.14 / 180.0 * steps_per_radian);
+        stepper2->moveTo(3 * position_at_max_value + pos_steps[0], true);
+        resetToPositionInSteps(-0.5 * PI * 3* steps_per_radian, PI * 3 * steps_per_radian);
 
         delayMicroseconds(1000);
         is_homed[1] = true;
         
         is_hall_sensor_detected = false;
-        position_at_max_speed = 0.0;
+        position_at_max_value = 0.0;
         max_hall_value = 0.0;
         homing_started_at_angle = 0.0;
         is_homing = false;
         has_started_in_hall_region = false;
       }
     }
-    // cout << "pos: " << pos[0] << endl;
   }
 
 }

@@ -35,7 +35,7 @@ class ArmModel{
 
     bool is_homed[2];
     bool is_hall_sensor_detected;
-    double position_at_max_speed;
+    double position_at_max_value;
     double max_hall_value;
     double homing_started_at_angle;
     bool is_homing;
