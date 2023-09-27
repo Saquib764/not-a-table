@@ -132,11 +132,12 @@ void ArmModel::home() {
     getJointPositionInRadians(pos);
     getJointPositionInSteps(pos_steps);
 
-    double value = analogRead(homing_pin) - 2000.0;
+    double value = (analogRead(homing_pin) - 2000.0);
     for(int i = 1; i<5; i++) {
-      value += analogRead(homing_pin) - 2000.0;
+      value += (analogRead(homing_pin) - 2000.0);
     }
     value /= 5.0;
+    value = -value;
 
     if(!is_homing) {
       // start homing
@@ -187,6 +188,11 @@ void ArmModel::home() {
         delayMicroseconds(1000);
         stepper1->moveTo(position_at_max_speed, true);
         resetToPositionInSteps(0.0, 0.0);
+
+        // move to -90 degrees
+        delayMicroseconds(1000);
+        stepper1->moveTo(-0.5 * 3.14 * 3 * steps_per_radian, true);
+        resetToPositionInSteps(-0.5 * 3.14 * 3 * steps_per_radian, 0.0);
 
         delayMicroseconds(1000);
         is_homed[0] = true;
@@ -260,7 +266,7 @@ void ArmModel::home() {
         setSpeedInHz(0.0, 100.0);
         delayMicroseconds(1000);
         stepper2->moveTo(3 * position_at_max_speed, true);
-        resetToPositionInSteps(0.0, 0.0);
+        resetToPositionInSteps(-90.0 * 3.14 / 180.0 * steps_per_radian, 180.0 * 3.14 / 180.0 * steps_per_radian);
 
         delayMicroseconds(1000);
         is_homed[1] = true;

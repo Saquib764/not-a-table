@@ -447,8 +447,8 @@ void loop() {
     // Perform homing
 
     if(arm->isHomed()) {
-      target_q1 = 0.0;
-      target_q2 = 0.0;
+      target_q1 = -90 * PI/180.0;
+      target_q2 = PI;
       should_perform_homing = false;
       controller->reset();
       arm->setSpeedInHz(1200, 1200);
