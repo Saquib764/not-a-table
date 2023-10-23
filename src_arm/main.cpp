@@ -1,5 +1,6 @@
 
 #include <Arduino.h>
+#include <FastLED.h>
 #include "math.h"
 #include <TMCStepper.h>
 #include <iostream>
