@@ -51,6 +51,7 @@ class ArmModel{
     void resetToPositionInSteps(double pos1, double pos2);
 
     void home();
+    void reset_home();
     void to_xy(double a1, double a2, double& x, double& y);
 };
 

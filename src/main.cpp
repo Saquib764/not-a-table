@@ -264,6 +264,7 @@ void handle_play() {
   filename.trim();
 
   player.read(SD, "/designs/" + filename);
+  arm->reset_home();
   is_printing_design = true;
   should_clear = true;
   should_perform_homing = true;

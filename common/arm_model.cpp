@@ -123,6 +123,16 @@ void ArmModel::resetToPositionInSteps(double pos1, double pos2) {
   setSpeedInHz(0, 0);
 }
 
+void ArmModel::reset_home() {
+  is_homed[0] = false;
+  is_homed[1] = false;
+  is_homing = false;
+  is_hall_sensor_detected = false;
+  position_at_max_value = 0.0;
+  max_hall_value = 0.0;
+  has_started_in_hall_region = false;
+  homing_started_at_angle = 0.0;
+}
 
 void ArmModel::home() {
   if(!is_homed[0]) {
@@ -138,6 +148,8 @@ void ArmModel::home() {
     }
     value /= 5.0;
     value = -value;
+    
+    // Serial.println("0: " + String(value));
 
     if(!is_homing) {
       // start homing
@@ -204,6 +216,8 @@ void ArmModel::home() {
         homing_started_at_angle = 0.0;
         is_homing = false;
         has_started_in_hall_region = false;
+
+        Serial.println("Homing 1 done");
       }
     }
     // cout << "pos: " << pos[0] << endl;
@@ -219,6 +233,8 @@ void ArmModel::home() {
       value += analogRead(homing_pin) - 2000.0;
     }
     value /= 5.0;
+
+    // Serial.println("1: " + String(value));
 
     if(!is_homing) {
       // start homing
@@ -278,6 +294,7 @@ void ArmModel::home() {
         homing_started_at_angle = 0.0;
         is_homing = false;
         has_started_in_hall_region = false;
+        Serial.println("Homing 2 done");
       }
     }
   }
