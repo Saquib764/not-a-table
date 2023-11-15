@@ -1,0 +1,10 @@
+# This track does a "dirty" position - no cleaning, always ending at rho = 0
+
+# theta	rho
+0	0
+# out to rho-1
+0	1
+# one full ring at rho=1
+6.346	1
+# back to 0
+6.346	0

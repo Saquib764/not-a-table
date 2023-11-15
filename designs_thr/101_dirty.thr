@@ -1,0 +1,9 @@
+# This track does a "dirty" position - no cleaning, always ending at rho = 1
+
+# theta	rho
+0	1
+6.346	1
+# down to rho=0
+6.346	0
+# back to 1
+6.346	1
