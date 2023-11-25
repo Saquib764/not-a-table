@@ -99,24 +99,40 @@ void Player::play(fs::FS &fs, String path) {
   is_completed = false;
   this->path = path;
   this->line_number = 0;
-  // File tracker = fs.open("/tracker.txt");
-  // String tracker_file;
-  // if(tracker.available()) {
-  //   tracker_file = tracker.readStringUntil('\n');
-  // }
-  // if(tracker_file == path) {
-  //   Serial.println("Continuing from previous position");
-  //   this->line_number = tracker.readStringUntil('\n').toInt();
-  //   for(int i = 0; i < this->line_number; i++) {
-  //     file.readStringUntil('\n');
-  //   }
-  // }
+
   this->file = file;
-  // tracker.close();
-  // tracker = fs.open("/tracker.txt", FILE_WRITE);
-  // tracker.println(path);
-  // tracker.println(this->line_number);
-  // this->tracker = tracker;
+  
+  // Check if in the playlist
+  File playlist = fs.open("/playlist.txt");
+  bool is_in_playlist = false;
+  while(playlist.available()) {
+    String line = playlist.readStringUntil('\n');
+    if(line == path) {
+      is_in_playlist = true;
+      break;
+    }
+  }
+  playlist.close();
+  if(is_in_playlist) {
+    // Remove designs before this design
+    String new_playlist = "";
+    while(playlist.available()) {
+      String line = playlist.readStringUntil('\n');
+      if(line == path) {
+        break;
+      }
+    }
+    new_playlist += path + "\n";
+    while(playlist.available()) {
+      String line = playlist.readStringUntil('\n');
+      new_playlist += line + "\n";
+    }
+    playlist.close();
+  }else{
+    // Initialize playlist
+    clear_playlist(fs);
+    add_to_playlist(fs, path);
+  }
 }
 
 bool Player::play(fs::FS &fs) {
