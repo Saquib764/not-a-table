@@ -113,24 +113,8 @@ void Player::play(fs::FS &fs, String path) {
     }
   }
   playlist.close();
-  if(is_in_playlist) {
-    // Remove designs before this design
-    String new_playlist = "";
-    while(playlist.available()) {
-      String line = playlist.readStringUntil('\n');
-      if(line == path) {
-        break;
-      }
-    }
-    new_playlist += path + "\n";
-    while(playlist.available()) {
-      String line = playlist.readStringUntil('\n');
-      new_playlist += line + "\n";
-    }
-    playlist.close();
-  }else{
-    // Initialize playlist
-    clear_playlist(fs);
+  if(!is_in_playlist) {
+    // Add to playlist
     add_to_playlist(fs, path);
   }
 }
