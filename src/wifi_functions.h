@@ -26,4 +26,11 @@ void update_counter(fs::FS &fs);
 bool should_reset(fs::FS &fs);
 void clear_counter(fs::FS &fs);
 
+void save_admin_secret();
+String get_admin_secret();
+bool is_admin_secret_correct(String secret);
+
+void save_paired_user(String user_id);
+bool is_paired_user(String user_id);
+
 #endif

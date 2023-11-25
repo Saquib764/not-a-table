@@ -118,3 +118,26 @@ void get_files_in_dir(fs::FS &fs, const char * dirname, String *files, int start
   }
   return;
 }
+
+bool download_file(fs::FS &fs, String url, String path) {
+  Serial.println("Downloading file from " + url);
+  HTTPClient http;
+  http.begin(url);
+  int httpCode = http.GET();
+  if(httpCode > 0) {
+    if(httpCode == HTTP_CODE_OK) {
+      File file = open_file(fs, path, FILE_WRITE);
+      if(!file){
+        Serial.println("Failed to open file for writing");
+        return false;
+      }
+      http.writeToStream(&file);
+      file.close();
+    }
+  } else {
+    Serial.printf("[HTTP] GET... failed, error: %s\n", http.errorToString(httpCode).c_str());
+    return false;
+  }
+  http.end();
+  return true;
+}

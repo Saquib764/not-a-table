@@ -83,7 +83,17 @@ bool is_storage_available = false;
 bool should_use_homing = true;
 
 
-void handle_status_check() {
+void handle_options_call() {
+  
+  jsonDocument.clear();  
+  jsonDocument["status"] = "ok";
+  serializeJson(jsonDocument, buffer);
+  
+  server.send(200, "application/json", buffer);
+}
+
+// 1. Get device info
+void handle_info() {
   Serial.println("Get server status");
   
   jsonDocument.clear();  
@@ -97,14 +107,6 @@ void handle_status_check() {
   jsonDocument["SSID"] = WiFi.SSID();
   jsonDocument["mac"] = WiFi.macAddress();
   jsonDocument["ip"] = WiFi.localIP().toString();
-  serializeJson(jsonDocument, buffer);
-  
-  server.send(200, "application/json", buffer);
-}
-void handle_get_mode() {
-  Serial.println("Get server mode");
-  
-  jsonDocument.clear();  
   if(is_in_pairing_mode) {
     jsonDocument["mode"] = "pairing";
   } else {
@@ -115,31 +117,170 @@ void handle_get_mode() {
   server.send(200, "application/json", buffer);
 }
 
-void handle_file_upload() {
-  Serial.println("File upload");
-  is_uploading = true;
-  String filename = server.arg("filename");
-  filename.trim();
-  Serial.println(filename);
-  File file = SD.open("/" + filename, FILE_WRITE);
-  if(!file) {
-    Serial.println("Failed to open file for writing");
-    return;
-  }
-  if(server.hasArg("plain")) {
-    file.print(server.arg("plain"));
-  } else {
-    Serial.println("No file to upload");
-  }
-  file.close();
-  is_uploading = false;
+// 2. Restart device
+void handle_restart() {
+  Serial.println("Restarting");
   jsonDocument.clear();  
   jsonDocument["success"] = true;
   serializeJson(jsonDocument, buffer);
   server.send(200, "application/json", buffer);
+  delay(2000);
+  ESP.restart();
 }
 
-void handle_pairing() {
+// 3. Update firmware
+void handle_update_firmware() {
+  Serial.println("Updating..");
+  String body = server.arg("plain");
+  jsonDocument.clear();
+  deserializeJson(jsonDocument, body);
+  String update_url = jsonDocument["update_url"];
+  update_url.trim();
+  Serial.println(update_url);
+  
+  jsonDocument.clear();  
+
+  controller->reset();
+  arm->stopMove();
+  delay(1000);
+  bool is_success = update_firmware(update_url);
+  jsonDocument["success"] = is_success;
+
+  serializeJson(jsonDocument, buffer);
+
+  server.send(200, "application/json", buffer);
+  delay(2000);
+  if(is_success) {
+    ESP.restart();
+  }
+}
+
+// 4. Home
+void handle_home() {
+  Serial.println("Home");
+  should_perform_homing = true;
+
+  jsonDocument.clear();  
+  jsonDocument["success"] = true;
+
+  serializeJson(jsonDocument, buffer);
+
+  server.send(200, "application/json", buffer);
+}
+
+// 5. Play
+void handle_play() {
+  Serial.println("Play");
+  String body = server.arg("plain");
+  Serial.println(body);
+  jsonDocument.clear();
+  deserializeJson(jsonDocument, body);
+
+  String filename = jsonDocument["filename"];
+  filename.trim();
+
+  player.play(SD, "/designs/" + filename);
+  arm->reset_home();
+  is_printing_design = true;
+  should_clear = true;
+  should_perform_homing = true;
+
+  jsonDocument.clear();  
+  jsonDocument["success"] = true;
+
+  serializeJson(jsonDocument, buffer);
+
+  server.send(200, "application/json", buffer);
+}
+
+// 6. Get current playing
+void handle_get_current_playing() {
+  Serial.println("Get current playing");
+  String current_playing = player.get_current_playing();
+  current_playing.trim();
+
+  jsonDocument.clear();  
+  jsonDocument["success"] = true;
+  jsonDocument["current_playing"] = current_playing;
+
+  serializeJson(jsonDocument, buffer);
+
+  server.send(200, "application/json", buffer);
+}
+
+// 8. Get list of tracks in device
+void handle_get_tracks() {
+  Serial.println("Get tracks");
+  // get list of files from designs folder
+  String files = "";
+  get_files_in_dir(SD, "/designs", &files, 0, 100);
+
+  jsonDocument.clear();  
+  jsonDocument["success"] = true;
+  jsonDocument["files"] = files;
+
+  serializeJson(jsonDocument, buffer);
+
+  server.send(200, "application/json", buffer);
+}
+
+// 9. Get playlist
+void handle_get_playlist() {
+  Serial.println("Get playlist");
+  String playlist = player.get_playlist(SD);
+  playlist.trim();
+
+  jsonDocument.clear();  
+  jsonDocument["success"] = true;
+  jsonDocument["playlist"] = playlist;
+
+  serializeJson(jsonDocument, buffer);
+
+  server.send(200, "application/json", buffer);
+}
+
+// 10. Add to playlist
+void handle_add_to_playlist() {
+  Serial.println("Add to playlist");
+  String body = server.arg("plain");
+  Serial.println(body);
+  jsonDocument.clear();
+  deserializeJson(jsonDocument, body);
+
+  String filename = jsonDocument["filename"];
+
+  player.add_to_playlist(SD, "/" + filename + ".thr");
+  
+  jsonDocument.clear();  
+  jsonDocument["success"] = true;
+
+  serializeJson(jsonDocument, buffer);
+
+  server.send(200, "application/json", buffer);
+}
+
+// 11. Remove from playlist
+void handle_remove_from_playlist() {
+  Serial.println("Remove from playlist");
+  String body = server.arg("plain");
+  Serial.println(body);
+  jsonDocument.clear();
+  deserializeJson(jsonDocument, body);
+
+  String filename = jsonDocument["filename"];
+
+  player.remove_from_playlist(SD, "/" + filename + ".thr");
+  
+  jsonDocument.clear();  
+  jsonDocument["success"] = true;
+
+  serializeJson(jsonDocument, buffer);
+
+  server.send(200, "application/json", buffer);
+}
+
+// 12. Pair admin app
+void handle_admin_pair() {
   Serial.println("Pairing");
   String body = server.arg("plain");
   Serial.println(body);
@@ -147,15 +288,25 @@ void handle_pairing() {
   deserializeJson(jsonDocument, body);
   String ssid = jsonDocument["ssid"];
   String pwd = jsonDocument["pwd"];
+  String user_id = jsonDocument["user_id"];
   ssid.trim();
   pwd.trim();
+  user_id.trim();
   SAVED_SSID = ssid;
   SAVED_PWD = pwd;
   Serial.println(ssid);
   Serial.println(pwd);
   save_wifi_login(preferences, ssid, pwd);
+
+  // Create admin secret
+  save_admin_secret();
+  String admin_secret = get_admin_secret();
+
+  // Save paired user
+  save_paired_user(user_id);
   
   jsonDocument.clear();  
+  jsonDocument["admin_secret"] = admin_secret;
   jsonDocument["success"] = true;
 
   serializeJson(jsonDocument, buffer);
@@ -164,6 +315,62 @@ void handle_pairing() {
   server.send(200, "application/json", buffer);
   delay(2000);
   ESP.restart();
+}
+
+// 13. Pair user
+void handle_user_pair() {
+  Serial.println("Pairing");
+  String body = server.arg("plain");
+  Serial.println(body);
+  jsonDocument.clear();
+  deserializeJson(jsonDocument, body);
+  String user_id = jsonDocument["user_id"];
+  String admin_secret = jsonDocument["admin_secret"];
+  user_id.trim();
+  admin_secret.trim();
+
+  // Check if admin secret is correct
+  if(!is_admin_secret_correct(admin_secret)) {
+    jsonDocument.clear();  
+    jsonDocument["success"] = false;
+    jsonDocument["error"] = "Admin secret is incorrect";
+    serializeJson(jsonDocument, buffer);
+    server.send(404, "application/json", buffer);
+    return;
+  }  
+
+  // Save paired user
+  save_paired_user(user_id);
+  
+  jsonDocument.clear();  
+  jsonDocument["success"] = true;
+
+  serializeJson(jsonDocument, buffer);
+
+  Serial.println("Pairing done. Connecting.");
+  server.send(200, "application/json", buffer);
+}
+
+// 14. Download design file
+void handle_file_download() {
+  Serial.println("Download file from a URL");
+  String body = server.arg("plain");
+  Serial.println(body);
+  jsonDocument.clear();
+  deserializeJson(jsonDocument, body);
+  String url = jsonDocument["url"];
+  url.trim();
+  Serial.println(url);
+  String filename = jsonDocument["filename"];
+  filename.trim();
+  Serial.println(filename);
+  String path = "/designs/" + filename;
+  Serial.println(path);
+  bool is_success = download_file(SD, url, path);
+  jsonDocument.clear();
+  jsonDocument["success"] = is_success;
+  serializeJson(jsonDocument, buffer);
+  server.send(200, "application/json", buffer);
 }
 
 void handle_led_color_update() {
@@ -200,126 +407,60 @@ void handle_led_color_update() {
   server.send(200, "application/json", buffer);
 }
 
-void handle_update() {
-  Serial.println("Updating..");
-  String body = server.arg("plain");
-  jsonDocument.clear();
-  deserializeJson(jsonDocument, body);
-  String update_url = jsonDocument["update_url"];
-  update_url.trim();
-  Serial.println(update_url);
-  
-  jsonDocument.clear();  
-
-  controller->reset();
-  arm->stopMove();
-  delay(1000);
-  bool is_success = update_firmware(update_url);
-  jsonDocument["success"] = is_success;
-
-  serializeJson(jsonDocument, buffer);
-
-  server.send(200, "application/json", buffer);
-  delay(2000);
-  if(is_success) {
-    ESP.restart();
-  }
-}
-
-void handle_home() {
-  Serial.println("Home");
-  should_perform_homing = true;
-
-  jsonDocument.clear();  
-  jsonDocument["success"] = true;
-
-  serializeJson(jsonDocument, buffer);
-
-  server.send(200, "application/json", buffer);
-}
-
-void handle_get_tracks() {
-  Serial.println("Get tracks");
-  // get list of files from designs folder
-  String files = "";
-  get_files_in_dir(SD, "/designs", &files, 0, 100);
-
-  jsonDocument.clear();  
-  jsonDocument["success"] = true;
-  jsonDocument["files"] = files;
-
-  serializeJson(jsonDocument, buffer);
-
-  server.send(200, "application/json", buffer);
-}
-
-void handle_play() {
-  Serial.println("Play");
-  String body = server.arg("plain");
-  Serial.println(body);
-  jsonDocument.clear();
-  deserializeJson(jsonDocument, body);
-
-  String filename = jsonDocument["filename"];
-  filename.trim();
-
-  player.read(SD, "/designs/" + filename);
-  arm->reset_home();
-  is_printing_design = true;
-  should_clear = true;
-  should_perform_homing = true;
-
-  jsonDocument.clear();  
-  jsonDocument["success"] = true;
-
-  serializeJson(jsonDocument, buffer);
-
-  server.send(200, "application/json", buffer);
-}
-
-void handle_add_to_playlist() {
-  Serial.println("Add to playlist");
-  String body = server.arg("plain");
-  Serial.println(body);
-  jsonDocument.clear();
-  deserializeJson(jsonDocument, body);
-
-  String filename = jsonDocument["filename"];
-
-  player.add_to_playlist(SD, "/" + filename + ".thr");
-  
-  jsonDocument.clear();  
-  jsonDocument["success"] = true;
-
-  serializeJson(jsonDocument, buffer);
-
-  server.send(200, "application/json", buffer);
-}
 
 void setup_routing(WebServer& server) {
   server.enableCORS();
-  server.on("/", HTTP_GET, handle_status_check);  
-  server.on("/mode", HTTP_GET, handle_get_mode);
+
+  // 1. Get device info
+  server.on("/info", HTTP_GET, handle_info);
+
+  // 2. Restart device
+  server.on("/restart", HTTP_GET, handle_restart);
+
+  // 3. Update firmware
+  server.on("/update", HTTP_POST, handle_update_firmware);
+  server.on("/update", HTTP_OPTIONS, handle_options_call);
+
+  // 4. Home
   server.on("/home", HTTP_GET, handle_home);
 
-
-  server.on("/update", HTTP_POST, handle_update);
-  server.on("/update", HTTP_OPTIONS, handle_status_check);
-
-  server.on("/pair", HTTP_POST, handle_pairing);
-  server.on("/pair", HTTP_OPTIONS, handle_status_check);
-  server.on("/design/upload", HTTP_POST, handle_file_upload);
-  server.on("/design/upload", HTTP_OPTIONS, handle_status_check);
-
+  // 5. Play
   server.on("/play", HTTP_POST, handle_play);
-  server.on("/play", HTTP_OPTIONS, handle_status_check);
+  server.on("/play", HTTP_OPTIONS, handle_options_call);
+
+  // 6. Get current playing
+  server.on("/current-playing", HTTP_GET, handle_get_current_playing);
+
+  // 7. Pause
+  // TODO
+
+  // 8. Get list of tracks in device
   server.on("/tracks", HTTP_GET, handle_get_tracks);
-  server.on("/tracks", HTTP_OPTIONS, handle_status_check);
+
+  // 9. Get playlist
+  server.on("/playlist", HTTP_GET, handle_get_playlist);
+
+  // 10. Add to playlist
   server.on("/add_to_playlist", HTTP_POST, handle_add_to_playlist);
-  server.on("/add_to_playlist", HTTP_OPTIONS, handle_status_check);
+  server.on("/add_to_playlist", HTTP_OPTIONS, handle_options_call);
+
+  // 11. Remove from playlist
+  server.on("/remove_from_playlist", HTTP_POST, handle_remove_from_playlist);
+
+  // 12. Pair admin app
+  server.on("/pair/admin", HTTP_POST, handle_admin_pair);
+  server.on("/pair/admin", HTTP_OPTIONS, handle_options_call);
+
+  // 13. Pair user
+  server.on("/pair/add", HTTP_POST, handle_user_pair);
+  server.on("/pair/add", HTTP_OPTIONS, handle_options_call);
+
+  // 14. Download design file
+  server.on("/design/download", HTTP_POST, handle_file_download);
+  server.on("/design/download", HTTP_OPTIONS, handle_options_call);
 
   server.on("/led/color", HTTP_POST, handle_led_color_update);
-  server.on("/led/color", HTTP_OPTIONS, handle_status_check);
+  server.on("/led/color", HTTP_OPTIONS, handle_options_call);
 }
 
 double points[3] = {0.0, 0.0, 0.0};
@@ -413,7 +554,7 @@ void setup() {
   Serial.println("Server started. Listening on port 80");
 
   // Remove this
-  player.read(SD, "/designs/StarryNight.thr.txt");
+  player.play(SD, "/designs/StarryNight.thr.txt");
   is_printing_design = true;
 
 }

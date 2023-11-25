@@ -17,7 +17,10 @@
 // ensure this library description is only included once
 #include "Player.h"
 
-Player::Player() {}
+Player::Player() {
+  is_paused = false;
+  is_completed = false;
+}
 
 void Player::add_to_playlist(fs::FS &fs, String path) {
   // Check if file exists, create if not
@@ -27,6 +30,25 @@ void Player::add_to_playlist(fs::FS &fs, String path) {
   }
   File playlist = fs.open("/playlist.txt", FILE_APPEND);
   playlist.println(path);
+  playlist.close();
+}
+void Player::remove_from_playlist(fs::FS &fs, String path) {
+  // Check if file exists, return if not
+  if(!fs.exists("/playlist.txt")) {
+    return;
+  }
+  File playlist = fs.open("/playlist.txt");
+  String new_playlist = "";
+  while(playlist.available()) {
+    String line = playlist.readStringUntil('\n');
+    if(line == path) {
+      continue;
+    }
+    new_playlist += line + "\n";
+  }
+  playlist.close();
+  playlist = fs.open("/playlist.txt", FILE_WRITE);
+  playlist.print(new_playlist);
   playlist.close();
 }
 String Player::get_playlist(fs::FS &fs) {
@@ -63,7 +85,8 @@ String Player::get_next_design(fs::FS &fs) {
   playlist.close();
   return path;
 }
-void Player::read(fs::FS &fs, String path) {
+void Player::play(fs::FS &fs, String path) {
+  resume();
   if(this->path == path) {
     Serial.println("Already playing this file.");
     return;
@@ -73,6 +96,7 @@ void Player::read(fs::FS &fs, String path) {
     Serial.println("Failed to open file for reading");
     return;
   }
+  is_completed = false;
   this->path = path;
   this->line_number = 0;
   // File tracker = fs.open("/tracker.txt");
@@ -95,15 +119,22 @@ void Player::read(fs::FS &fs, String path) {
   // this->tracker = tracker;
 }
 
-bool Player::read(fs::FS &fs) {
+bool Player::play(fs::FS &fs) {
   File tracker = fs.open("/tracker.txt");
   String tracker_file;
   if(tracker.available()) {
     tracker_file = tracker.readStringUntil('\n');
-    this->read(fs, tracker_file);
+    this->play(fs, tracker_file);
     return true;
   }
   return false;
+}
+
+void Player::pause() {
+  is_paused = true;
+}
+void Player::resume() {
+  is_paused = false;
 }
 
 void Player::next_line(fs::FS &fs, double *thetas) {
@@ -134,6 +165,11 @@ void Player::next_line(fs::FS &fs, double *thetas) {
   }
   Serial.println("End of design file.");
   thetas[0] = 0.0;
+  is_completed = true;
   // this->tracker.close();
   this->file.close();
+}
+
+String Player::get_current_playing() {
+  return this->path;
 }
