@@ -58,8 +58,8 @@ uint8_t motor2DirPin = 14;
 uint8_t motor2StepPin = 13;
 uint8_t motor2HomingPin = 33;
 
-StaticJsonDocument<250> jsonDocument;
-char buffer[250];
+StaticJsonDocument<550> jsonDocument;
+char buffer[550];
 
 double target_q1 = 0.0;
 double target_q2 = 0.0;
@@ -112,6 +112,16 @@ void handle_info() {
   } else {
     jsonDocument["mode"] = "running";
   }
+  if(is_printing_design) {
+    jsonDocument["is_printing_design"] = true;
+  } else {
+    jsonDocument["is_printing_design"] = false;
+  }
+  if(should_perform_homing) {
+    jsonDocument["is_performing_homing"] = true;
+  } else {
+    jsonDocument["is_performing_homing"] = false;
+  }
   serializeJson(jsonDocument, buffer);
   
   server.send(200, "application/json", buffer);
@@ -122,6 +132,8 @@ void handle_restart() {
   Serial.println("Restarting");
   jsonDocument.clear();  
   jsonDocument["success"] = true;
+  is_printing_design = false;
+  arm->stopMove();
   serializeJson(jsonDocument, buffer);
   server.send(200, "application/json", buffer);
   delay(2000);
@@ -158,6 +170,8 @@ void handle_update_firmware() {
 // 4. Home
 void handle_home() {
   Serial.println("Home");
+  arm->reset_home();
+  is_printing_design = false;
   should_perform_homing = true;
 
   jsonDocument.clear();  
@@ -179,7 +193,7 @@ void handle_play() {
   String filename = jsonDocument["filename"];
   filename.trim();
 
-  player.play(SD, "/designs/" + filename);
+  player.play(SD, filename);
   arm->reset_home();
   is_printing_design = true;
   should_clear = true;
@@ -212,8 +226,17 @@ void handle_get_current_playing() {
 void handle_get_tracks() {
   Serial.println("Get tracks");
   // get list of files from designs folder
+  int from = 0;
+  int to = 10;
+  if(server.hasArg("from")) {
+    from = server.arg("from").toInt();
+  }
+  if(server.hasArg("to")) {
+    to = server.arg("to").toInt();
+  }
+
   String files = "";
-  get_files_in_dir(SD, "/designs", &files, 0, 100);
+  get_files_in_dir(SD, "/designs", &files, from, to);
 
   jsonDocument.clear();  
   jsonDocument["success"] = true;
@@ -224,24 +247,24 @@ void handle_get_tracks() {
   server.send(200, "application/json", buffer);
 }
 
-// 9. Get playlist
-void handle_get_playlist() {
-  Serial.println("Get playlist");
-  String playlist = player.get_playlist(SD);
-  playlist.trim();
+// 9. Get queue
+void handle_get_queue() {
+  Serial.println("Get queue");
+  String queue = player.get_queue(SD);
+  queue.trim();
 
   jsonDocument.clear();  
   jsonDocument["success"] = true;
-  jsonDocument["playlist"] = playlist;
+  jsonDocument["queue"] = queue;
 
   serializeJson(jsonDocument, buffer);
 
   server.send(200, "application/json", buffer);
 }
 
-// 10. Add to playlist
-void handle_add_to_playlist() {
-  Serial.println("Add to playlist");
+// 10. Add to queue
+void handle_add_to_queue() {
+  Serial.println("Add to queue");
   String body = server.arg("plain");
   Serial.println(body);
   jsonDocument.clear();
@@ -249,7 +272,7 @@ void handle_add_to_playlist() {
 
   String filename = jsonDocument["filename"];
 
-  player.add_to_playlist(SD, "/" + filename + ".thr");
+  player.add_to_queue(SD, filename);
   
   jsonDocument.clear();  
   jsonDocument["success"] = true;
@@ -259,9 +282,9 @@ void handle_add_to_playlist() {
   server.send(200, "application/json", buffer);
 }
 
-// 11. Remove from playlist
-void handle_remove_from_playlist() {
-  Serial.println("Remove from playlist");
+// 11. Remove from queue
+void handle_remove_from_queue() {
+  Serial.println("Remove from queue");
   String body = server.arg("plain");
   Serial.println(body);
   jsonDocument.clear();
@@ -269,7 +292,7 @@ void handle_remove_from_playlist() {
 
   String filename = jsonDocument["filename"];
 
-  player.remove_from_playlist(SD, "/" + filename + ".thr");
+  player.remove_from_queue(SD, filename);
   
   jsonDocument.clear();  
   jsonDocument["success"] = true;
@@ -365,7 +388,6 @@ void handle_file_download() {
   filename.trim();
   Serial.println(filename);
   String path = "/designs/" + filename;
-  Serial.println(path);
   bool is_success = download_file(SD, url, path);
   jsonDocument.clear();
   jsonDocument["success"] = is_success;
@@ -437,15 +459,16 @@ void setup_routing(WebServer& server) {
   // 8. Get list of tracks in device
   server.on("/tracks", HTTP_GET, handle_get_tracks);
 
-  // 9. Get playlist
-  server.on("/playlist", HTTP_GET, handle_get_playlist);
+  // 9. Get queue
+  server.on("/queue", HTTP_GET, handle_get_queue);
 
-  // 10. Add to playlist
-  server.on("/add_to_playlist", HTTP_POST, handle_add_to_playlist);
-  server.on("/add_to_playlist", HTTP_OPTIONS, handle_options_call);
+  // 10. Add to queue
+  server.on("/add_to_queue", HTTP_POST, handle_add_to_queue);
+  server.on("/add_to_queue", HTTP_OPTIONS, handle_options_call);
 
-  // 11. Remove from playlist
-  server.on("/remove_from_playlist", HTTP_POST, handle_remove_from_playlist);
+  // 11. Remove from queue
+  server.on("/remove_from_queue", HTTP_POST, handle_remove_from_queue);
+  server.on("/remove_from_queue", HTTP_OPTIONS, handle_options_call);
 
   // 12. Pair admin app
   server.on("/pair/admin", HTTP_POST, handle_admin_pair);
@@ -456,8 +479,8 @@ void setup_routing(WebServer& server) {
   server.on("/pair/add", HTTP_OPTIONS, handle_options_call);
 
   // 14. Download design file
-  server.on("/design/download", HTTP_POST, handle_file_download);
-  server.on("/design/download", HTTP_OPTIONS, handle_options_call);
+  server.on("/track/download", HTTP_POST, handle_file_download);
+  server.on("/track/download", HTTP_OPTIONS, handle_options_call);
 
   server.on("/led/color", HTTP_POST, handle_led_color_update);
   server.on("/led/color", HTTP_OPTIONS, handle_options_call);
@@ -507,8 +530,8 @@ void setup() {
   }
   clear_counter(SD);
 
-  // Serial.println("List playlist:");
-  // Serial.println(player.get_playlist(SD));
+  // Serial.println("List queue:");
+  // Serial.println(player.get_queue(SD));
   
   if(!is_in_pairing_mode) {
     std::array<String, 2> logins = get_wifi_login(preferences);

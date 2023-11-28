@@ -22,70 +22,75 @@ Player::Player() {
   is_completed = false;
 }
 
-void Player::add_to_playlist(fs::FS &fs, String path) {
+void Player::add_to_queue(fs::FS &fs, String path) {
   // Check if file exists, create if not
-  if(!fs.exists("/playlist.txt")) {
-    File playlist = fs.open("/playlist.txt", FILE_WRITE);
-    playlist.close();
+  if(!fs.exists("/queue.txt")) {
+    File queue = fs.open("/queue.txt", FILE_WRITE);
+    queue.close();
   }
-  File playlist = fs.open("/playlist.txt", FILE_APPEND);
-  playlist.println(path);
-  playlist.close();
+  File queue = fs.open("/queue.txt", FILE_APPEND);
+  queue.println(path);
+  queue.close();
 }
-void Player::remove_from_playlist(fs::FS &fs, String path) {
+void Player::remove_from_queue(fs::FS &fs, String path) {
+  path.trim();
   // Check if file exists, return if not
-  if(!fs.exists("/playlist.txt")) {
+  if(!fs.exists("/queue.txt")) {
     return;
   }
-  File playlist = fs.open("/playlist.txt");
-  String new_playlist = "";
-  while(playlist.available()) {
-    String line = playlist.readStringUntil('\n');
+  File queue = fs.open("/queue.txt");
+  String new_queue = "";
+  Serial.println("path: " + path);
+  while(queue.available()) {
+    String line = queue.readStringUntil('\n');
+    line.trim();
+    Serial.println("line: " + line);
     if(line == path) {
       continue;
     }
-    new_playlist += line + "\n";
+    new_queue += line + "\n";
   }
-  playlist.close();
-  playlist = fs.open("/playlist.txt", FILE_WRITE);
-  playlist.print(new_playlist);
-  playlist.close();
+  queue.close();
+  queue = fs.open("/queue.txt", FILE_WRITE);
+  queue.print(new_queue);
+  queue.close();
 }
-String Player::get_playlist(fs::FS &fs) {
+String Player::get_queue(fs::FS &fs) {
   // Check if file exists, return empty string if not
-  if(!fs.exists("/playlist.txt")) {
+  if(!fs.exists("/queue.txt")) {
     return "";
   }
-  File playlist = fs.open("/playlist.txt");
-  return playlist.readString();
+  File queue = fs.open("/queue.txt");
+  return queue.readString();
 }
-void Player::clear_playlist(fs::FS &fs) {
-  File playlist = fs.open("/playlist.txt", FILE_WRITE);
-  playlist.close();
+void Player::clear_queue(fs::FS &fs) {
+  File queue = fs.open("/queue.txt", FILE_WRITE);
+  queue.close();
 }
 
 String Player::get_next_design(fs::FS &fs) {
-  File playlist = fs.open("/playlist.txt");
+  File queue = fs.open("/queue.txt");
   String path;
   String first_path = this->path;
-  while(playlist.available()) {
-    path = playlist.readStringUntil('\n');
+  while(queue.available()) {
+    path = queue.readStringUntil('\n');
     if(first_path == "") {
       first_path = path;
     }
     if(path == this->path) {
-      if(playlist.available()) {
-        path = playlist.readStringUntil('\n');
+      if(queue.available()) {
+        path = queue.readStringUntil('\n');
       } else {
         path = first_path;
       }
       break;
     }
   }
-  playlist.close();
+  queue.close();
   return path;
 }
 void Player::play(fs::FS &fs, String path) {
+  path.trim();
   resume();
   if(this->path == path) {
     Serial.println("Already playing this file.");
@@ -102,23 +107,23 @@ void Player::play(fs::FS &fs, String path) {
 
   this->file = file;
   
-  // Check if in the playlist
-  File playlist = fs.open("/playlist.txt");
-  bool is_in_playlist = false;
-  while(playlist.available()) {
-    String line = playlist.readStringUntil('\n');
+  // Check if in the queue
+  File queue = fs.open("/queue.txt");
+  bool is_in_queue = false;
+  while(queue.available()) {
+    String line = queue.readStringUntil('\n');
+    line.trim();
     if(line == path) {
-      is_in_playlist = true;
+      is_in_queue = true;
       break;
     }
   }
-  playlist.close();
-  if(!is_in_playlist) {
-    // Add to playlist
-    add_to_playlist(fs, path);
+  queue.close();
+  if(!is_in_queue) {
+    // Add to queue
+    add_to_queue(fs, path);
   }
 }
-
 bool Player::play(fs::FS &fs) {
   File tracker = fs.open("/tracker.txt");
   String tracker_file;

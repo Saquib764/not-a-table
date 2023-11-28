@@ -105,16 +105,16 @@ void get_files_in_dir(fs::FS &fs, const char * dirname, String *files, int start
   File root = fs.open(dirname);
   File file = root.openNextFile();
   int i = 0;
-  while(file && i < 5){
+  while(file && i < end){
     if(file.isDirectory()){
       file = root.openNextFile();
       continue;
     }
-    i++;
     if(i>=start && i<end) {
       *files += "," + String(file.name());
     }
     file = root.openNextFile();
+    i++;
   }
   return;
 }

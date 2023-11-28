@@ -11,10 +11,10 @@ class Player {
     // constructors:
     Player();
 
-    void add_to_playlist(fs::FS &fs, String path);
-    void remove_from_playlist(fs::FS &fs, String path);
-    String get_playlist(fs::FS &fs);
-    void clear_playlist(fs::FS &fs);
+    void add_to_queue(fs::FS &fs, String path);
+    void remove_from_queue(fs::FS &fs, String path);
+    String get_queue(fs::FS &fs);
+    void clear_queue(fs::FS &fs);
     String get_next_design(fs::FS &fs);
     bool play(fs::FS &fs);
     void play(fs::FS &fs, String path);
