@@ -15,5 +15,7 @@ void list_dir(fs::FS &fs, const char * dirname, uint8_t levels);
 void get_files_in_dir(fs::FS &fs, const char * dirname, String *files, int start=0, int end=100);
 
 bool download_file(fs::FS &fs, String url, String path);
+String get_device_id(fs::FS &fs);
+
 
 #endif

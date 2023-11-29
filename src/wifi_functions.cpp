@@ -153,36 +153,59 @@ void clear_counter(fs::FS &fs) {
   file.close();
 }
 
-void save_admin_secret() {
-  File file = open_file(SD, "/admin_secret.txt", FILE_WRITE);
+void save_admin_secret(fs::FS &fs) {
+  File file = open_file(fs, "/admin_secret.txt", FILE_WRITE);
   file.print(random(100000, 999999));
   file.close();
 }
 
-String get_admin_secret() {
-  File file = open_file(SD, "/admin_secret.txt", FILE_READ);
+String get_admin_secret(fs::FS &fs) {
+  File file = open_file(fs, "/admin_secret.txt", FILE_READ);
   String secret = file.readString();
+  Serial.println("ADMIN: " +secret);
   secret.trim();
   file.close();
   return secret;
 }
 
-bool is_admin_secret_correct(String secret) {
-  File file = open_file(SD, "/admin_secret.txt", FILE_READ);
+bool is_admin_secret_correct(fs::FS &fs, String secret) {
+  File file = open_file(fs, "/admin_secret.txt", FILE_READ);
   String correct_secret = file.readString();
   correct_secret.trim();
   file.close();
   return secret == correct_secret;
 }
 
-void save_paired_user(String user_id) {
-  File file = open_file(SD, "/paired_users.txt", FILE_APPEND);
+void save_admin_user(fs::FS &fs, String user_id) {
+  File file = open_file(fs, "/admin_user.txt", FILE_WRITE);
+  file.print(user_id);
+  file.close();
+  // Delete all paired users
+  file = open_file(fs, "/paired_users.txt", FILE_WRITE);
+  file.print("");
+  file.close();
+}
+
+bool is_admin_user(fs::FS &fs, String user_id) {
+  File file = open_file(fs, "/admin_user.txt", FILE_READ);
+  String line = file.readString();
+  line.trim();
+  if(line == user_id) {
+    file.close();
+    return true;
+  }
+  file.close();
+  return false;
+}
+
+void save_paired_user(fs::FS &fs, String user_id) {
+  File file = open_file(fs, "/paired_users.txt", FILE_APPEND);
   file.print(user_id + "\n");
   file.close();
 }
 
-bool is_paired_user(String user_id) {
-  File file = open_file(SD, "/paired_users.txt", FILE_READ);
+bool is_paired_user(fs::FS &fs, String user_id) {
+  File file = open_file(fs, "/paired_users.txt", FILE_READ);
   String line;
   while(file.available()) {
     line = file.readStringUntil('\n');
@@ -194,4 +217,12 @@ bool is_paired_user(String user_id) {
   }
   file.close();
   return false;
+}
+
+String get_paired_users(fs::FS &fs) {
+  File file = open_file(fs, "/paired_users.txt");
+  String users = file.readString();
+  users.trim();
+  file.close();
+  return users;
 }

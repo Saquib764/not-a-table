@@ -141,3 +141,12 @@ bool download_file(fs::FS &fs, String url, String path) {
   http.end();
   return true;
 }
+
+String get_device_id(fs::FS &fs) {
+  File file = open_file(fs, "/device_id.txt");
+  String device_id = file.readString();
+  device_id.trim();
+  file.close();
+  
+  return device_id;
+}

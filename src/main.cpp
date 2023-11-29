@@ -95,10 +95,13 @@ void handle_options_call() {
 // 1. Get device info
 void handle_info() {
   Serial.println("Get server status");
+
+  // param user_id
+  String user_id = server.arg("user_id");
   
   jsonDocument.clear();  
   jsonDocument["model_name"] = "Yume Pro V0.01";
-  jsonDocument["id"] = "unique_id_for_each_table";
+  jsonDocument["id"] = get_device_id(SD);
   jsonDocument["type"] = "Running";
   jsonDocument["value"] = 200;
   jsonDocument["unit"] = true;
@@ -121,6 +124,13 @@ void handle_info() {
     jsonDocument["is_performing_homing"] = true;
   } else {
     jsonDocument["is_performing_homing"] = false;
+  }
+  if(is_admin_user(SD, user_id)) {
+    jsonDocument["is_admin"] = true;
+    // admin_secret
+    jsonDocument["admin_secret"] = get_admin_secret(SD);
+  } else {
+    jsonDocument["is_admin"] = false;
   }
   serializeJson(jsonDocument, buffer);
   
@@ -322,11 +332,14 @@ void handle_admin_pair() {
   save_wifi_login(preferences, ssid, pwd);
 
   // Create admin secret
-  save_admin_secret();
-  String admin_secret = get_admin_secret();
+  save_admin_secret(SD);
+  String admin_secret = get_admin_secret(SD);
+
+  // Save admin user
+  save_admin_user(SD, user_id);
 
   // Save paired user
-  save_paired_user(user_id);
+  save_paired_user(SD, user_id);
   
   jsonDocument.clear();  
   jsonDocument["admin_secret"] = admin_secret;
@@ -352,8 +365,10 @@ void handle_user_pair() {
   user_id.trim();
   admin_secret.trim();
 
+  Serial.println(user_id + ", " + get_admin_secret(SD));
+
   // Check if admin secret is correct
-  if(!is_admin_secret_correct(admin_secret)) {
+  if(!is_admin_secret_correct(SD, admin_secret)) {
     jsonDocument.clear();  
     jsonDocument["success"] = false;
     jsonDocument["error"] = "Admin secret is incorrect";
@@ -363,7 +378,9 @@ void handle_user_pair() {
   }  
 
   // Save paired user
-  save_paired_user(user_id);
+  if(!is_paired_user(SD, user_id)) {
+    save_paired_user(SD, user_id);
+  }
   
   jsonDocument.clear();  
   jsonDocument["success"] = true;
@@ -374,7 +391,21 @@ void handle_user_pair() {
   server.send(200, "application/json", buffer);
 }
 
-// 14. Download design file
+// 14. Get paired users
+void handle_user_paired() {
+  Serial.println("Get paired users");
+  String paired_users = get_paired_users(SD);
+
+  jsonDocument.clear();  
+  jsonDocument["success"] = true;
+  jsonDocument["paired_users"] = paired_users;
+
+  serializeJson(jsonDocument, buffer);
+
+  server.send(200, "application/json", buffer);
+}
+
+// 15. Download design file
 void handle_file_download() {
   Serial.println("Download file from a URL");
   String body = server.arg("plain");
@@ -478,7 +509,10 @@ void setup_routing(WebServer& server) {
   server.on("/pair/add", HTTP_POST, handle_user_pair);
   server.on("/pair/add", HTTP_OPTIONS, handle_options_call);
 
-  // 14. Download design file
+  // 14. Get paired users
+  server.on("/paired", HTTP_GET, handle_user_paired);
+
+  // 15. Download design file
   server.on("/track/download", HTTP_POST, handle_file_download);
   server.on("/track/download", HTTP_OPTIONS, handle_options_call);
 
@@ -537,10 +571,10 @@ void setup() {
     std::array<String, 2> logins = get_wifi_login(preferences);
 
     Serial.println("Wifi logins:");
-    logins[0] = SAVED_SSID;
-    logins[1] = SAVED_PWD;
-    Serial.println(logins[0]);
-    Serial.println(logins[1]);
+    // logins[0] = SAVED_SSID;
+    // logins[1] = SAVED_PWD;
+    // Serial.println(logins[0]);
+    // Serial.println(logins[1]);
 
     if( logins[0] != "" && logins[1] != "" ) {
       // Wifi login found, connect to wifi
