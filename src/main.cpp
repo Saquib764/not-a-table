@@ -84,11 +84,9 @@ bool should_use_homing = true;
 
 
 void handle_options_call() {
-  
   jsonDocument.clear();  
   jsonDocument["status"] = "ok";
   serializeJson(jsonDocument, buffer);
-  
   server.send(200, "application/json", buffer);
 }
 
@@ -101,10 +99,8 @@ void handle_info() {
   
   jsonDocument.clear();  
   jsonDocument["model_name"] = "Yume Pro V0.01";
+  jsonDocument["software_version"] = "V0.01";
   jsonDocument["id"] = get_device_id(SD);
-  jsonDocument["type"] = "Running";
-  jsonDocument["value"] = 200;
-  jsonDocument["unit"] = true;
   jsonDocument["has_error"] = has_error;
   jsonDocument["status_code"] = status_code;
   jsonDocument["SSID"] = WiFi.SSID();
@@ -143,7 +139,7 @@ void handle_restart() {
   jsonDocument.clear();  
   jsonDocument["success"] = true;
   is_printing_design = false;
-  arm->stopMove();
+  controller->force_stop();
   serializeJson(jsonDocument, buffer);
   server.send(200, "application/json", buffer);
   delay(2000);
