@@ -136,6 +136,10 @@ void handle_info() {
 // 2. Restart device
 void handle_restart() {
   Serial.println("Restarting");
+  led_color[0] = static_cast<uint8_t>(0);
+  led_color[1] = static_cast<uint8_t>(0);
+  led_color[2] = static_cast<uint8_t>(0);
+  led_color[3] = static_cast<uint8_t>(0);
   jsonDocument.clear();  
   jsonDocument["success"] = true;
   is_printing_design = false;
@@ -158,8 +162,8 @@ void handle_update_firmware() {
   
   jsonDocument.clear();  
 
+  controller->force_stop();
   controller->reset();
-  arm->stopMove();
   delay(1000);
   bool is_success = update_firmware(update_url);
   jsonDocument["success"] = is_success;
@@ -222,6 +226,20 @@ void handle_get_current_playing() {
   jsonDocument.clear();  
   jsonDocument["success"] = true;
   jsonDocument["current_playing"] = current_playing;
+
+  serializeJson(jsonDocument, buffer);
+
+  server.send(200, "application/json", buffer);
+}
+
+// 7. Pause
+void handle_pause() {
+  Serial.println("Pause");
+  is_printing_design = false;
+  controller->force_stop();
+
+  jsonDocument.clear();  
+  jsonDocument["success"] = true;
 
   serializeJson(jsonDocument, buffer);
 
@@ -481,7 +499,7 @@ void setup_routing(WebServer& server) {
   server.on("/current-playing", HTTP_GET, handle_get_current_playing);
 
   // 7. Pause
-  // TODO
+  server.on("/pause", HTTP_GET, handle_pause);
 
   // 8. Get list of tracks in device
   server.on("/tracks", HTTP_GET, handle_get_tracks);

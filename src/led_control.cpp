@@ -23,7 +23,7 @@ void init_led() {
 }
 void set_led_status(int status_code) {
   /* 0: No error, GREEN
-   * 1: SD card error, RED
+   * 1: RED
    * 2: Wifi in pairing mode, YELLOW, BLINK
   */
   if(status_code == 0) {
