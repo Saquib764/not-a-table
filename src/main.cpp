@@ -625,9 +625,8 @@ void setup() {
   Serial.println("Server started. Listening on port 80");
 
   // Remove this
-  player.play(SD, "/designs/cleanup_spiral.thr.txt");
-  is_printing_design = true;
-
+  // player.play(SD, "/designs/cleanup_spiral.thr.txt");
+  // is_printing_design = true;
 }
 
 // double points[5][3] = {
@@ -712,6 +711,10 @@ void loop() {
         target_q2 = 0.0;
       }
       last_time = micros();
+    }else {
+      // Play next track from queue
+      player.play_next_track(SD);
+      is_printing_design = true;
     }
   }
   // delay(300);

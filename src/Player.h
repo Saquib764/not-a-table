@@ -15,9 +15,10 @@ class Player {
     void remove_from_queue(fs::FS &fs, String path);
     String get_queue(fs::FS &fs);
     void clear_queue(fs::FS &fs);
-    String get_next_design(fs::FS &fs);
+    String get_next_track_from_queue(fs::FS &fs);
     bool play(fs::FS &fs);
     void play(fs::FS &fs, String path);
+    void play_next_track(fs::FS &fs);
     void pause();
     void resume();
     void next_line(fs::FS &fs, double *thetas);

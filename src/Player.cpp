@@ -68,7 +68,7 @@ void Player::clear_queue(fs::FS &fs) {
   queue.close();
 }
 
-String Player::get_next_design(fs::FS &fs) {
+String Player::get_next_track_from_queue(fs::FS &fs) {
   File queue = fs.open("/queue.txt");
   String path;
   String first_path = this->path;
@@ -133,6 +133,14 @@ bool Player::play(fs::FS &fs) {
     return true;
   }
   return false;
+}
+void Player::play_next_track(fs::FS &fs) {
+  String path = get_next_track_from_queue(fs);
+  if(path == "") {
+    Serial.println("No more tracks in queue.");
+    return;
+  }
+  play(fs, path);
 }
 
 void Player::pause() {
