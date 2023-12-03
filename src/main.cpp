@@ -625,7 +625,7 @@ void setup() {
   Serial.println("Server started. Listening on port 80");
 
   // Remove this
-  player.play(SD, "/designs/StarryNight.thr.txt");
+  player.play(SD, "/designs/cleanup_spiral.thr.txt");
   is_printing_design = true;
 
 }
