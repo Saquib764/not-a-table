@@ -45,8 +45,8 @@ WebServer server(80);
 
 Preferences preferences;
 
-String SAVED_SSID = "Zapp";
-String SAVED_PWD = "Haweli@1504";
+String SAVED_SSID = "E1_1102";
+String SAVED_PWD = "Roomies@2829";
 
 int EN_PIN = 25;
 uint8_t motor1DirPin = 26;
@@ -585,10 +585,10 @@ void setup() {
     std::array<String, 2> logins = get_wifi_login(preferences);
 
     Serial.println("Wifi logins:");
-    // logins[0] = SAVED_SSID;
-    // logins[1] = SAVED_PWD;
-    // Serial.println(logins[0]);
-    // Serial.println(logins[1]);
+    logins[0] = SAVED_SSID;
+    logins[1] = SAVED_PWD;
+    Serial.println(logins[0]);
+    Serial.println(logins[1]);
 
     if( logins[0] != "" && logins[1] != "" ) {
       // Wifi login found, connect to wifi

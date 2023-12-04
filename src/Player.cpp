@@ -20,6 +20,7 @@
 Player::Player() {
   is_paused = false;
   is_completed = false;
+  path = "";
 }
 
 void Player::add_to_queue(fs::FS &fs, String path) {
@@ -69,25 +70,34 @@ void Player::clear_queue(fs::FS &fs) {
 }
 
 String Player::get_next_track_from_queue(fs::FS &fs) {
+  /*  Play next track from queue after this->path
+      If this->path is empty, play the first track in the queue
+      If this->path is the last track in the queue, play the first track in the queue
+  */
   File queue = fs.open("/queue.txt");
-  String path;
-  String first_path = this->path;
+  String next_track = "";
+  String current_track = "";
+  bool is_next = false;
   while(queue.available()) {
-    path = queue.readStringUntil('\n');
-    if(first_path == "") {
-      first_path = path;
+    String line = queue.readStringUntil('\n');
+    line.trim();
+    if(current_track == "") {
+      current_track = line;
     }
-    if(path == this->path) {
-      if(queue.available()) {
-        path = queue.readStringUntil('\n');
-      } else {
-        path = first_path;
-      }
+    if(is_next) {
+      next_track = line;
       break;
+    }
+    if(line == this->path) {
+      is_next = true;
     }
   }
   queue.close();
-  return path;
+  if(next_track == "") {
+    // If next track is empty, play the first track in the queue
+    return current_track;
+  }
+  return next_track;
 }
 void Player::play(fs::FS &fs, String path) {
   path.trim();
@@ -136,6 +146,7 @@ bool Player::play(fs::FS &fs) {
 }
 void Player::play_next_track(fs::FS &fs) {
   String path = get_next_track_from_queue(fs);
+  Serial.println("Next track: " + path);
   if(path == "") {
     Serial.println("No more tracks in queue.");
     return;
