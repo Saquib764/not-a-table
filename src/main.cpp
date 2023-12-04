@@ -357,6 +357,9 @@ void handle_admin_pair() {
   
   jsonDocument.clear();  
   jsonDocument["admin_secret"] = admin_secret;
+  jsonDocument["model_name"] = "Yume Pro V0.01";
+  jsonDocument["software_version"] = "V0.01";
+  jsonDocument["id"] = get_device_id(SD);
   jsonDocument["success"] = true;
 
   serializeJson(jsonDocument, buffer);
