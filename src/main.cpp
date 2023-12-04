@@ -703,8 +703,12 @@ void loop() {
         // target_q1 = points[current_index][1];
         // target_q2 = points[current_index][2];
         // current_index = (current_index + 1) % 5;
+      }else{
+        Serial.println("should_read_next: " + String(should_read_next));
+
       }
       if(should_read_next == 2) {
+        Serial.println("Stop design print" + String(should_read_next));
         is_printing_design = false;
         // should_play_next = true;
         target_q1 = 0.0;
@@ -713,6 +717,7 @@ void loop() {
       last_time = micros();
     }else {
       // Play next track from queue
+      Serial.println("play next");
       player.play_next_track(SD);
       is_printing_design = true;
     }
