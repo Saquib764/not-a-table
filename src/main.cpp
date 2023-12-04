@@ -587,8 +587,8 @@ void setup() {
     Serial.println("Wifi logins:");
     logins[0] = SAVED_SSID;
     logins[1] = SAVED_PWD;
-    Serial.println(logins[0]);
-    Serial.println(logins[1]);
+    Serial.println("ssid: " + logins[0]);
+    Serial.println("password: " + logins[1]);
 
     if( logins[0] != "" && logins[1] != "" ) {
       // Wifi login found, connect to wifi
