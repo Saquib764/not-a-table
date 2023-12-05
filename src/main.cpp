@@ -266,6 +266,7 @@ void handle_get_tracks() {
   jsonDocument.clear();  
   jsonDocument["success"] = true;
   jsonDocument["count"] = count;
+  jsonDocument["has_more"] = count == (to - from);
   jsonDocument["files"] = files;
 
   serializeJson(jsonDocument, buffer);
