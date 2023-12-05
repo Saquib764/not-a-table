@@ -261,7 +261,7 @@ void handle_get_tracks() {
 
   String files = "";
   int count = 0;
-  get_files_in_dir(SD, "/designs", &files, count, from, to);
+  get_files_in_dir(SD, "/designs", &files, &count, from, to);
 
   jsonDocument.clear();  
   jsonDocument["success"] = true;
