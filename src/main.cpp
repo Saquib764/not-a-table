@@ -260,10 +260,12 @@ void handle_get_tracks() {
   }
 
   String files = "";
-  get_files_in_dir(SD, "/designs", &files, from, to);
+  int count = 0;
+  get_files_in_dir(SD, "/designs", &files, count, from, to);
 
   jsonDocument.clear();  
   jsonDocument["success"] = true;
+  jsonDocument["count"] = count;
   jsonDocument["files"] = files;
 
   serializeJson(jsonDocument, buffer);
