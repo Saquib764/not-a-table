@@ -714,9 +714,6 @@ void loop() {
         // target_q1 = points[current_index][1];
         // target_q2 = points[current_index][2];
         // current_index = (current_index + 1) % 5;
-      }else{
-        Serial.println("should_read_next: " + String(should_read_next));
-
       }
       if(should_read_next == 2) {
         Serial.println("Stop design print" + String(should_read_next));
