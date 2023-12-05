@@ -71,6 +71,7 @@ float ARM1 = 0.25;
 float ARM2 = 0.25;
 
 bool is_printing_design = false;
+bool is_paused = false;
 bool is_in_pairing_mode = false;
 bool should_clear = false;
 bool should_perform_homing = true;
@@ -206,6 +207,7 @@ void handle_play() {
   player.play(SD, filename);
   arm->reset_home();
   is_printing_design = true;
+  is_paused = false;
   should_clear = true;
   should_perform_homing = true;
 
@@ -235,7 +237,7 @@ void handle_get_current_playing() {
 // 7. Pause
 void handle_pause() {
   Serial.println("Pause");
-  is_printing_design = false;
+  is_paused = true;
   controller->force_stop();
 
   jsonDocument.clear();  
@@ -692,7 +694,7 @@ void loop() {
     // move_led();
   }
   EVERY_N_MILLISECONDS(4) {
-    if(is_printing_design) {
+    if(is_printing_design && !is_paused) {
       // Serial.println("Time: " + String( (micros() - last_time)/1000.0 ));
       int should_read_next = controller->follow_trajectory();
       // long int delta[2] = {0, 0};
@@ -716,16 +718,18 @@ void loop() {
       if(should_read_next == 2) {
         Serial.println("Stop design print" + String(should_read_next));
         is_printing_design = false;
-        // should_play_next = true;
+        should_play_next = true;
         target_q1 = 0.0;
         target_q2 = 0.0;
       }
       last_time = micros();
-    }else {
+    }
+    if(should_play_next) {
       // Play next track from queue
       Serial.println("play next");
       player.play_next_track(SD);
       is_printing_design = true;
+      should_play_next = false;
     }
   }
   // delay(300);
