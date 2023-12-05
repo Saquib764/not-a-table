@@ -204,12 +204,15 @@ void handle_play() {
   String filename = jsonDocument["filename"];
   filename.trim();
 
-  player.play(SD, filename);
-  arm->reset_home();
+  // if new track is different from current track, home again
+  if(player.get_current_playing() != filename) {
+    should_perform_homing = true;
+    arm->reset_home();
+    should_clear = true;
+    player.play(SD, filename);
+  }
   is_printing_design = true;
   is_paused = false;
-  should_clear = true;
-  should_perform_homing = true;
 
   jsonDocument.clear();  
   jsonDocument["success"] = true;
