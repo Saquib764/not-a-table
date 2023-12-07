@@ -206,9 +206,9 @@ void handle_play() {
 
   // if new track is different from current track, home again
   if(player.get_current_playing() != filename) {
-    should_perform_homing = true;
-    arm->reset_home();
-    should_clear = true;
+    // should_perform_homing = true;
+    // arm->reset_home();
+    // should_clear = true;
     player.play(SD, filename);
   }
   is_printing_design = true;
