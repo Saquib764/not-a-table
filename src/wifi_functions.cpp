@@ -47,19 +47,26 @@ bool disconnect_from_network() {
 }
 
 bool connect_to_network(String ssid, String pwd, int n_try) {
+  Serial.println("Connecting to WiFi... 50");
   WiFi.mode(WIFI_STA);
   const char* ssid_c = ssid.c_str();
   const char* pwd_c = pwd.c_str();
   if(check_if_connected_to_network(ssid)) {
+  Serial.println("Connecting to WiFi... 55");
     return true;
   }
+  Serial.println("Connecting to WiFi... 58");
   if(check_if_connected_to_network()) {
+  Serial.println("Connecting to WiFi... 60");
     disconnect_from_network();
   }
   // Connect to network in Dynamic IP mode to get network parameter
 
+  Serial.println("Connecting to WiFi... 65");
   WiFi.begin(ssid_c, pwd_c);
+  Serial.println("Connecting to WiFi... 67");
   for(int i = 0; i < n_try; i++) {
+    Serial.println("Connecting to WiFi... 69: " + String(i) + " Status: " + String(WiFi.status()));
     if(WiFi.status() == WL_CONNECTED) {
       Serial.print("WiFi connected: ");
       Serial.println(ssid_c);
