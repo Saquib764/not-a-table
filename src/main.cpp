@@ -182,6 +182,7 @@ void handle_update_firmware() {
 void handle_home() {
   Serial.println("Home");
   arm->reset_home();
+  controller->reset();
   is_printing_design = false;
   should_perform_homing = true;
 
@@ -209,6 +210,7 @@ void handle_play() {
     // should_perform_homing = true;
     // arm->reset_home();
     // should_clear = true;
+    controller->reset();
     player.play(SD, filename);
   }
   is_printing_design = true;
