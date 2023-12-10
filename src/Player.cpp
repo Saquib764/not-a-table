@@ -26,7 +26,7 @@ Player::Player() {
 void Player::index_all_tracks(fs::FS &fs) {
   File tracks = fs.open("/tracks.txt", FILE_WRITE);
   String files = "";
-  get_files_in_dir(fs, "/designs/", &files);
+  get_files_in_dir(fs, "/designs", &files);
   Serial.println("Files: " + files);
   tracks.print(files);
   tracks.close();
