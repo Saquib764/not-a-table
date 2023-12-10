@@ -51,7 +51,6 @@ void Player::get_tracks(fs::FS &fs, String *tracks, int &count, int from, int to
     if(to <= 0) {
       break;
     }
-    Serial.println("File: " + String(count) + " : " + file);
     *tracks += file + ",";
     to--;
     count++;

@@ -181,10 +181,12 @@ void handle_update_firmware() {
 // 4. Home
 void handle_home() {
   Serial.println("Home");
-  arm->reset_home();
-  controller->reset();
-  is_printing_design = false;
-  should_perform_homing = true;
+  if(!should_perform_homing) {
+    arm->reset_home();
+    controller->reset();
+    is_printing_design = false;
+    should_perform_homing = true;
+  }
 
   jsonDocument.clear();  
   jsonDocument["success"] = true;
@@ -197,6 +199,16 @@ void handle_home() {
 // 5. Play
 void handle_play() {
   Serial.println("Play");
+  if(should_perform_homing) {
+    jsonDocument.clear();  
+    jsonDocument["success"] = false;
+    jsonDocument["error"] = "Arm is homing";
+
+    serializeJson(jsonDocument, buffer);
+
+    server.send(200, "application/json", buffer);
+    return;
+  }
   String body = server.arg("plain");
   Serial.println(body);
   jsonDocument.clear();
@@ -243,6 +255,16 @@ void handle_get_current_playing() {
 // 7. Pause
 void handle_pause() {
   Serial.println("Pause");
+  if(should_perform_homing) {
+    jsonDocument.clear();  
+    jsonDocument["success"] = false;
+    jsonDocument["error"] = "Arm is homing";
+
+    serializeJson(jsonDocument, buffer);
+
+    server.send(200, "application/json", buffer);
+    return;
+  }
   is_paused = true;
   controller->force_stop();
 
@@ -383,6 +405,16 @@ void handle_admin_pair() {
 
 // 13. Pair user
 void handle_user_pair() {
+  if(should_perform_homing) {
+    jsonDocument.clear();  
+    jsonDocument["success"] = false;
+    jsonDocument["error"] = "Arm is homing";
+
+    serializeJson(jsonDocument, buffer);
+
+    server.send(200, "application/json", buffer);
+    return;
+  }
   Serial.println("Pairing");
   String body = server.arg("plain");
   Serial.println(body);
@@ -435,6 +467,16 @@ void handle_user_paired() {
 
 // 15. Download design file
 void handle_file_download() {
+  if(should_perform_homing) {
+    jsonDocument.clear();  
+    jsonDocument["success"] = false;
+    jsonDocument["error"] = "Arm is homing";
+
+    serializeJson(jsonDocument, buffer);
+
+    server.send(200, "application/json", buffer);
+    return;
+  }
   Serial.println("Download file from a URL");
   String body = server.arg("plain");
   Serial.println(body);
@@ -455,6 +497,16 @@ void handle_file_download() {
 }
 
 void handle_led_color_update() {
+  if(should_perform_homing) {
+    jsonDocument.clear();  
+    jsonDocument["success"] = false;
+    jsonDocument["error"] = "Arm is homing";
+
+    serializeJson(jsonDocument, buffer);
+
+    server.send(200, "application/json", buffer);
+    return;
+  }
   Serial.println("Changing led color");
   String body = server.arg("plain");
   Serial.println(body);
