@@ -23,6 +23,43 @@ Player::Player() {
   path = "";
 }
 
+void Player::index_all_tracks(fs::FS &fs) {
+  // Check if file exists, create if not
+  if(!fs.exists("/tracks.txt")) {
+    File tracks = fs.open("/tracks.txt", FILE_WRITE);
+    tracks.close();
+  }
+  File tracks = fs.open("/tracks.txt", FILE_WRITE);
+  String files = "";
+  get_files_in_dir(fs, "/designs/", &files);
+  tracks.print(files);
+  tracks.close();
+}
+
+void Player::get_tracks(fs::FS &fs, String *tracks, int &count, int from, int to) {
+  // Check if file exists, return if not
+  if(!fs.exists("/tracks.txt")) {
+    return;
+  }
+  File tracks_file = fs.open("/tracks.txt");
+  while (tracks_file.available()) {
+    String file = tracks_file.readStringUntil('\n');
+    file.trim();
+    if(file == "") {
+      continue;
+    }
+    if(from > 0) {
+      from--;
+      continue;
+    }
+    if(to > 0) {
+      to--;
+    }
+    *tracks += file + "\n";
+    count++;
+  }
+}
+
 void Player::add_to_queue(fs::FS &fs, String path) {
   // Check if file exists, create if not
   if(!fs.exists("/queue.txt")) {

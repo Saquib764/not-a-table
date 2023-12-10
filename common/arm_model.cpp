@@ -134,6 +134,15 @@ void ArmModel::reset_home() {
   homing_started_at_angle = 0.0;
 }
 
+void ArmModel::reset_within_2PI_domain() {
+  double pos[2] = {0, 0};
+  getJointPositionInRadians(pos);
+  // modulate to 2PI domain, pos can be N multiple of PI
+  pos[0] = pos[0] - 2 * PI * floor(pos[0] / (2 * PI));
+  pos[1] = pos[1] - 2 * PI * floor(pos[1] / (2 * PI));
+  resetToPositionInSteps(pos[0] * 3 * steps_per_radian, pos[1] * 3 * steps_per_radian);
+}
+
 void ArmModel::home() {
   if(!is_homed[0]) {
     int homing_pin = homing_pin1;

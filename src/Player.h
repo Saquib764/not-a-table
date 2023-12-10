@@ -5,12 +5,15 @@
 #include "FS.h"
 #include "SD.h"
 #include "SPI.h"
+#include "file_functions.h"
 
 class Player {
   public:
     // constructors:
     Player();
 
+    void index_all_tracks(fs::FS &fs);
+    void get_tracks(fs::FS &fs, String *tracks, int &count, int from, int to);
     void add_to_queue(fs::FS &fs, String path);
     void remove_from_queue(fs::FS &fs, String path);
     String get_queue(fs::FS &fs);

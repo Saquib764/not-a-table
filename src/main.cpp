@@ -211,6 +211,7 @@ void handle_play() {
     // arm->reset_home();
     // should_clear = true;
     controller->reset();
+    arm->reset_within_2PI_domain();
     player.play(SD, filename);
   }
   is_printing_design = true;
@@ -266,15 +267,15 @@ void handle_get_tracks() {
     to = server.arg("to").toInt();
   }
 
-  String files = "";
+  String tracks = "";
   int count = 0;
-  get_files_in_dir(SD, "/designs", &files, count, from, to);
+  player.get_tracks(SD, &tracks, count, from, to);
 
   jsonDocument.clear();  
   jsonDocument["success"] = true;
   jsonDocument["count"] = count;
   jsonDocument["has_more"] = count == (to - from);
-  jsonDocument["files"] = files;
+  jsonDocument["files"] = tracks;
 
   serializeJson(jsonDocument, buffer);
 
@@ -633,8 +634,10 @@ void setup() {
   // if(has_resumed) {
   //   is_printing_design = false;
   // }
+  player.index_all_tracks(SD);
   server.begin();
   set_led_status(status_code);
+  
   Serial.println("Server started. Listening on port 80");
 
   // Remove this

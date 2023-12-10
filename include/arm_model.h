@@ -52,6 +52,7 @@ class ArmModel{
 
     void home();
     void reset_home();
+    void reset_within_2PI_domain();
     void to_xy(double a1, double a2, double& x, double& y);
 };
 

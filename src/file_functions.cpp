@@ -100,22 +100,17 @@ void list_dir(fs::FS &fs, const char * dirname, uint8_t levels) {
   }
 }
 
-void get_files_in_dir(fs::FS &fs, const char * dirname, String *files, int &count, int start, int end) {
+void get_files_in_dir(fs::FS &fs, const char * dirname, String *files) {
   File root1 = fs.open("/");
   File root = fs.open(dirname);
   File file = root.openNextFile();
-  int i = 0;
-  while(file && i < end){
+  while(file){
     if(file.isDirectory()){
       file = root.openNextFile();
       continue;
     }
-    if(i>=start && i<end) {
-      count++;
-      *files += "," + String(file.name());
-    }
+    *files += "\n" + String(file.name());
     file = root.openNextFile();
-    i++;
   }
   return;
 }
