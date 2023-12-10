@@ -27,7 +27,6 @@ void Player::index_all_tracks(fs::FS &fs) {
   File tracks = fs.open("/tracks.txt", FILE_WRITE);
   String files = "";
   get_files_in_dir(fs, "/designs", &files);
-  Serial.println("Files: " + files);
   tracks.print(files);
   tracks.close();
 }
@@ -40,18 +39,19 @@ void Player::get_tracks(fs::FS &fs, String *tracks, int &count, int from, int to
   File tracks_file = fs.open("/tracks.txt");
   while (tracks_file.available()) {
     String file = tracks_file.readStringUntil('\n');
-    Serial.println("File: " + String(count) + " : " + file);
     file.trim();
     if(file == "") {
       continue;
     }
     if(from > 0) {
       from--;
+      to--;
       continue;
     }
     if(to > 0) {
       to--;
     }
+    Serial.println("File: " + String(count) + " : " + file);
     *tracks += file + "\n";
     count++;
   }
