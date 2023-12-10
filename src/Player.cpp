@@ -24,14 +24,10 @@ Player::Player() {
 }
 
 void Player::index_all_tracks(fs::FS &fs) {
-  // Check if file exists, create if not
-  if(!fs.exists("/tracks.txt")) {
-    File tracks = fs.open("/tracks.txt", FILE_WRITE);
-    tracks.close();
-  }
   File tracks = fs.open("/tracks.txt", FILE_WRITE);
   String files = "";
   get_files_in_dir(fs, "/designs/", &files);
+  Serial.println("Files: " + files);
   tracks.print(files);
   tracks.close();
 }
@@ -44,6 +40,7 @@ void Player::get_tracks(fs::FS &fs, String *tracks, int &count, int from, int to
   File tracks_file = fs.open("/tracks.txt");
   while (tracks_file.available()) {
     String file = tracks_file.readStringUntil('\n');
+    Serial.println("File: " + String(count) + " : " + file);
     file.trim();
     if(file == "") {
       continue;
