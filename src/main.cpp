@@ -664,8 +664,9 @@ void setup() {
       SAVED_SSID.trim();
       SAVED_PWD.trim();
 
-      connect_to_network( SAVED_SSID, SAVED_PWD, 5);
-      is_connected_to_wifi = true;
+      if(connect_to_network( SAVED_SSID, SAVED_PWD, 5)){
+        is_connected_to_wifi = true;
+      }
     }
   }
   if(is_in_pairing_mode){
