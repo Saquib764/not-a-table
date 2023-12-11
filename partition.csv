@@ -4,4 +4,4 @@ otadata,  data, ota,     56K,     8K,
 app0,  app,  ota_0,         ,        0x190000,
 app1,     app,  ota_1,      ,        0x190000,
 spiffs,   data, spiffs,     ,        0x30000,
-coredump, data, coredump,   ,        64K
+coredump, data, coredump,   ,        16K
