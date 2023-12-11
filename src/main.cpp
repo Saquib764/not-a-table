@@ -64,7 +64,7 @@ char buffer[550];
 double target_q1 = 0.0;
 double target_q2 = 0.0;
 
-uint8_t led_color[4] = {255, 255, 255, 255};
+uint8_t led_color[4] = {246, 231, 210, 255};
 
 
 float ARM1 = 0.25;
@@ -73,6 +73,7 @@ float ARM2 = 0.25;
 bool is_printing_design = false;
 bool is_paused = false;
 bool is_in_pairing_mode = false;
+bool is_connected_to_wifi = false;
 bool should_clear = false;
 bool should_perform_homing = true;
 bool should_play_next = false;
@@ -664,8 +665,7 @@ void setup() {
       SAVED_PWD.trim();
 
       connect_to_network( SAVED_SSID, SAVED_PWD, 5);
-    } else {
-      is_in_pairing_mode = true;
+      is_connected_to_wifi = true;
     }
   }
   if(is_in_pairing_mode){
