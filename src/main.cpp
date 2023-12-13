@@ -201,6 +201,7 @@ void handle_home() {
 void handle_play() {
   Serial.println("Play");
   if(should_perform_homing) {
+    Serial.println("Arm is homing");
     jsonDocument.clear();  
     jsonDocument["success"] = false;
     jsonDocument["error"] = "Arm is homing";
@@ -257,6 +258,7 @@ void handle_get_current_playing() {
 void handle_pause() {
   Serial.println("Pause");
   if(should_perform_homing) {
+    Serial.println("Arm is homing");
     jsonDocument.clear();  
     jsonDocument["success"] = false;
     jsonDocument["error"] = "Arm is homing";
