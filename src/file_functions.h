@@ -5,7 +5,6 @@
 #include "SD.h"
 #include "SPI.h"
 #include "SPIFFS.h"
-#include <HTTPClient.h>
 
 File read_file(fs::FS &fs, String path);
 File open_file(fs::FS &fs, String path, const char* mode = FILE_READ);
