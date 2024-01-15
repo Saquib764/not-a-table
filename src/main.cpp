@@ -78,6 +78,9 @@ bool is_uploading = false;
 bool should_use_internal_sd = false;
 bool is_storage_available = false;
 bool should_use_homing = true;
+bool is_waiting_for_timer = false;
+float wait_time = 10.0 * 60.0;  // 10 minutes
+float wait_time_start = 0.0;
 
 
 double points[3] = {0.0, 0.0, 0.0};
@@ -139,6 +142,7 @@ void setup() {
   // Remove this
   // player.play(SD, "/designs/cleanup_spiral.thr.txt");
   // is_printing_design = true;
+  // should_play_next = true;
 }
 
 // double points[5][3] = {
@@ -219,10 +223,17 @@ void loop() {
         Serial.println("Stop design print" + String(should_read_next));
         is_printing_design = false;
         should_play_next = true;
+        is_waiting_for_timer = true;
+        wait_time_start = millis();
         target_q1 = 0.0;
         target_q2 = 0.0;
       }
       last_time = micros();
+    }
+    if(is_waiting_for_timer) {
+      if(millis() - wait_time_start > wait_time * 1000.0) {
+        is_waiting_for_timer = false;
+      }
     }
     if(should_play_next) {
       // Play next track from queue
