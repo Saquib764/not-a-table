@@ -235,7 +235,7 @@ void loop() {
       last_time = micros();
     }
     if(is_waiting_for_timer) {
-      Serial.println("Time remaining (seconds): " + String((millis() - wait_time_start) / 1000.0));
+      Serial.println("Time elapsed (seconds): " + String((millis() - wait_time_start) / 1000.0));
       if(millis() - wait_time_start > wait_time * 1000.0) {
         is_waiting_for_timer = false;
       }
