@@ -79,7 +79,7 @@ bool should_use_internal_sd = false;
 bool is_storage_available = false;
 bool should_use_homing = true;
 bool is_waiting_for_timer = false;
-float wait_time = 10.0 * 60.0;  // 10 minutes
+float wait_time = 1.0 * 60.0;  // 10 minutes
 float wait_time_start = 0.0;
 
 
@@ -221,7 +221,6 @@ void loop() {
       }
       if(should_read_next == 2) {
         Serial.println("Stop design print.");
-        Serial.println("Wait for " + String(wait_time) + " seconds. Then play the next design");
 
         controller->reset();
 
@@ -231,10 +230,12 @@ void loop() {
         wait_time_start = millis();
         // target_q1 = 0.0;
         // target_q2 = 0.0;
+        Serial.println("Wait for " + String(wait_time) + " seconds. Then play the next design");
       }
       last_time = micros();
     }
     if(is_waiting_for_timer) {
+      Serial.println("Time remaining (seconds): " + String((millis() - wait_time_start) / 1000.0));
       if(millis() - wait_time_start > wait_time * 1000.0) {
         is_waiting_for_timer = false;
       }

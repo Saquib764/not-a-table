@@ -174,9 +174,6 @@ int ArmController::follow_trajectory() {
   double t = (micros() - start_time) / 1000000.0;
   int current_target_index = get_target_index(current_position) + 1;
 
-  if(has_all_targets) {
-    Serial.println("Has all targets: " + String(current_target_index) + " " + String(MAX_POINTS));
-  }
   if (current_target_index >= MAX_POINTS-2 && has_all_targets) {
     has_finished = true;
     target_speeds[0] = 0.0;
