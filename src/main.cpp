@@ -222,6 +222,9 @@ void loop() {
       if(should_read_next == 2) {
         Serial.println("Stop design print.");
         Serial.println("Wait for " + String(wait_time) + " seconds. Then play the next design");
+
+        controller->reset();
+
         is_printing_design = false;
         should_play_next = true;
         is_waiting_for_timer = true;
@@ -235,6 +238,7 @@ void loop() {
       if(millis() - wait_time_start > wait_time * 1000.0) {
         is_waiting_for_timer = false;
       }
+      return
     }
     if(should_play_next) {
       // Play next track from queue
