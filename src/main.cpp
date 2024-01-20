@@ -238,7 +238,7 @@ void loop() {
       if(millis() - wait_time_start > wait_time * 1000.0) {
         is_waiting_for_timer = false;
       }
-      return
+      return;
     }
     if(should_play_next) {
       // Play next track from queue
