@@ -79,7 +79,7 @@ bool should_use_internal_sd = false;
 bool is_storage_available = false;
 bool should_use_homing = true;
 bool is_waiting_for_timer = false;
-float wait_time = 1.0 * 60.0;  // 10 minutes
+float wait_time = 1.0 * 60.0;  // 1 minutes
 float wait_time_start = 0.0;
 
 
@@ -142,7 +142,7 @@ void setup() {
   // Remove this
   // player.play(SD, "/designs/cleanup_spiral.thr.txt");
   // is_printing_design = true;
-  // should_play_next = true;
+  should_play_next = true;
 }
 
 // double points[5][3] = {
