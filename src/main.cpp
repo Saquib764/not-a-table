@@ -211,22 +211,23 @@ void loop() {
         if(points[0] != 0.0) {
           target_q1 = points[1];
           target_q2 = points[2];
+          controller->add_point_to_trajectory(target_q1, target_q2);
         }else{
           controller->has_all_targets = true;
         }
-        controller->add_point_to_trajectory(target_q1, target_q2);
         // target_q1 = points[current_index][1];
         // target_q2 = points[current_index][2];
         // current_index = (current_index + 1) % 5;
       }
       if(should_read_next == 2) {
-        Serial.println("Stop design print" + String(should_read_next));
+        Serial.println("Stop design print.");
+        Serial.println("Wait for " + String(wait_time) + " seconds. Then play the next design");
         is_printing_design = false;
         should_play_next = true;
         is_waiting_for_timer = true;
         wait_time_start = millis();
-        target_q1 = 0.0;
-        target_q2 = 0.0;
+        // target_q1 = 0.0;
+        // target_q2 = 0.0;
       }
       last_time = micros();
     }
