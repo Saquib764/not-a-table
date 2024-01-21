@@ -243,6 +243,7 @@ void loop() {
     }
     if(should_play_next) {
       // Play next track from queue
+      arm->reset_within_2PI_domain();
       Serial.println("play next");
       player.play_next_track(SD);
       is_printing_design = true;
