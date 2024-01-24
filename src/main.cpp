@@ -235,7 +235,7 @@ void loop() {
       last_time = micros();
     }
     if(is_waiting_for_timer) {
-      Serial.println("Time elapsed (seconds): " + String((millis() - wait_time_start) / 1000.0));
+      // Serial.println("Time elapsed (seconds): " + String((millis() - wait_time_start) / 1000.0));
       if(millis() - wait_time_start > wait_time * 1000.0) {
         is_waiting_for_timer = false;
       }
@@ -254,6 +254,16 @@ void loop() {
   // Serial.print("Time for servo run: ");
   EVERY_N_MILLISECONDS(20070){
     // Serial.println("Time: " + String(micros() - current_time));
+  }
+  EVERY_N_MILLISECONDS(1000){
+    // print RAM memory usage
+    Serial.print("Free RAM: ");
+    Serial.println(ESP.getFreeHeap());
+
+    // size_t freeHeap = heap_caps_get_free_size(MALLOC_CAP_8BIT);
+    // Serial.print("Free Heap Size: ");
+    // Serial.print(freeHeap);
+    // Serial.println(" bytes");
   }
   // Serial.print("  ");
 }
