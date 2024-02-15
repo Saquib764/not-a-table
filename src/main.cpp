@@ -6,14 +6,13 @@
 #include <ArduinoJson.h>
 #include <iostream>
 #include<array>
-#include "SD.h"
 
 using namespace std;
+#include "SPIFFS.h"
 
 #include "../common/driver_setup.cpp"
 #include "../common/arm_model.cpp"
 #include "../common/arm_controller.cpp"
-#include "file_functions.h"
 #include "Player.h"
 #include "ota.h"
 #include <Preferences.h>
@@ -61,6 +60,14 @@ double target_q2 = 0.0;
 
 uint8_t led_color[4] = {246, 231, 210, 255};
 
+String playlist[3] = {
+  "designs/AngularRadiance.thr.txt",
+  "designs/circle.thr.txt",
+  "designs/spiral.thr.txt"
+};
+
+int current_playlist_index = -1;
+
 
 float ARM1 = 0.25;
 float ARM2 = 0.25;
@@ -75,8 +82,6 @@ bool should_play_next = false;
 bool has_error = false;
 int status_code = 0;
 bool is_uploading = false;
-bool should_use_internal_sd = false;
-bool is_storage_available = false;
 bool should_use_homing = true;
 bool is_waiting_for_timer = false;
 float wait_time = 1.0 * 60.0;  // 1 minutes
@@ -92,33 +97,20 @@ void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
   Serial.println("Version: " + String(VERSION));
-  if(should_use_internal_sd) {
-    if(setup_internal_card(SPIFFS)) {
-      is_storage_available = true;
-    }
-  } else {
-    if( setup_sd_card(SD)) {
-      is_storage_available = true;
-    }
+  
+  if(!SPIFFS.begin(true)){
+    Serial.println("An Error has occurred while mounting SPIFFS");
+    return;
   }
 
-  if(is_storage_available) {
-    Serial.println("Storage initialized.");
-    has_error = false;
-    status_code = 0;
-  }else{
-    Serial.println("No storage available.");
-    has_error = true;
-    status_code = 1;
-    delay(100);
-  }
-  
+  Serial.println("Storage initialized.");
+  has_error = false;
+  status_code = 0;
+    
   set_led_status(status_code);
   if(has_error) {
     return;
   }
-  
-  list_dir(SD, "/", 0);
 
   // Serial.println("List queue:");
   // Serial.println(player.get_queue(SD));
@@ -133,15 +125,11 @@ void setup() {
   // if(has_resumed) {
   //   is_printing_design = false;
   // }
-  player.index_all_tracks(SD);
 
   set_led_status(status_code);
   
   Serial.println("Server started. Listening on port 80");
 
-  // Remove this
-  // player.play(SD, "/designs/cleanup_spiral.thr.txt");
-  // is_printing_design = true;
   should_play_next = true;
 }
 
@@ -186,16 +174,7 @@ void loop() {
     arm->home();
     return;
   }
-  // if(should_play_next) {
-  //   // Play next design
-  //   String next_design = player.get_next_design(SD);
-  //   player.read(SD, "/" + next_design);
-  //   is_printing_design = true;
-  //   should_clear = true;
-  //   should_perform_homing = true;
-  //   should_play_next = false;
-  //   return;
-  // }
+  
   EVERY_N_MILLISECONDS(25) {
     set_led_color(led_color[0], led_color[1], led_color[2], led_color[3]);
     // move_led();
@@ -207,7 +186,7 @@ void loop() {
       // long int delta[2] = {0, 0};
       // bool should_read_next = move_arm(delta, target_q1, target_q2);
       if(should_read_next == 1) {
-        player.next_line(SD, points);
+        player.next_line( points);
         if(points[0] != 0.0) {
           target_q1 = points[1];
           target_q2 = points[2];
@@ -244,8 +223,9 @@ void loop() {
     if(should_play_next) {
       // Play next track from queue
       arm->reset_within_2PI_domain();
+      current_playlist_index = (current_playlist_index + 1) % 3;
       Serial.println("play next");
-      player.play_next_track(SD);
+      player.play(playlist[current_playlist_index]);
       is_printing_design = true;
       should_play_next = false;
     }
