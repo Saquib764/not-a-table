@@ -9,7 +9,7 @@
 #include <FastLED.h>
 
 #define NUM_LEDS 220
-#define LED_PIN 4
+#define LED_PIN 8
 
 
 void setup_led();

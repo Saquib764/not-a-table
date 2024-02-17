@@ -42,15 +42,15 @@ Preferences preferences;
 String SAVED_SSID = "E1_1102";
 String SAVED_PWD = "Roomies@2829";
 
-int EN_PIN = 25;
-uint8_t motor1DirPin = 26;
-uint8_t motor1StepPin = 27;
-uint8_t motor1HomingPin = 32;
+int EN_PIN = 7;
+uint8_t motor1DirPin = 35;
+uint8_t motor1StepPin = 36;
+uint8_t motor1HomingPin = 10;
 
 
-uint8_t motor2DirPin = 14;
-uint8_t motor2StepPin = 13;
-uint8_t motor2HomingPin = 33;
+uint8_t motor2DirPin = 37;
+uint8_t motor2StepPin = 38;
+uint8_t motor2HomingPin = 9;
 
 StaticJsonDocument<550> jsonDocument;
 char buffer[550];
