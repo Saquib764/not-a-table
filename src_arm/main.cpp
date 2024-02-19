@@ -26,15 +26,15 @@ int mode = 3;  // Controller code
 // TMC2209Stepper driver(&SERIAL_PORT, R_SENSE);
 TMC2209Stepper driver(&SERIAL_PORT, R_SENSE, DRIVER_ADDRESS);
 
-int EN_PIN = 25;
-uint8_t motor1DirPin = 26;
-uint8_t motor1StepPin = 27;
-uint8_t motor1HomingPin = 32;
+int EN_PIN = 7;
+uint8_t motor1DirPin = 35;
+uint8_t motor1StepPin = 36;
+uint8_t motor1HomingPin = 10;
 
 
-uint8_t motor2DirPin = 14;
-uint8_t motor2StepPin = 13;
-uint8_t motor2HomingPin = 33;
+uint8_t motor2DirPin = 37;
+uint8_t motor2StepPin = 38;
+uint8_t motor2HomingPin = 9;
 
 #define K     STEPS_PER_REV * MICROSTEPS/ (2.0*PI)
 #define ARM     0.63/2
