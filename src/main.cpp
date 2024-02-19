@@ -61,7 +61,7 @@ double target_q2 = 0.0;
 uint8_t led_color[4] = {246, 231, 210, 255};
 
 String playlist[3] = {
-  "designs/AngularRadiance.thr.txt",
+  "designs/AngRad.thr.txt",
   "designs/circle.thr.txt",
   "designs/spiral.thr.txt"
 };
@@ -235,15 +235,4 @@ void loop() {
   EVERY_N_MILLISECONDS(20070){
     // Serial.println("Time: " + String(micros() - current_time));
   }
-  EVERY_N_MILLISECONDS(1000){
-    // print RAM memory usage
-    Serial.print("Free RAM: ");
-    Serial.println(ESP.getFreeHeap());
-
-    // size_t freeHeap = heap_caps_get_free_size(MALLOC_CAP_8BIT);
-    // Serial.print("Free Heap Size: ");
-    // Serial.print(freeHeap);
-    // Serial.println(" bytes");
-  }
-  // Serial.print("  ");
 }

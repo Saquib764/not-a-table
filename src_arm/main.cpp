@@ -20,7 +20,7 @@ using namespace std;
 
 // int mode = 1;  // Simple arm move test
 // int mode = 2;  // Homing code
-int mode = 2;  // Controller code
+int mode = 3;  // Controller code
 
 
 // TMC2209Stepper driver(&SERIAL_PORT, R_SENSE);
@@ -75,12 +75,17 @@ void setup() {
   delay(2000);
 }
 
-double points[5][3] = {
+double points[10][2] = {
   {0.0, 0.0},
-  {-1.0, 2.0},
-  {1.0, 1.},
-  {2.0, 0.5},
-  {3., 0.0}
+  {2*3.14, 0.0},
+  {2*3.14, 2*3.14},
+  {2*3.14, 2*3.14},
+  {2*3.14, 2*3.14},
+  {2*3.14, 2*3.14},
+  {2*3.14, 2*3.14},
+  {2*3.14, 2*3.14},
+  {2*3.14, 0},
+  {2*3.14, 2*3.14},
 };
 int current_index = 0;
 
@@ -99,17 +104,20 @@ void loop() {
   }
   if(mode == 3) {
     // controller code
+
     int should_read_next = controller->follow_trajectory();
     // long int delta[2] = {0, 0};
     // bool should_read_next = move_arm(delta, target_q1, target_q2);
     if(should_read_next == 1) {
-      if(current_index < 5) {
+      if(current_index < 10) {
         double* point = points[current_index];
         current_index = current_index + 1;
         target_q1 = point[0];
         target_q2 = point[1];
+        controller->add_point_to_trajectory(target_q1, target_q2);
+      }else{
+        controller->has_all_targets = true;
       }
-      controller->add_point_to_trajectory(target_q1, target_q2);
       // target_q1 = points[current_index][1];
       // target_q2 = points[current_index][2];
       // current_index = (current_index + 1) % 5;
@@ -118,6 +126,7 @@ void loop() {
       // should_play_next = true;
       target_q1 = 0.0;
       target_q2 = 0.0;
+      Serial.println("Stop design print.");
     }
   }
   delay(1);
