@@ -1,5 +1,6 @@
 
 #include <Arduino.h>
+#include <HardwareSerial.h>
 #include "led_control.h"
 #include "math.h"
 #include <TMCStepper.h>
@@ -19,14 +20,15 @@ using namespace std;
 
 const int dummy = 0;
 
-#define SERIAL_PORT Serial2 // TMC2208/TMC2224 HardwareSerial port
+// #define SERIAL_PORT Serial2 // TMC2208/TMC2224 HardwareSerial port
 #define DRIVER_ADDRESS 0b00 // TMC2209 Driver address according to MS1 and MS2
+HardwareSerial mySerial(2);
 
 #define R_SENSE 0.11f
 #define VERSION "1.0.0"
 
 // TMC2209Stepper driver(&SERIAL_PORT, R_SENSE);
-TMC2209Stepper driver(&SERIAL_PORT, R_SENSE, DRIVER_ADDRESS);
+TMC2209Stepper driver(&mySerial, R_SENSE, DRIVER_ADDRESS);
 
 #define K     STEPS_PER_REV * MICROSTEPS/ (2.0*PI)
 #define ARM     0.63/2
@@ -117,6 +119,7 @@ void setup() {
 
   sleep(1);
 
+  mySerial.begin(9600, SERIAL_8N1, 18, 17);
   setup_driver(driver, EN_PIN);
 
   arm->setup(EN_PIN, motor1DirPin, motor1StepPin, motor1HomingPin, motor2DirPin, motor2StepPin, motor2HomingPin);

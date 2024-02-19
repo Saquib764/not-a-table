@@ -9,7 +9,7 @@ void setup_driver(TMC2209Stepper &driver, int EN_PIN) {
                                   // Enable one according to your setup
 //SPI.begin();                    // SPI drivers
   // NEVER increase the baud rate, its adds 10ms delay. probably related to buffer overflow and flush cycle
-  SERIAL_PORT.begin(9600);      // HW UART drivers
+  // SERIAL_PORT.begin(9600);      // HW UART drivers
 // driver.beginSerial(115200);     // SW UART drivers
 
   driver.begin();                 //  SPI: Init CS pins and possible SW SPI pins

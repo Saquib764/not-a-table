@@ -15,22 +15,7 @@ using namespace std;
 
 const int dummy = 0;
 
-#define SERIAL_PORT Serial2 // TMC2208/TMC2224 HardwareSerial port
-#define DRIVER_ADDRESS 0b00 // TMC2209 Driver address according to MS1 and MS2
-
-#define R_SENSE 0.11f
-#define VERSION "1.0.0"
-
-
 Preferences preferences;
-
-
-String playlist[3] = {
-  "designs/AngularRadiance.thr.txt",
-  "designs/circle.thr.txt",
-  "designs/spiral.thr.txt"
-};
-
 
 void setup() {
 

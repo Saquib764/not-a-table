@@ -15,7 +15,7 @@
 
 // Total steps per revolution = 200 * 16 = 3200
 
-#define SERIAL_PORT Serial2 // TMC2208/TMC2224 HardwareSerial port
+// #define SERIAL_PORT Serial2 // TMC2208/TMC2224 HardwareSerial port
 
 void setup_driver(TMC2209Stepper &driver, int EN_PIN);
 
