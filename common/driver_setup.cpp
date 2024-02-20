@@ -12,10 +12,11 @@ void setup_driver(TMC2209Stepper &driver, int EN_PIN) {
   // SERIAL_PORT.begin(9600);      // HW UART drivers
 // driver.beginSerial(115200);     // SW UART drivers
 
-  driver.begin();                 //  SPI: Init CS pins and possible SW SPI pins
+  // driver.begin();                 //  SPI: Init CS pins and possible SW SPI pins
                                   // UART: Init SW UART (if selected) with default 115200 baudrate
   driver.toff(3);                 // Enables driver in software
-  // driver.pdn_disable(true);
+  driver.pdn_disable(true);
+  driver.I_scale_analog(false); // Use internal scaler for current control
   driver.rms_current(1200);        // Set motor RMS current
   driver.microsteps( MICROSTEPS );          // Set microsteps to 1/16th
   // driver.irun(31);

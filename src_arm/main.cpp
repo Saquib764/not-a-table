@@ -15,14 +15,14 @@ using namespace std;
 
 // #define SERIAL_PORT Serial2 // TMC2208/TMC2224 HardwareSerial port
 #define DRIVER_ADDRESS 0b00 // TMC2209 Driver address according to MS1 and MS2
-HardwareSerial mySerial(2);
+HardwareSerial mySerial(1);
 
 #define R_SENSE 0.11f
 #define VERSION "1.0.0"
 
-int mode = 1;  // Simple arm move test
+// int mode = 1;  // Simple arm move test
 // int mode = 2;  // Homing code
-// int mode = 3;  // Controller code
+int mode = 3;  // Controller code
 
 // TMC2209Stepper driver(&SERIAL_PORT, R_SENSE);
 TMC2209Stepper driver(&mySerial, R_SENSE, DRIVER_ADDRESS);
@@ -60,7 +60,7 @@ void setup() {
 
   sleep(1);
 
-  mySerial.begin(9600, SERIAL_8N1, 18, 17);
+  mySerial.begin(9600, SERIAL_8N1, 17, 18);
   setup_driver(driver, EN_PIN);
   arm->setup(EN_PIN, motor1DirPin, motor1StepPin, motor1HomingPin, motor2DirPin, motor2StepPin, motor2HomingPin);
 
