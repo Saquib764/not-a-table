@@ -9,7 +9,6 @@
 
 // #define MAX_SPEED                 0.01  // m/s
 #define MAX_ANGULAR_SPEED         4000.0  // steps/s
-#define MICROSTEPS                32
 #define STEPS_PER_REV             200.0
 #define MAX_TARGET_DISTANCE       50
 #define ACCELERATION_TIME         1.0  // s
