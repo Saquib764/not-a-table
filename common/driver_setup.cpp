@@ -12,7 +12,7 @@ void setup_driver(TMC2209Stepper &driver, int EN_PIN) {
   // SERIAL_PORT.begin(9600);      // HW UART drivers
 // driver.beginSerial(115200);     // SW UART drivers
 
-  // driver.begin();                 //  SPI: Init CS pins and possible SW SPI pins
+  driver.begin();                 //  SPI: Init CS pins and possible SW SPI pins
                                   // UART: Init SW UART (if selected) with default 115200 baudrate
   driver.toff(3);                 // Enables driver in software
   driver.pdn_disable(true);
@@ -27,4 +27,8 @@ void setup_driver(TMC2209Stepper &driver, int EN_PIN) {
   driver.en_spreadCycle(false);   // Toggle spreadCycle on TMC2208/2209/2224
   driver.pwm_autoscale(true);     // Needed for stealthChop
   Serial.println("Done setting up driver");
+
+  uint16_t msread=driver.microsteps();
+  Serial.print("Read microsteps via UART to test UART receive : ");
+  Serial.println(msread); 
 }

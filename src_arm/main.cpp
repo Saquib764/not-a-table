@@ -1,7 +1,6 @@
 
 #include <Arduino.h>
 #include <HardwareSerial.h>
-#include <FastLED.h>
 #include "math.h"
 #include <TMCStepper.h>
 #include <iostream>
@@ -37,6 +36,9 @@ uint8_t motor2DirPin = 37;
 uint8_t motor2StepPin = 38;
 uint8_t motor2HomingPin = 9;
 
+#define RXD_PIN 17 // RX pin for UART1
+#define TXD_PIN 18 // TX pin for UART1
+
 #define K     STEPS_PER_REV * MICROSTEPS/ (2.0*PI)
 #define ARM     0.63/2
 
@@ -57,10 +59,10 @@ void setup() {
   Serial.begin(115200);
   Serial.println("Version: " + String(VERSION));
 
-
   sleep(1);
 
-  mySerial.begin(9600, SERIAL_8N1, 17, 18);
+  mySerial.begin(115200, SERIAL_8N1, RXD_PIN, TXD_PIN);
+  mySerial.begin(115200);
   setup_driver(driver, EN_PIN);
   arm->setup(EN_PIN, motor1DirPin, motor1StepPin, motor1HomingPin, motor2DirPin, motor2StepPin, motor2HomingPin);
 

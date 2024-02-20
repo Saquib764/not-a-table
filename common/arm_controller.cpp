@@ -181,11 +181,6 @@ int ArmController::follow_trajectory() {
     arm->stopMove();
     return 2;
   }
-  
-  EVERY_N_MILLISECONDS(20000){
-    // Serial.println("Trace error: " + String(trace_error_sum));
-    // Serial.println("Max trace error: " + String(max_trace_error));
-  }
 
   double total_displacement[2] = {
     targets[current_target_index][0] - targets[current_target_index - 1][0],
