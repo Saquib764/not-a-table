@@ -20,9 +20,9 @@ HardwareSerial mySerial(2);
 #define R_SENSE 0.11f
 #define VERSION "1.0.0"
 
-// int mode = 1;  // Simple arm move test
+int mode = 1;  // Simple arm move test
 // int mode = 2;  // Homing code
-int mode = 3;  // Controller code
+// int mode = 3;  // Controller code
 
 // TMC2209Stepper driver(&SERIAL_PORT, R_SENSE);
 TMC2209Stepper driver(&mySerial, R_SENSE, DRIVER_ADDRESS);
@@ -67,7 +67,9 @@ void setup() {
 
   if(mode == 1) {
     arm->setSpeedInHz(600, 600);
-    arm->moveByAcceleration(100.0, 100.0);
+    // arm->moveByAcceleration(100.0, 100.0);
+    Serial.println("Steps: " + String(K * 2 * PI) + ", Microstepping: " + String(MICROSTEPS)+ ", STEPS_PER_REV: " + String(STEPS_PER_REV));
+    arm->moveToPositionInSteps(K * 2 * PI, 0);
   }
   if(mode == 3) {
     arm->setSpeedInHz(1200, 1200);
