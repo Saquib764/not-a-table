@@ -175,12 +175,16 @@ int ArmController::follow_trajectory() {
   int current_target_index = get_target_index(current_position) + 1;
 
   if (current_target_index >= MAX_POINTS-2 && has_all_targets) {
+    Serial.println("Finished");
     has_finished = true;
     target_speeds[0] = 0.0;
     target_speeds[1] = 0.0;
     arm->stopMove();
     return 2;
   }
+
+  Serial.println("Current Target Index: " + String(current_target_index));
+  Serial.println("Current targets: " + String(targets[current_target_index][0]) + ", " + String(targets[current_target_index][1]));
 
   double total_displacement[2] = {
     targets[current_target_index][0] - targets[current_target_index - 1][0],
@@ -234,6 +238,7 @@ int ArmController::follow_trajectory() {
 }
 
 void ArmController::add_point_to_trajectory(double a1, double a2){
+  Serial.println("Adding point to trajectory");
   if(!has_started) {
     has_started = true;
     start_time = micros();
