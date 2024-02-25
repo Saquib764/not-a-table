@@ -70,9 +70,10 @@ void setup() {
 
   if(mode == 1) {
     arm->setSpeedInHz(600, 600);
+    arm->moveByAcceleration(1000, 1000);
     // arm->moveByAcceleration(100.0, 100.0);
     Serial.println("Steps: " + String(K * 2 * PI) + ", Microstepping: " + String(MICROSTEPS)+ ", STEPS_PER_REV: " + String(STEPS_PER_REV));
-    arm->moveToPositionInSteps(K * 2 * PI, 0);
+    arm->moveToPositionInSteps(3*K * 2 * PI, 3*K * 2 * PI);
   }
   if(mode == 3) {
     arm->setSpeedInHz(1200, 1200);
@@ -90,8 +91,8 @@ double points[10][2] = {
   {2*3.14, 2*3.14},
   {2*3.14, 2*3.14},
   {2*3.14, 2*3.14},
-  {2*3.14, 0},
-  {2*3.14, 2*3.14},
+  {2*3.14, 0.0},
+  {0.0, 0.0},
 };
 int current_index = 0;
 

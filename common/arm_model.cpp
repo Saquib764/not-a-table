@@ -237,13 +237,11 @@ void ArmModel::home() {
     getJointPositionInRadians(pos);
     getJointPositionInSteps(pos_steps);
 
-    double value = analogRead(homing_pin) - 2000.0;
+    double value = analogRead(homing_pin) - 2050.0;
     for(int i = 1; i<5; i++) {
-      value += analogRead(homing_pin) - 2000.0;
+      value += analogRead(homing_pin) - 2050.0;
     }
     value /= 5.0;
-
-    // Serial.println("1: " + String(value));
 
     if(!is_homing) {
       // start homing

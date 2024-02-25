@@ -22,7 +22,7 @@ const int dummy = 0;
 
 // #define SERIAL_PORT Serial2 // TMC2208/TMC2224 HardwareSerial port
 #define DRIVER_ADDRESS 0b00 // TMC2209 Driver address according to MS1 and MS2
-HardwareSerial mySerial(2);
+HardwareSerial mySerial(1);
 
 #define R_SENSE 0.11f
 #define VERSION "1.0.0"
@@ -45,14 +45,17 @@ String SAVED_SSID = "E1_1102";
 String SAVED_PWD = "Roomies@2829";
 
 int EN_PIN = 7;
-uint8_t motor1DirPin = 35;
-uint8_t motor1StepPin = 36;
-uint8_t motor1HomingPin = 10;
+#define RXD_PIN 17 // RX pin for UART1
+#define TXD_PIN 18 // TX pin for UART1
+
+uint8_t motor1DirPin = 37;
+uint8_t motor1StepPin = 38;
+uint8_t motor1HomingPin = 9;
 
 
-uint8_t motor2DirPin = 37;
-uint8_t motor2StepPin = 38;
-uint8_t motor2HomingPin = 9;
+uint8_t motor2DirPin = 35;
+uint8_t motor2StepPin = 36;
+uint8_t motor2HomingPin = 10;
 
 StaticJsonDocument<550> jsonDocument;
 char buffer[550];
@@ -63,9 +66,9 @@ double target_q2 = 0.0;
 uint8_t led_color[4] = {246, 231, 210, 255};
 
 String playlist[3] = {
-  "designs/AngRad.thr.txt",
-  "designs/circle.thr.txt",
-  "designs/spiral.thr.txt"
+  "/designs/AngRad.thr.txt",
+  "/designs/circle.thr.txt",
+  "/designs/spiral.thr.txt"
 };
 
 int current_playlist_index = -1;
@@ -119,7 +122,8 @@ void setup() {
 
   sleep(1);
 
-  mySerial.begin(9600, SERIAL_8N1, 18, 17);
+  mySerial.begin(115200, SERIAL_8N1, RXD_PIN, TXD_PIN);
+  mySerial.begin(115200);
   setup_driver(driver, EN_PIN);
 
   arm->setup(EN_PIN, motor1DirPin, motor1StepPin, motor1HomingPin, motor2DirPin, motor2StepPin, motor2HomingPin);

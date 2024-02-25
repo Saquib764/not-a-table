@@ -183,8 +183,8 @@ int ArmController::follow_trajectory() {
     return 2;
   }
 
-  Serial.println("Current Target Index: " + String(current_target_index));
-  Serial.println("Current targets: " + String(targets[current_target_index][0]) + ", " + String(targets[current_target_index][1]));
+  // Serial.println("Current Target Index: " + String(current_target_index));
+  // Serial.println("Current targets: " + String(targets[current_target_index][0]) + ", " + String(targets[current_target_index][1]));
 
   double total_displacement[2] = {
     targets[current_target_index][0] - targets[current_target_index - 1][0],
