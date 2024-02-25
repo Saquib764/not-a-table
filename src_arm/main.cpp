@@ -19,9 +19,9 @@ HardwareSerial mySerial(1);
 #define R_SENSE 0.11f
 #define VERSION "1.0.0"
 
-// int mode = 1;  // Simple arm move test
+int mode = 1;  // Simple arm move test
 // int mode = 2;  // Homing code
-int mode = 3;  // Controller code
+// int mode = 3;  // Controller code
 
 // TMC2209Stepper driver(&SERIAL_PORT, R_SENSE);
 TMC2209Stepper driver(&mySerial, R_SENSE, DRIVER_ADDRESS);
@@ -30,14 +30,14 @@ int EN_PIN = 7;
 #define RXD_PIN 17 // RX pin for UART1
 #define TXD_PIN 18 // TX pin for UART1
 
-uint8_t motor1DirPin = 35;
-uint8_t motor1StepPin = 36;
-uint8_t motor1HomingPin = 10;
+uint8_t motor1DirPin = 37;
+uint8_t motor1StepPin = 38;
+uint8_t motor1HomingPin = 9;
 
 
-uint8_t motor2DirPin = 37;
-uint8_t motor2StepPin = 38;
-uint8_t motor2HomingPin = 9;
+uint8_t motor2DirPin = 35;
+uint8_t motor2StepPin = 36;
+uint8_t motor2HomingPin = 10;
 
 
 #define K     STEPS_PER_REV * MICROSTEPS/ (2.0*PI)

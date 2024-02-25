@@ -1,12 +1,12 @@
 
 #include <Arduino.h>
 #include "math.h"
-#include <TMCStepper.h>
-#include <ArduinoJson.h>
+// #include <TMCStepper.h>
+// #include <ArduinoJson.h>
 #include <iostream>
 #include<array>
 
-#include <FastLED.h>
+// #include <FastLED.h>
 
 using namespace std;
 // #include "SPIFFS.h"
@@ -32,8 +32,8 @@ void setup() {
 
 void loop() {
 
-  EVERY_N_MILLISECONDS(2000){
+  // EVERY_N_MILLISECONDS(2000){
     Serial.println("There is light!");
-  }
+  // }
   // Serial.print("  ");
 }
