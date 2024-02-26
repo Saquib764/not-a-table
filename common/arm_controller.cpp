@@ -12,8 +12,8 @@ ArmController::ArmController(ArmModel *arm){
   this->arm = arm;
 
   // Define constants
-  MAX_SPEED = 800;
-  MAX_ACCELERATION = 1500;
+  MAX_SPEED = 50 * MICROSTEPS;
+  MAX_ACCELERATION = 50 * MICROSTEPS;
   
   has_started = false;
   has_finished = false;
@@ -49,8 +49,10 @@ void ArmController::reset(){
   has_finished = false;
   has_all_targets = false;
 
-  target_index = 0;
-  SPEED_LIMIT_RATIO = 0;
+  SPEED_LIMIT_RATIO = 1;
+  
+  target_index = 6;
+  number_of_targets = 0;
   // Reinitialise trajectory to zero
   for(int i = 0; i < MAX_POINTS; i++) {
     targets[i][0] = 0;
@@ -72,8 +74,6 @@ void ArmController::reset(){
     should_stop[i] = false;
   }
 
-  target_index = 6;
-  number_of_targets = 0;
 }
 
 void ArmController::get_goal(double *current_position, double *goal) {
@@ -187,16 +187,17 @@ int ArmController::follow_trajectory() {
   // Serial.println("Current Target Index: " + String(current_target_index));
   // Serial.println("Current targets: " + String(targets[current_target_index][0]) + ", " + String(targets[current_target_index][1]));
 
-  double total_displacement[2] = {
-    targets[current_target_index][0] - targets[current_target_index - 1][0],
-    targets[current_target_index][1] - targets[current_target_index - 1][1]
+  double displacement_to_go[2] = {
+    targets[current_target_index][0] - current_position[0],
+    targets[current_target_index][1] - current_position[1]
   };
   
   EVERY_N_MILLISECONDS(1000) {
-    Serial.println("Disp: " + String(total_displacement[0]) + ", " + String(total_displacement[1]));
-    Serial.println("Pos: " + String(current_position[0]) + ", " + String(current_position[1]));
-    Serial.println("Ind: " + String(current_target_index));
+    Serial.println("Disp: " + String(displacement_to_go[0]) + ", " + String(displacement_to_go[1]));
     Serial.println("Target: " + String(targets[current_target_index][0]) + ", " + String(targets[current_target_index][1]));
+    Serial.println("Pos: " + String(current_position[0]) + ", " + String(current_position[1]));
+    Serial.println("Ind: " + String(current_target_index) + " of " + String(number_of_targets));
+    Serial.println("-------------------------------");
   }
 
   if(current_target_index > 2 && !has_all_targets) {
