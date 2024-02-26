@@ -151,16 +151,15 @@ void ArmModel::home() {
     getJointPositionInRadians(pos);
     getJointPositionInSteps(pos_steps);
 
-    double value = (analogRead(homing_pin) - 1900.0);
+    double value = (analogRead(homing_pin) - 2100.0);
     for(int i = 1; i<5; i++) {
-      value += (analogRead(homing_pin) - 1900.0);
+      value += (analogRead(homing_pin) - 2100.0);
     }
     value /= 5.0;
     value = -value;
-    
-    // Serial.println("0: " + String(value));
 
     if(!is_homing) {
+      Serial.println("Homing start");
       // start homing
       is_homing = true;
       is_hall_sensor_detected = false;

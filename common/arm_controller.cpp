@@ -19,9 +19,6 @@ ArmController::ArmController(ArmModel *arm){
   has_finished = false;
   has_all_targets = false;
   
-  // Define global variables
-  current_target_indexes[0] = 2;
-  current_target_indexes[1] = 2;
 
   // Define target arrays
   reset();
@@ -195,6 +192,13 @@ int ArmController::follow_trajectory() {
     (targets[current_target_index][1] - current_position[1]) * target_directions[current_target_index][1]
   };
 
+  EVERY_N_MILLISECONDS(1000) {
+    Serial.println("Dist: " + String(distance_to_go[0]) + ", " + String(distance_to_go[1]));
+    Serial.println("Pos: " + String(current_position[0]) + ", " + String(current_position[1]));
+    Serial.println("Ind: " + String(current_target_index));
+    Serial.println("Target: " + String(targets[current_target_index][0]) + ", " + String(targets[current_target_index][1]));
+  }
+
   if(current_target_index > 2 && !has_all_targets) {
     return 1;
   }
@@ -238,7 +242,7 @@ int ArmController::follow_trajectory() {
 }
 
 void ArmController::add_point_to_trajectory(double a1, double a2){
-  Serial.println("Adding point to trajectory");
+  // Serial.println("Adding point to trajectory: " + String(a1) + ", " + String(a2));
   if(!has_started) {
     has_started = true;
     start_time = micros();
@@ -302,9 +306,6 @@ void ArmController::add_point_to_trajectory(double a1, double a2){
   } else if (keypoints[MAX_POINTS-1][1] - keypoints[MAX_POINTS-2][1] < 0) {
     target_directions[MAX_POINTS-2][1] = -1;
   }
-
-  current_target_indexes[0]--;
-  current_target_indexes[1]--;
 
   angles_at_keypoints[MAX_POINTS-2] = angle_to_new_point;
 
