@@ -210,8 +210,8 @@ int ArmController::follow_trajectory() {
 
   get_target_speed(current_position, target_speeds);
 
-  current_acceleration[0] = (target_speeds[0] - current_speed[0])*100.0;
-  current_acceleration[1] = (target_speeds[1] - current_speed[1])*100.0;
+  current_acceleration[0] = (target_speeds[0] - current_speed[0])*8.0;
+  current_acceleration[1] = (target_speeds[1] - current_speed[1])*8.0;
 
   enforce_guards(current_acceleration, MAX_ACCELERATION);
 

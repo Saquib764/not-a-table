@@ -61,6 +61,9 @@ class SimArmController{
     double max_speeds[9][2];
     bool should_stop[9];
 
+    int target_index;
+    int number_of_targets;
+
     double target_speeds[2];
     double start_time;
 

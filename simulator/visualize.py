@@ -32,7 +32,7 @@ if True:
   t1 = 0.0
   t2 = 0.0
   for v in values:
-    if np.random.rand(1)[0] > 0.002:
+    if np.random.rand(1)[0] > 0.008:
       continue
     t1 = v[0] * (1-l) + t1 * l
     t2 = v[1] * (1-l) + t2 * l
