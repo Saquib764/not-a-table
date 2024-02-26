@@ -37,7 +37,7 @@ class ArmController{
     int get_target_index(double *position);
     void get_target_speed(double *current_position, double *speeds);
     void get_target_position(double t, double *target_positions);
-    void get_target_acceleration(double *positions, double *speeds, double *accelerations);
+    // void get_target_acceleration(double *positions, double *speeds, double *accelerations);
 
     // Define constants
     int MAX_SPEED;
@@ -61,6 +61,10 @@ class ArmController{
     double angles_at_keypoints[9];
     double max_speeds[9][2];
     bool should_stop[9];
+
+    double position_targets[10][2];
+    int target_index;
+    int number_of_targets;
 
     double target_speeds[2];
     double start_time;
