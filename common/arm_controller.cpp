@@ -12,8 +12,8 @@ ArmController::ArmController(ArmModel *arm){
   this->arm = arm;
 
   // Define constants
-  MAX_SPEED = 50 * MICROSTEPS;
-  MAX_ACCELERATION = 50 * MICROSTEPS;
+  MAX_SPEED = 70 * MICROSTEPS;
+  MAX_ACCELERATION = 10 * MAX_SPEED;
   
   has_started = false;
   has_finished = false;
@@ -210,8 +210,8 @@ int ArmController::follow_trajectory() {
 
   get_target_speed(current_position, target_speeds);
 
-  current_acceleration[0] = (target_speeds[0] - current_speed[0]);
-  current_acceleration[1] = (target_speeds[1] - current_speed[1]);
+  current_acceleration[0] = (target_speeds[0] - current_speed[0])*100.0;
+  current_acceleration[1] = (target_speeds[1] - current_speed[1])*100.0;
 
   enforce_guards(current_acceleration, MAX_ACCELERATION);
 
