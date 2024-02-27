@@ -157,6 +157,17 @@ void SimArmController::get_target_speed(double *current_position, double *speeds
   speeds[0] = speed_targets[target_index][0];
   speeds[1] = goal[1] * abs(speed_targets[target_index][0]) / (abs(goal[0]) + 0.0001);
 
+  if(abs(speeds[0]) + abs(speeds[1]) <2) {
+    if(abs(goal[0]) + abs(goal[1]) > 10) {
+      speeds[0] = MAX_SPEED * goal[0] / (abs(goal[0]) + 0.0001);
+      speeds[1] = MAX_SPEED * goal[1] / (abs(goal[0]) + 0.0001);
+
+      if(abs(speeds[1]) > MAX_SPEED) {
+        speeds[0] = MAX_SPEED * goal[0] / (abs(goal[1]) + 0.0001);
+        speeds[1] = MAX_SPEED * goal[1] / (abs(goal[1]) + 0.0001);
+      }
+    }
+  }
 
   // approaching goal
   double distance = abs(position_targets[target_index][0] - current_position[0]) + abs(position_targets[target_index][1] - current_position[1]);
@@ -392,8 +403,8 @@ void SimArmController::add_point_to_trajectory(double a1, double a2){
   };
 
   if(abs(acceleration[0]) + abs(acceleration[1]) > MAX_SPEED * 0.3) {
-    speed_targets[MAX_POINTS-3][0] = speed_targets[MAX_POINTS-3][0] * 0.9;
-    speed_targets[MAX_POINTS-3][1] = speed_targets[MAX_POINTS-3][1] * 0.9;
+    // speed_targets[MAX_POINTS-3][0] = speed_targets[MAX_POINTS-3][0] * 0.9;
+    // speed_targets[MAX_POINTS-3][1] = speed_targets[MAX_POINTS-3][1] * 0.9;
 
     speed_targets[MAX_POINTS-2][0] = speed_targets[MAX_POINTS-2][0] * 0.6;
     speed_targets[MAX_POINTS-2][1] = speed_targets[MAX_POINTS-2][1] * 0.6;
