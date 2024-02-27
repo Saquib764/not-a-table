@@ -66,7 +66,7 @@ double target_q2 = 0.0;
 uint8_t led_color[4] = {246, 231, 210, 255};
 
 String playlist[3] = {
-  "/designs/AngRad.thr.txt",
+  "/designs/square.thr.txt",
   "/designs/circle.thr.txt",
   "/designs/spiral.thr.txt"
 };
