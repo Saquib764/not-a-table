@@ -160,11 +160,22 @@ void ArmController::get_target_speed(double *current_position, double *speeds){
 
   SPEED_LIMIT_RATIO = 1.0;
 
-
   double UPDATED_MAX_SPEED = MAX_SPEED * SPEED_LIMIT_RATIO;
+  
   speeds[0] = speed_targets[target_index][0];
   speeds[1] = goal[1] * abs(speed_targets[target_index][0]) / (abs(goal[0]) + 0.0001);
 
+  if(abs(speed_targets[0]) + abs(speed_targets[1]) <2) {
+    if(abs(goal[0]) + abs(goal[1]) > 10) {
+      speeds[0] = MAX_SPEED * goal[0] / (abs(goal[0]) + 0.0001);
+      speeds[1] = MAX_SPEED * goal[1] / (abs(goal[0]) + 0.0001);
+
+      if(abs(speeds[1]) > MAX_SPEED) {
+        speeds[0] = MAX_SPEED * goal[0] / (abs(goal[1]) + 0.0001);
+        speeds[1] = MAX_SPEED * goal[1] / (abs(goal[1]) + 0.0001);
+      }
+    }
+  }
 }
 
 
