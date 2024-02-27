@@ -64,7 +64,7 @@ int main() {
   }
 
   double pt[2];
-  int T = 500000;
+  int T = 700000;
 
   double ps[2];
   double v[2];
@@ -80,7 +80,7 @@ int main() {
     arm->getJointSpeedInSteps(v);
     arm->getJointAccelerationInSteps(a);
     // cout << "p: " << ps[0] << " " << ps[1] << " v " << v[0] << " " << v[1] << " a: " << a[0] << " " << a[1] << endl;
-    fileout << ps[0] << " " << ps[1] << " " << v[0] << " " << v[1] << " " << a[0] << " " << a[1] << " " << controller->error[0] << " " << controller->error[1] << " " << controller->target_speeds[0] << " " << controller->target_speeds[1] << " " << controller->tracing_error << endl;
+    fileout << ps[0] << " " << ps[1] << " " << v[0] << " " << v[1] << " " << a[0] << " " << a[1] << " " << controller->error[0] << " " << controller->error[1] << " " << controller->interpolated_speed_target[0] << " " << controller->interpolated_speed_target[1] << " " << controller->tracing_error << endl;
     if(i%10 !=0) {
       continue;
     }
