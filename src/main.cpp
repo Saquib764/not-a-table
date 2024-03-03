@@ -17,6 +17,7 @@ using namespace std;
 #include "Player.h"
 #include "ota.h"
 #include <Preferences.h>
+#include "wifi_functions.h"
 
 const int dummy = 0;
 
@@ -41,8 +42,8 @@ Player player;
 
 Preferences preferences;
 
-String SAVED_SSID = "E1_1102";
-String SAVED_PWD = "Roomies@2829";
+String SAVED_SSID = "Megam1 2.4GHZ";
+String SAVED_PWD = "Letamarin@123";
 
 int EN_PIN = 7;
 #define RXD_PIN 17 // RX pin for UART1
@@ -94,6 +95,13 @@ float wait_time_start = 0.0;
 
 
 double points[3] = {0.0, 0.0, 0.0};
+
+void setup_wifi() {
+  if(connect_to_network( SAVED_SSID, SAVED_PWD, 5)){
+    is_connected_to_wifi = true;
+  }
+}
+
 void setup() {
   preferences.begin("yume", false); 
   setup_led();
@@ -116,6 +124,8 @@ void setup() {
   if(has_error) {
     return;
   }
+
+  setup_wifi();
 
   // Serial.println("List queue:");
   // Serial.println(player.get_queue(SD));

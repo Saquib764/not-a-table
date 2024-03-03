@@ -105,7 +105,7 @@ int SimArmController::get_target_index(double *position){
   int cur_target = target_index;
   double distance = abs(targets[cur_target][0] - position[0]) + abs(targets[cur_target][1] - position[1]);
   cout << "Distance: " << distance << ", " << target_index << endl;
-  if( distance < 50) {
+  if( distance < 20) {
     cur_target = target_index + 1;
   }
   return cur_target;
@@ -174,7 +174,7 @@ void SimArmController::get_target_speed(double *current_position, double *speeds
 
   // if(distance < DIST_THRES) {
   //   speeds[0] = speeds[0]*0.9 + speed_targets[target_index+1][0] * 0.1;
-  //   speeds[1] = speeds[1]*0.9 + speed_targets[target_index+1][1] * 0.1;
+  //   speeds[1] = speeds[1]*0.9 + speed_targets[target_index+1][1] * 0.2;
   // }
 
   // if( distance < DIST_THRES ) {
@@ -276,8 +276,8 @@ int SimArmController::follow_trajectory() {
   // current_acceleration[0] = (target_speeds[0] - current_speed[0]) * 1. + expected_acceleration[0] * 0;
   // current_acceleration[1] = (target_speeds[1] - current_speed[1]) * 1. + expected_acceleration[1] * 0;
 
-  current_acceleration[0] = (target_speeds[0] - current_speed[0])*8.0;
-  current_acceleration[1] = (target_speeds[1] - current_speed[1])*8.0;
+  current_acceleration[0] = (target_speeds[0] - current_speed[0])*25.0;
+  current_acceleration[1] = (target_speeds[1] - current_speed[1])*25.0;
 
 
   enforce_guards(current_acceleration, MAX_ACCELERATION);
@@ -306,9 +306,9 @@ void SimArmController::add_point_to_trajectory(double a1, double a2){
     has_started = true;
     start_time = micros();
   }
-  double dt1 = abs(targets[MAX_POINTS-1][0]-int(3 * a1 * arm->steps_per_radian));
-  double dt2 = abs(targets[MAX_POINTS-1][1]-int(3 * a2 * arm->steps_per_radian));
-  if(dt1 < 50 && dt2 < 50) {
+  double dt1 = abs(position_targets[MAX_POINTS-1][0]-int(3 * a1 * arm->steps_per_radian));
+  double dt2 = abs(position_targets[MAX_POINTS-1][1]-int(3 * a2 * arm->steps_per_radian));
+  if(dt1 < 450 && dt2 < 450) {
     return;
   }
   number_of_targets ++;
@@ -402,17 +402,44 @@ void SimArmController::add_point_to_trajectory(double a1, double a2){
     speed_targets[MAX_POINTS-1][1] - speed_targets[MAX_POINTS-2][1]
   };
 
-  if(abs(acceleration[0]) + abs(acceleration[1]) > MAX_SPEED * 0.3) {
-    // speed_targets[MAX_POINTS-3][0] = speed_targets[MAX_POINTS-3][0] * 0.9;
-    // speed_targets[MAX_POINTS-3][1] = speed_targets[MAX_POINTS-3][1] * 0.9;
+  if(speed_targets[MAX_POINTS - 1][0] * speed_targets[MAX_POINTS - 2][0] < 0) {
+    if(abs(acceleration[0]) > MAX_SPEED * 0.4) {
+      for(int i = 2; i<4; i++) {
+        double dt = abs((position_targets[MAX_POINTS-i][0] - position_targets[MAX_POINTS-i-1][0]) / speed_targets[MAX_POINTS-i][0]) ;
+        double dt_ = max(dt, 4.5 - i);
+        speed_targets[MAX_POINTS-i][0] = speed_targets[MAX_POINTS-i][0] * min(0.4, dt/dt_);
+        speed_targets[MAX_POINTS-i][1] = speed_targets[MAX_POINTS-i][1] * min(0.4, dt/dt_);
+      }
 
-    speed_targets[MAX_POINTS-2][0] = speed_targets[MAX_POINTS-2][0] * 0.6;
-    speed_targets[MAX_POINTS-2][1] = speed_targets[MAX_POINTS-2][1] * 0.6;
-
-    speed_targets[MAX_POINTS-1][0] = speed_targets[MAX_POINTS-1][0] * 0.5;
-    speed_targets[MAX_POINTS-1][1] = speed_targets[MAX_POINTS-1][1] * 0.5;
-
+      speed_targets[MAX_POINTS-1][0] = speed_targets[MAX_POINTS-1][0] * 0.4;
+      speed_targets[MAX_POINTS-1][1] = speed_targets[MAX_POINTS-1][1] * 0.4;
+    }
   }
+  if(speed_targets[MAX_POINTS - 1][1] * speed_targets[MAX_POINTS - 2][1] < 0) {
+    if(abs(acceleration[1]) > MAX_SPEED * 0.4) {
+      for(int i = 2; i<4; i++) {
+        double dt = abs((position_targets[MAX_POINTS-i][1] - position_targets[MAX_POINTS-i-1][1]) / speed_targets[MAX_POINTS-i][1]) ;
+        double dt_ = max(dt, 4.5 - i);
+        speed_targets[MAX_POINTS-i][0] = speed_targets[MAX_POINTS-i][0] * min(0.4, dt/dt_);
+        speed_targets[MAX_POINTS-i][1] = speed_targets[MAX_POINTS-i][1] * min(0.4, dt/dt_);
+      }
+
+      speed_targets[MAX_POINTS-1][0] = speed_targets[MAX_POINTS-1][0] * 0.4;
+      speed_targets[MAX_POINTS-1][1] = speed_targets[MAX_POINTS-1][1] * 0.4;
+    }
+  }
+
+  // if(abs(acceleration[0]) + abs(acceleration[1]) > MAX_SPEED * 0.8) {
+  //   speed_targets[MAX_POINTS-3][0] = speed_targets[MAX_POINTS-3][0] * 0.9;
+  //   speed_targets[MAX_POINTS-3][1] = speed_targets[MAX_POINTS-3][1] * 0.9;
+
+  //   speed_targets[MAX_POINTS-2][0] = speed_targets[MAX_POINTS-2][0] * 0.6;
+  //   speed_targets[MAX_POINTS-2][1] = speed_targets[MAX_POINTS-2][1] * 0.6;
+
+  //   speed_targets[MAX_POINTS-1][0] = speed_targets[MAX_POINTS-1][0] * 0.4;
+  //   speed_targets[MAX_POINTS-1][1] = speed_targets[MAX_POINTS-1][1] * 0.4;
+
+  // }
 
 
   double current_position[2] = {0, 0};
